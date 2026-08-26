@@ -88,7 +88,7 @@
           }
         ],
         "includeAll": true,
-        "allValue": "%",
+        "allValue": "'%'",
         "multi": true
       }
     ]
