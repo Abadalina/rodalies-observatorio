@@ -318,11 +318,34 @@ class Ingestor:
                     duration_ms=int((time.perf_counter() - started) * 1000),
                 )
 
+        # La geografia se resuelve despues del horario, porque necesita las
+        # coordenadas de las estaciones que acaba de cargar.
+        try:
+            counts["geografia"] = self.load_geografia()
+        except Exception:
+            log.exception("no se pudo resolver la geografia de las estaciones")
+            counts["geografia"] = 0
+
         self._service_dates = {}
         self._service_dates_loaded_at = 0.0
         counts["duration_s"] = round(time.perf_counter() - started, 1)
         log.info("horario cargado: %s", counts)
         return counts
+
+    def load_geografia(self) -> int:
+        """Asigna provincia y comunidad autonoma a cada estacion.
+
+        Oficial donde el listado de Renfe la trae; inferida por cercania donde
+        no, siempre marcada como tal. Ver `rodalies.geografia`.
+        """
+        from . import geografia
+
+        oficiales = geografia.descargar(timeout=max(60, self.settings.http_timeout))
+        with session(self.settings.database_url) as conn:
+            repo = Repository(conn)
+            coordenadas = repo.stop_coordinates()
+            completo = geografia.completar_por_cercania(oficiales, coordenadas)
+            return repo.update_geografia(completo.values())
 
     # -- mantenimiento --------------------------------------------------------
 

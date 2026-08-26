@@ -321,6 +321,44 @@ class Repository:
         keys = ("version_id", "downloaded_at", "sha256", "etag", "last_modified", "n_trips")
         return dict(zip(keys, row, strict=True))
 
+    def update_geografia(self, ubicaciones: Iterable[Any]) -> int:
+        """Escribe provincia, comunidad y poblacion en las estaciones."""
+        payload = [
+            {
+                "stop_id": u.stop_id,
+                "provincia": u.provincia,
+                "comunidad": u.comunidad,
+                "poblacion": u.poblacion,
+                "codigo_postal": u.codigo_postal,
+                "geo_origen": u.origen,
+            }
+            for u in ubicaciones
+        ]
+        if not payload:
+            return 0
+        with self.conn.cursor() as cur:
+            cur.executemany(
+                """
+                UPDATE gtfs.stop
+                   SET provincia = %(provincia)s,
+                       comunidad = %(comunidad)s,
+                       poblacion = COALESCE(%(poblacion)s, poblacion),
+                       codigo_postal = COALESCE(%(codigo_postal)s, codigo_postal),
+                       geo_origen = %(geo_origen)s
+                 WHERE stop_id = %(stop_id)s
+                """,
+                payload,
+            )
+        return len(payload)
+
+    def stop_coordinates(self) -> dict[str, tuple[float, float]]:
+        """Coordenadas de las estaciones, para inferir la provincia que falta."""
+        filas = self.conn.execute(
+            "SELECT stop_id, stop_lat, stop_lon FROM gtfs.stop "
+            "WHERE stop_lat IS NOT NULL AND stop_lon IS NOT NULL"
+        ).fetchall()
+        return {str(sid): (float(la), float(lo)) for sid, la, lo in filas}
+
     # -- mantenimiento --------------------------------------------------------
 
     def sync_settings(self, values: dict[str, int]) -> None:
