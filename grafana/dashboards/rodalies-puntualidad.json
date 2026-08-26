@@ -44,22 +44,47 @@
         "multi": false
       },
       {
-        "name": "nucleo",
-        "label": "Nucleo",
+        "name": "comunidad",
+        "label": "Comunidad",
         "type": "query",
         "datasource": {
           "type": "postgres",
           "uid": "rodalies-pg"
         },
-        "query": "SELECT n.nombre AS __text, n.nucleo_id AS __value FROM gtfs.nucleo n WHERE n.nucleo_id IN (SELECT DISTINCT nucleo_id FROM gtfs.route) ORDER BY 1",
+        "query": "SELECT DISTINCT comunidad FROM analytics.mv_stop_final WHERE source = '$source' AND comunidad <> 'sin determinar' ORDER BY 1",
         "refresh": 1,
         "current": {
-          "text": "Barcelona (Rodalies)",
-          "value": "51"
+          "text": "Catalunya",
+          "value": "Catalunya",
+          "selected": true
         },
         "options": [],
         "includeAll": false,
         "multi": false
+      },
+      {
+        "name": "provincia",
+        "label": "Provincia",
+        "type": "query",
+        "datasource": {
+          "type": "postgres",
+          "uid": "rodalies-pg"
+        },
+        "query": "SELECT DISTINCT provincia FROM analytics.mv_stop_final WHERE source = '$source' AND comunidad = '$comunidad' ORDER BY 1",
+        "refresh": 1,
+        "current": {
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ],
+          "selected": true
+        },
+        "options": [],
+        "includeAll": true,
+        "multi": true,
+        "allValue": "'%'"
       },
       {
         "name": "linea",
@@ -118,7 +143,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "\nSELECT round(100.0 * sum(paradas_puntuales) / NULLIF(sum(paradas_con_retraso), 0), 1)\n         AS \"Puntualidad (%)\"\n  FROM analytics.mv_line_daily\n WHERE service_date BETWEEN $__timeFrom()::date AND $__timeTo()::date\n   AND source = '$source'\n   AND nucleo_id = '$nucleo'\n   AND linea LIKE ANY (ARRAY[${linea:sqlstring}])\n",
+          "rawSql": "\nSELECT round(100.0 * sum(paradas_puntuales) / NULLIF(sum(paradas_con_retraso), 0), 1)\n         AS \"Puntualidad (%)\"\n  FROM analytics.mv_line_daily\n WHERE service_date BETWEEN $__timeFrom()::date AND $__timeTo()::date\n   AND source = '$source'\n   AND comunidad = '$comunidad'\n   AND provincia LIKE ANY (ARRAY[${provincia:sqlstring}])\n   AND linea LIKE ANY (ARRAY[${linea:sqlstring}])\n",
           "sql": {
             "columns": [
               {
@@ -197,7 +222,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "\nSELECT round(sum(retraso_medio_s * paradas_con_retraso)\n             / NULLIF(sum(paradas_con_retraso), 0), 0) AS \"Retraso medio (s)\"\n  FROM analytics.mv_line_daily\n WHERE service_date BETWEEN $__timeFrom()::date AND $__timeTo()::date\n   AND source = '$source'\n   AND nucleo_id = '$nucleo'\n   AND linea LIKE ANY (ARRAY[${linea:sqlstring}])\n",
+          "rawSql": "\nSELECT round(sum(retraso_medio_s * paradas_con_retraso)\n             / NULLIF(sum(paradas_con_retraso), 0), 0) AS \"Retraso medio (s)\"\n  FROM analytics.mv_line_daily\n WHERE service_date BETWEEN $__timeFrom()::date AND $__timeTo()::date\n   AND source = '$source'\n   AND comunidad = '$comunidad'\n   AND provincia LIKE ANY (ARRAY[${provincia:sqlstring}])\n   AND linea LIKE ANY (ARRAY[${linea:sqlstring}])\n",
           "sql": {
             "columns": [
               {
@@ -274,7 +299,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "\nSELECT sum(trenes) AS \"Trenes observados\"\n  FROM analytics.mv_line_daily\n WHERE service_date BETWEEN $__timeFrom()::date AND $__timeTo()::date\n   AND source = '$source'\n   AND nucleo_id = '$nucleo'\n   AND linea LIKE ANY (ARRAY[${linea:sqlstring}])\n",
+          "rawSql": "\nSELECT sum(trenes) AS \"Trenes observados\"\n  FROM analytics.mv_line_daily\n WHERE service_date BETWEEN $__timeFrom()::date AND $__timeTo()::date\n   AND source = '$source'\n   AND comunidad = '$comunidad'\n   AND provincia LIKE ANY (ARRAY[${provincia:sqlstring}])\n   AND linea LIKE ANY (ARRAY[${linea:sqlstring}])\n",
           "sql": {
             "columns": [
               {
@@ -341,7 +366,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "\nSELECT sum(paradas_observadas) AS \"Observaciones\"\n  FROM analytics.mv_line_daily\n WHERE service_date BETWEEN $__timeFrom()::date AND $__timeTo()::date\n   AND source = '$source'\n   AND nucleo_id = '$nucleo'\n   AND linea LIKE ANY (ARRAY[${linea:sqlstring}])\n",
+          "rawSql": "\nSELECT sum(paradas_observadas) AS \"Observaciones\"\n  FROM analytics.mv_line_daily\n WHERE service_date BETWEEN $__timeFrom()::date AND $__timeTo()::date\n   AND source = '$source'\n   AND comunidad = '$comunidad'\n   AND provincia LIKE ANY (ARRAY[${provincia:sqlstring}])\n   AND linea LIKE ANY (ARRAY[${linea:sqlstring}])\n",
           "sql": {
             "columns": [
               {
@@ -409,7 +434,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "\nSELECT service_date::timestamptz AS time,\n       linea AS metric,\n       round(100.0 * paradas_puntuales / NULLIF(paradas_con_retraso, 0), 1) AS puntualidad\n  FROM analytics.mv_line_daily\n WHERE service_date BETWEEN $__timeFrom()::date AND $__timeTo()::date\n   AND source = '$source'\n   AND nucleo_id = '$nucleo'\n   AND linea LIKE ANY (ARRAY[${linea:sqlstring}])\n ORDER BY 1\n",
+          "rawSql": "\nSELECT service_date::timestamptz AS time,\n       linea AS metric,\n       round(100.0 * paradas_puntuales / NULLIF(paradas_con_retraso, 0), 1) AS puntualidad\n  FROM analytics.mv_line_daily\n WHERE service_date BETWEEN $__timeFrom()::date AND $__timeTo()::date\n   AND source = '$source'\n   AND comunidad = '$comunidad'\n   AND provincia LIKE ANY (ARRAY[${provincia:sqlstring}])\n   AND linea LIKE ANY (ARRAY[${linea:sqlstring}])\n ORDER BY 1\n",
           "sql": {
             "columns": [
               {
@@ -476,7 +501,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "\nSELECT linea AS \"Linea\",\n       round(sum(retraso_medio_s * paradas_con_retraso)\n             / NULLIF(sum(paradas_con_retraso), 0), 0)              AS \"Retraso medio (s)\",\n       round(100.0 * sum(paradas_puntuales)\n             / NULLIF(sum(paradas_con_retraso), 0), 1)              AS \"Puntualidad (%)\",\n       max(retraso_p90_s)::int                                     AS \"P90 (s)\",\n       sum(trenes)                                                 AS \"Trenes\"\n  FROM analytics.mv_line_daily\n WHERE service_date BETWEEN $__timeFrom()::date AND $__timeTo()::date\n   AND source = '$source'\n   AND nucleo_id = '$nucleo'\n   AND linea LIKE ANY (ARRAY[${linea:sqlstring}])\n GROUP BY linea\n ORDER BY 2 DESC\n",
+          "rawSql": "\nSELECT linea AS \"Linea\",\n       round(sum(retraso_medio_s * paradas_con_retraso)\n             / NULLIF(sum(paradas_con_retraso), 0), 0)              AS \"Retraso medio (s)\",\n       round(100.0 * sum(paradas_puntuales)\n             / NULLIF(sum(paradas_con_retraso), 0), 1)              AS \"Puntualidad (%)\",\n       max(retraso_p90_s)::int                                     AS \"P90 (s)\",\n       sum(trenes)                                                 AS \"Trenes\"\n  FROM analytics.mv_line_daily\n WHERE service_date BETWEEN $__timeFrom()::date AND $__timeTo()::date\n   AND source = '$source'\n   AND comunidad = '$comunidad'\n   AND provincia LIKE ANY (ARRAY[${provincia:sqlstring}])\n   AND linea LIKE ANY (ARRAY[${linea:sqlstring}])\n GROUP BY linea\n ORDER BY 2 DESC\n",
           "sql": {
             "columns": [
               {
@@ -530,7 +555,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "\nSELECT hora AS \"Hora\",\n       linea AS \"Linea\",\n       round(sum(retraso_medio_s * paradas_con_retraso)\n             / NULLIF(sum(paradas_con_retraso), 0), 0) AS \"Retraso medio (s)\"\n  FROM analytics.mv_line_hour\n WHERE service_date BETWEEN $__timeFrom()::date AND $__timeTo()::date\n   AND source = '$source'\n   AND nucleo_id = '$nucleo'\n   AND linea LIKE ANY (ARRAY[${linea:sqlstring}])\n GROUP BY hora, linea\n ORDER BY hora, linea\n",
+          "rawSql": "\nSELECT hora AS \"Hora\",\n       linea AS \"Linea\",\n       round(sum(retraso_medio_s * paradas_con_retraso)\n             / NULLIF(sum(paradas_con_retraso), 0), 0) AS \"Retraso medio (s)\"\n  FROM analytics.mv_line_hour\n WHERE service_date BETWEEN $__timeFrom()::date AND $__timeTo()::date\n   AND source = '$source'\n   AND comunidad = '$comunidad'\n   AND provincia LIKE ANY (ARRAY[${provincia:sqlstring}])\n   AND linea LIKE ANY (ARRAY[${linea:sqlstring}])\n GROUP BY hora, linea\n ORDER BY hora, linea\n",
           "sql": {
             "columns": [
               {
@@ -626,7 +651,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "\nSELECT estacion                                                    AS \"Estacion\",\n       round(sum(retraso_medio_s * paradas_con_retraso)\n             / NULLIF(sum(paradas_con_retraso), 0), 0)              AS \"Retraso medio (s)\",\n       max(retraso_max_s)                                          AS \"Peor retraso (s)\",\n       sum(paradas_observadas)                                     AS \"Observaciones\"\n  FROM analytics.mv_station_daily\n WHERE service_date BETWEEN $__timeFrom()::date AND $__timeTo()::date\n   AND source = '$source'\n   AND nucleo_id = '$nucleo'\n GROUP BY estacion\nHAVING sum(paradas_observadas) >= 20\n ORDER BY 2 DESC\n LIMIT 15\n",
+          "rawSql": "\nSELECT estacion                                                    AS \"Estacion\",\n       round(sum(retraso_medio_s * paradas_con_retraso)\n             / NULLIF(sum(paradas_con_retraso), 0), 0)              AS \"Retraso medio (s)\",\n       max(retraso_max_s)                                          AS \"Peor retraso (s)\",\n       sum(paradas_observadas)                                     AS \"Observaciones\"\n  FROM analytics.mv_station_daily\n WHERE service_date BETWEEN $__timeFrom()::date AND $__timeTo()::date\n   AND source = '$source'\n   AND comunidad = '$comunidad'\n   AND provincia LIKE ANY (ARRAY[${provincia:sqlstring}])\n GROUP BY estacion\nHAVING sum(paradas_observadas) >= 20\n ORDER BY 2 DESC\n LIMIT 15\n",
           "sql": {
             "columns": [
               {
