@@ -70,12 +70,23 @@
           "uid": "rodalies-pg"
         },
         "query": "SELECT DISTINCT linea FROM analytics.mv_line_daily WHERE nucleo_id = '$nucleo' AND source = '$source' ORDER BY 1",
-        "refresh": 2,
+        "refresh": 1,
         "current": {
-          "text": "All",
-          "value": "$__all"
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ],
+          "selected": true
         },
-        "options": [],
+        "options": [
+          {
+            "text": "All",
+            "value": "$__all",
+            "selected": true
+          }
+        ],
         "includeAll": true,
         "allValue": "%",
         "multi": true
