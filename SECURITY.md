@@ -27,4 +27,6 @@ datos personales ni credenciales de terceros.
 
 ## Reportar un problema
 
-Escribe a alejandroabadal31@gmail.com en lugar de abrir una incidencia publica.
+Usa el aviso privado de GitHub (*Security -> Report a vulnerability*) en lugar
+de abrir una incidencia publica. Para cualquier otra cosa, las incidencias del
+repositorio valen.
