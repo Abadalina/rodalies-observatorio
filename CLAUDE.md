@@ -46,7 +46,8 @@ Renfe en un VPS, cada 60 segundos, sin intervencion.**
 | Ruta | `/home/alex/rodalies-observatorio` |
 | Repositorio | https://github.com/Abadalina/rodalies-observatorio (**publico**) |
 | Servicios | db, ingestor, api, grafana. Todos con `restart: unless-stopped` |
-| Copias | `scripts/backup.sh` en cron diario a las 03:30 |
+| Copias | `scripts/backup.sh` en cron diario a las 03:30, retencion 14 dias |
+| Copias fuera del servidor | `C:\Users\Alex\Backups\rodalies\` en el portatil |
 
 ### Comprobado ejecutandolo, no leyendolo
 
