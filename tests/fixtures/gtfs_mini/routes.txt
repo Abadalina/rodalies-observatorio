@@ -1,0 +1,3 @@
+route_id,route_short_name,route_long_name,route_type,route_color,route_text_color                    
+51T0001R2N,R2N  ,Aeroport                                -Macanet-Massanes                        ,2,00A94F,FFFFFF
+10T0001C1  ,C1  ,Principe Pio                            -Aeropuerto-T4                           ,2,75B6E0,FFFFFF

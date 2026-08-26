@@ -1,0 +1,431 @@
+{
+ "header": {
+  "gtfsRealtimeVersion": "2.0",
+  "timestamp": "1787664316"
+ },
+ "entity": [
+  {
+   "id": "AVISO_509501",
+   "alert": {
+    "activePeriod": [
+     {
+      "start": "1787647980"
+     }
+    ],
+    "informedEntity": [
+     {
+      "routeId": "10T0099C3"
+     },
+     {
+      "routeId": "10T0033C3"
+     },
+     {
+      "routeId": "10T0100C3"
+     },
+     {
+      "routeId": "10T0029C3"
+     },
+     {
+      "routeId": "10T0007C3"
+     },
+     {
+      "routeId": "10T0118C3"
+     },
+     {
+      "routeId": "10T0030C3"
+     },
+     {
+      "routeId": "10T0034C3"
+     },
+     {
+      "routeId": "10T0117C3"
+     },
+     {
+      "routeId": "10T0008C3"
+     },
+     {
+      "routeId": "10T0014C4a"
+     },
+     {
+      "routeId": "10T0013C4a"
+     },
+     {
+      "routeId": "10T0016C4b"
+     },
+     {
+      "routeId": "10T0015C4b"
+     }
+    ],
+    "descriptionText": {
+     "translation": [
+      {
+       "text": "#MadC3 #MadC4 Por obras de mejora en la infraestructura, el túnel de Sol quedará sin servicio durante los fines de semana del 29-30 de agosto y 5-6 de septiembre. Además, la estación de Sol permanecerá cerrada.",
+       "language": "es"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "AVISO_508409",
+   "alert": {
+    "activePeriod": [
+     {
+      "start": "1787044800"
+     }
+    ],
+    "informedEntity": [
+     {
+      "routeId": "10T0042C8"
+     },
+     {
+      "routeId": "10T0044C8"
+     },
+     {
+      "routeId": "10T0046C8"
+     },
+     {
+      "routeId": "10T0090C8"
+     },
+     {
+      "routeId": "10T0040C8"
+     },
+     {
+      "routeId": "10T0041C8"
+     },
+     {
+      "routeId": "10T0089C8"
+     },
+     {
+      "routeId": "10T0043C8"
+     },
+     {
+      "routeId": "10T0045C8"
+     },
+     {
+      "routeId": "10T0069C8"
+     },
+     {
+      "routeId": "10T0039C8"
+     },
+     {
+      "routeId": "10T0070C8"
+     }
+    ],
+    "descriptionText": {
+     "translation": [
+      {
+       "text": "#MadC8 Por obras de mejora en la infraestructura, del 22 de agosto al 5 de septiembre, los trenes no prestan servicio entre Cercedilla y Los Molinos. Se dispone de un servicio especial de autobuses entre estas estaciones. ",
+       "language": "es"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "AVISO_503244",
+   "alert": {
+    "activePeriod": [
+     {
+      "start": "1784891520"
+     }
+    ],
+    "informedEntity": [
+     {
+      "routeId": "10T0031C2"
+     },
+     {
+      "routeId": "10T0020C2"
+     },
+     {
+      "routeId": "10T0037C2"
+     },
+     {
+      "routeId": "10T0038C2"
+     },
+     {
+      "routeId": "10T0049C2"
+     },
+     {
+      "routeId": "10T0005C2"
+     },
+     {
+      "routeId": "10T0082C2"
+     },
+     {
+      "routeId": "10T0084C2"
+     },
+     {
+      "routeId": "10T0032C2"
+     },
+     {
+      "routeId": "10T0081C2"
+     },
+     {
+      "routeId": "10T0006C2"
+     },
+     {
+      "routeId": "10T0019C2"
+     },
+     {
+      "routeId": "10T0083C2"
+     },
+     {
+      "routeId": "10T0050C2"
+     },
+     {
+      "routeId": "10T0053C7"
+     },
+     {
+      "routeId": "10T0079C7"
+     },
+     {
+      "routeId": "10T0057C7"
+     },
+     {
+      "routeId": "10T0059C7"
+     },
+     {
+      "routeId": "10T0080C7"
+     },
+     {
+      "routeId": "10T0060C7"
+     },
+     {
+      "routeId": "10T0073C7"
+     },
+     {
+      "routeId": "10T0051C7"
+     },
+     {
+      "routeId": "10T0054C7"
+     },
+     {
+      "routeId": "10T0058C7"
+     },
+     {
+      "routeId": "10T0074C7"
+     },
+     {
+      "routeId": "10T0052C7"
+     },
+     {
+      "routeId": "10T0042C8"
+     },
+     {
+      "routeId": "10T0044C8"
+     },
+     {
+      "routeId": "10T0046C8"
+     },
+     {
+      "routeId": "10T0090C8"
+     },
+     {
+      "routeId": "10T0040C8"
+     },
+     {
+      "routeId": "10T0041C8"
+     },
+     {
+      "routeId": "10T0089C8"
+     },
+     {
+      "routeId": "10T0043C8"
+     },
+     {
+      "routeId": "10T0045C8"
+     },
+     {
+      "routeId": "10T0069C8"
+     },
+     {
+      "routeId": "10T0039C8"
+     },
+     {
+      "routeId": "10T0070C8"
+     },
+     {
+      "routeId": "10T0077C10"
+     },
+     {
+      "routeId": "10T0075C10"
+     },
+     {
+      "routeId": "10T0063C10"
+     },
+     {
+      "routeId": "10T0071C10"
+     },
+     {
+      "routeId": "10T0004C10"
+     },
+     {
+      "routeId": "10T0093C10"
+     },
+     {
+      "routeId": "10T0078C10"
+     },
+     {
+      "routeId": "10T0064C10"
+     },
+     {
+      "routeId": "10T0076C10"
+     },
+     {
+      "routeId": "10T0072C10"
+     },
+     {
+      "routeId": "10T0094C10"
+     },
+     {
+      "routeId": "10T0003C10"
+     }
+    ],
+    "descriptionText": {
+     "translation": [
+      {
+       "text": "#MadC2 #MadC7 #MadC8 #MadC10 Por obras de mejora en la infraestructura, del 1 al 28 de agosto, se reajusta el servicio de trenes. En la línea C-2, los trenes circulan por vía CIVIS, Guadalajara-Chamartín-Atocha. En la línea C-7, los trenes no prestan servicio entre Atocha y Nuevos Ministerios. En la línea C-8a/C-8b, los trenes en ambos sentidos, inician y finalizan en Atocha. Y, en la línea C-10, los trenes en ambos sentidos, inician y finalizan en Delicias.",
+       "language": "es"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "AVISO_483553",
+   "alert": {
+    "activePeriod": [
+     {
+      "start": "1774611420"
+     }
+    ],
+    "informedEntity": [
+     {
+      "routeId": "10T0111C9"
+     },
+     {
+      "routeId": "10T0114C9"
+     },
+     {
+      "routeId": "10T0025C9"
+     },
+     {
+      "routeId": "10T0112C9"
+     },
+     {
+      "routeId": "10T0026C9"
+     },
+     {
+      "routeId": "10T0113C9"
+     }
+    ],
+    "descriptionText": {
+     "translation": [
+      {
+       "text": "#MadC9 Por obras de reforma integral en la línea C-9, se encuentra suspendido el servicio de trenes entre las estaciones de Cercedilla-Puerto de Navacerrada-Los Cotos. Se ha establecido un servicio especial de autobuses con reserva de plaza.",
+       "language": "es"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "AVISO_467462",
+   "alert": {
+    "activePeriod": [
+     {
+      "start": "1765528080"
+     }
+    ],
+    "informedEntity": [
+     {
+      "routeId": "10T0042C8"
+     },
+     {
+      "routeId": "10T0044C8"
+     },
+     {
+      "routeId": "10T0046C8"
+     },
+     {
+      "routeId": "10T0090C8"
+     },
+     {
+      "routeId": "10T0040C8"
+     },
+     {
+      "routeId": "10T0041C8"
+     },
+     {
+      "routeId": "10T0089C8"
+     },
+     {
+      "routeId": "10T0043C8"
+     },
+     {
+      "routeId": "10T0045C8"
+     },
+     {
+      "routeId": "10T0069C8"
+     },
+     {
+      "routeId": "10T0039C8"
+     },
+     {
+      "routeId": "10T0070C8"
+     },
+     {
+      "routeId": "10T0111C9"
+     },
+     {
+      "routeId": "10T0114C9"
+     },
+     {
+      "routeId": "10T0025C9"
+     },
+     {
+      "routeId": "10T0112C9"
+     },
+     {
+      "routeId": "10T0026C9"
+     },
+     {
+      "routeId": "10T0113C9"
+     }
+    ],
+    "descriptionText": {
+     "translation": [
+      {
+       "text": "#MadC9 Debido a las obras que se están realizando en la línea C-9, los aseos públicos de la estación de Cercedilla permanecen temporalmente inoperativos. ",
+       "language": "es"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "INFO_509484",
+   "alert": {
+    "activePeriod": [
+     {
+      "start": "1787634840"
+     }
+    ],
+    "informedEntity": [
+     {
+      "stopId": "37010"
+     }
+    ],
+    "descriptionText": {
+     "translation": [
+      {
+       "text": "La estación de Las Margaritas, en estos momentos, se encuentra inaccesible.",
+       "language": "es"
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

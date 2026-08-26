@@ -1,0 +1,4 @@
+stop_id,stop_name,stop_lat,stop_lon,wheelchair_boarding
+71801,Barcelona Sants,41.3792,2.1400,1
+71802,Passeig de Gracia,41.3917,2.1650,1
+79300,Macanet-Massanes,41.7639,2.7300,2

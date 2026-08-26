@@ -1,0 +1,4 @@
+route_id,service_id,trip_id,trip_headsign,wheelchair_accessible,block_id,shape_id
+51T0001R2N,5135M,5135M12345R2N,Macanet       ,1,5135M12345,51_R2N
+51T0001R2N,5136X,5136X12346R2N,Macanet       ,1,5136X12346,51_R2N
+10T0001C1,1035M,1035M19799C1,       ,1,1035M19799,10_C1
