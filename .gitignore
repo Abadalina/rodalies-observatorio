@@ -1,0 +1,39 @@
+# Secretos y configuracion local
+reference/private/
+.env
+.env.local
+
+# Datos: el historico vive en el volumen de Postgres, no en el repositorio.
+# Se exceptua la muestra sintetica que usa el notebook.
+data/*
+!data/sample/
+data/sample/*
+!data/sample/*.csv.gz
+backups/
+
+# Capturas crudas del feed (las de los tests si se versionan, ver mas abajo)
+*.zip
+*.pb
+!tests/fixtures/*.pb
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Editores y sistema
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

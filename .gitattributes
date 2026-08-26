@@ -1,0 +1,27 @@
+# Finales de linea normalizados a LF en el repositorio.
+#
+# Sin esto, Git convierte a CRLF al clonar en Windows y los scripts de shell
+# fallan en el servidor con `bad interpreter: /bin/bash^M`. Es un fallo que solo
+# aparece al desplegar, que es el peor momento para descubrirlo.
+* text=auto eol=lf
+
+# Estos tienen que ser LF si o si: se ejecutan en Linux.
+*.sh            text eol=lf
+Dockerfile      text eol=lf
+*.yml           text eol=lf
+*.yaml          text eol=lf
+*.sql           text eol=lf
+
+# PowerShell se queda en CRLF, que es lo suyo en Windows.
+*.ps1           text eol=crlf
+
+# Binarios: que Git no los toque.
+*.pb            binary
+*.gz            binary
+*.zip           binary
+*.docx          binary
+*.png           binary
+*.jpg           binary
+
+# El cuaderno cuenta como texto, pero sin normalizar nada por dentro.
+*.ipynb         text eol=lf

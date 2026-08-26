@@ -1,0 +1,66 @@
+[project]
+name = "rodalies-observatorio"
+version = "1.0.0"
+description = "Observatorio de puntualidad de Rodalies: captura continua de GTFS-Realtime, PostgreSQL, Grafana y API"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [{ name = "Alejandro Abadal Goula", email = "alejandroabadal31@gmail.com" }]
+
+dependencies = [
+    "psycopg[binary]>=3.2,<4",
+    "pydantic-settings>=2.6,<3",
+    "requests>=2.32,<3",
+    "gtfs-realtime-bindings>=1.0,<2",
+]
+
+[project.optional-dependencies]
+api = ["fastapi>=0.115,<1", "uvicorn[standard]>=0.32,<1", "psycopg_pool>=3.2,<4"]
+analysis = ["pandas>=2.2,<3", "numpy>=2,<3", "matplotlib>=3.9,<4", "jupyter>=1.1,<2", "pyarrow>=18,<22"]
+dev = [
+    "mypy>=1.13,<2",
+    "pytest>=8,<10",
+    "pytest-cov>=6,<8",
+    "ruff>=0.8,<1",
+    "httpx>=0.27",
+    "types-requests>=2.32,<3",
+]
+
+[project.scripts]
+rodalies = "rodalies.cli:main"
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+addopts = "-ra --strict-markers --cov=rodalies --cov-report=term-missing --cov-fail-under=65"
+testpaths = ["tests"]
+markers = ["integration: requiere una base de datos PostgreSQL (RODALIES_TEST_DATABASE_URL)"]
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "C4", "SIM"]
+ignore = ["B008"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+packages = ["rodalies"]
+mypy_path = "src"
+# psycopg_pool y las bindings de GTFS no publican tipos completos.
+[[tool.mypy.overrides]]
+module = ["psycopg_pool.*", "google.transit.*", "google.protobuf.*"]
+ignore_missing_imports = true
+
+[tool.coverage.run]
+source = ["rodalies"]
+omit = ["*/__main__.py"]
