@@ -13,6 +13,26 @@ observacion en PostgreSQL. Encima, una capa analitica en SQL responde a las tres
 preguntas que importan: **que linea, que estacion y que franja horaria acumulan
 retraso de verdad**.
 
+## Enfoque: Rodalies de Catalunya, con toda Espana de contexto
+
+El proyecto **esta enfocado a Rodalies de Catalunya**. Es lo que se analiza, lo
+que enseñan los paneles por defecto y lo que da sentido a la pregunta.
+
+Pero **captura los quince nucleos de Cercanias de Espana**, y lo hace por una
+razon que no tiene vuelta atras: lo que no se capture hoy no existira nunca. El
+almacenamiento cuesta unos 27 GB al ano; agosto de 2026 solo pasa una vez.
+
+Eso convierte una pregunta local en una comparativa: no solo *"que linea de
+Rodalies va peor"*, sino **"¿va Rodalies peor que Cercanias de Madrid?"**. Los
+datos se filtran por **comunidad autonoma y provincia**, no solo por nucleo,
+porque un nucleo es una division interna de Renfe y una comunidad la entiende
+cualquiera.
+
+| Alcance | Que se hace con el |
+|---|---|
+| **Rodalies de Catalunya** | El analisis, los paneles por defecto, la narrativa |
+| **Los otros catorce nucleos** | Se capturan y se guardan; disponibles para comparar |
+
 ---
 
 ## Verlo funcionando en un comando
@@ -64,7 +84,10 @@ cada dia que no corre es un dia que no se recupera.
 ## Que hace
 
 - **Captura continua** de los tres feeds GTFS-Realtime de Renfe (circulaciones,
-  incidencias y posiciones), con filtrado por nucleo y tolerancia a fallos.
+  incidencias y posiciones) para toda Espana, con tolerancia a fallos.
+- **Territorio en cada estacion**: provincia y comunidad autonoma, del listado
+  oficial de Renfe donde existe e inferida por cercania donde no, siempre
+  marcando cual es cual.
 - **Historico propio en PostgreSQL**, particionado por mes, idempotente y con
   registro de cada consulta al feed, tambien de las fallidas.
 - **Analisis en SQL**: puntualidad, mediana y percentiles por linea, estacion y

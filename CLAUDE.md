@@ -86,26 +86,48 @@ credenciales estan en `reference/private/CREDENCIALES.md` (fuera de git).
 
 ## 4. La fuente de datos, ya verificada
 
-No hace falta volver a investigar esto. Comprobado el 25/08/2026 y revalidado
-el 26/08/2026:
+No hace falta volver a investigar esto. Comprobado el 25 y 26/08/2026:
 
 - **GTFS-Realtime**, sin clave ni registro:
   `https://gtfsrt.renfe.com/{trip_updates,alerts,vehicle_positions}.{json,pb}`
 - **GTFS estatico**:
   `https://ssl.renfe.com/ftransit/Fichero_CER_FOMENTO/fomento_transit.zip`
-- **Licencia: CC BY 4.0** (`license_id: CC-BY-4.0` en el catalogo CKAN).
-- Cubre los quince nucleos de Cercanias. **Rodalies Barcelona = nucleo `51`**,
-  que son los dos primeros caracteres del `trip_id` y del `route_id`.
-- El protobuf y el JSON son **el mismo dato**: `MessageToDict()` sobre el pb
-  produce exactamente la estructura del JSON. Hay un test que lo fija.
+- **Listado de estaciones** (provincia, poblacion, CP), en latin-1 y con punto y
+  coma: `https://ssl.renfe.com/ftransit/Fichero_estaciones/estaciones.csv`
+- **Licencia: CC BY 4.0** en todo el catalogo.
+- El protobuf y el JSON son **el mismo dato**: `MessageToDict()` sobre el pb da
+  la estructura del JSON. Hay un test que lo fija.
 - `trip_updates` **no aparece en el catalogo CKAN** aunque se publica. Por eso
   hay un trabajo diario de CI que lo vigila.
 
-Detalle completo y rarezas del fichero en `docs/FUENTE_DATOS.md`.
+### Alcance: se captura Espana, se analiza Catalunya
 
----
+**En produccion `RODALIES_NUCLEOS=all`**: los quince nucleos de Cercanias. El
+foco del proyecto sigue siendo **Rodalies de Catalunya** —es lo que enseñan los
+paneles por defecto y lo que sostiene la narrativa—, pero se guarda todo porque
+lo que no se capture hoy no existira nunca.
 
-## 5. Los seis fallos que solo aparecieron al ejecutar de verdad
+En el codigo el valor por defecto sigue siendo `51`: quien clone el repositorio
+captura solo Catalunya, que es lo que el proyecto dice ser. Produccion lo amplia
+en su `.env`.
+
+| Nucleo 51 (Catalunya) | Los quince nucleos |
+|---|---|
+| ~70 filas/minuto | ~213 filas/minuto |
+| ~9 GB al ano | ~27 GB al ano |
+| 40.638 trenes en el horario | 140.610 |
+
+Los filtros de los paneles son **comunidad autonoma y provincia**, no el nucleo:
+un nucleo es una division interna de Renfe (el 41 cubre Murcia y Alacant, y
+Rodalies llega a Zaragoza y Teruel).
+
+La provincia sale del listado oficial donde existe (1.027 de 1.162 estaciones) y
+se infiere por cercania donde no, **marcada en `gtfs.stop.geo_origen`**. La
+inferencia se valido al 90,9 %. Ver `docs/MODELO_DATOS.md`.
+
+Detalle completo y rarezas de los ficheros en `docs/FUENTE_DATOS.md`.
+
+## 5. Los ocho fallos que solo aparecieron al ejecutar de verdad
 
 Ninguno era detectable sin Docker y PostgreSQL corriendo. Todos corregidos,
 subidos a GitHub y desplegados el 26/08/2026. Sirven de aviso: **la verificacion
@@ -119,6 +141,8 @@ estatica tiene un techo**.
 | 4 | Variable `linea` sin resolver al cargar el panel | Estaba en `refresh: 2` (solo al cambiar el rango) |
 | 5 | `allValue` sin comillas SQL | Grafana inserta `allValue` **en crudo**, saltandose `:sqlstring`: llegaba `ARRAY[%]` |
 | 6 | La copia se verificaba despues de borrarla | El `pg_restore --list` corria sobre un fichero ya eliminado |
+| 7 | Con HTTP 304 la geografia no se resolvia nunca | El atajo del horario sin cambios devolvia antes de llegar a ella |
+| 8 | Al ampliar a toda Espana, el horario seguia filtrado por el nucleo 51 | Renfe respondia 304 y no se recargaba, pese a que el alcance habia cambiado |
 
 Del 3 aprendimos algo aplicable: **los dobles de prueba deben imitar lo que
 devuelve PostgreSQL de verdad**, fechas incluidas. Se comprobo que, con el

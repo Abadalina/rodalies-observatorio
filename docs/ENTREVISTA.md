@@ -23,6 +23,11 @@ noventa segundos, no cuenta.
 >
 > Lo interesante no es el codigo: es que **el dataset no lo tiene nadie mas**.
 > Cada dia que corre, vale mas.
+>
+> Y aunque el analisis se centra en Rodalies, capturo los quince nucleos de
+> Cercanias de Espana, porque lo que no captures hoy no existira nunca. Eso me
+> permite responder algo que no responde nadie: **si Rodalies va peor que
+> Cercanias de Madrid, y cuanto**.
 
 ---
 
@@ -70,6 +75,21 @@ tira datos.
 Hay un trabajo diario en la CI que descarga los tres feeds en los dos formatos y
 los pasa por el parser. Si algo cambia, me entero en menos de veinticuatro horas
 en vez de descubrirlo tres semanas despues mirando un panel vacio.
+
+**¿Por que capturas toda Espana si el proyecto va de Catalunya?**
+Porque la captura es irreversible y el analisis no. Filtrar al presentar lo
+cambio cuando quiera; recuperar un dia que no capture, no. Cuesta 27 GB al ano
+sobre un disco de 232. Y convierte una pregunta local en una comparativa que
+nadie mas puede hacer.
+
+**¿Como sabes en que provincia esta cada estacion?**
+El GTFS no lo dice. Renfe publica aparte un listado de estaciones con provincia
+y poblacion que cubre 1.027 de las 1.162; el resto lo infiero por cercania a la
+estacion etiquetada mas proxima. Valide esa inferencia dejando fuera cada
+estacion conocida y prediciendola con su vecina: acierta el 90,9 %, y los fallos
+estan en fronteras provinciales. Por eso cada fila lleva una marca de si el dato
+es oficial o inferido, y cualquier analisis serio puede excluir las inferidas.
+Un dato aproximado etiquetado es util; sin etiquetar, es una trampa.
 
 **¿Por que hay tres versiones del proyecto?**
 Escribi el proyecto entero dos veces, y luego lo unifique. La primera era mas

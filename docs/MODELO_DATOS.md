@@ -124,6 +124,29 @@ la idempotencia sale del modelo, no de codigo defensivo. Ademas es la clave de
 particionado (PostgreSQL exige que la incluya) y ahorra la columna de
 contador y su indice.
 
+## El territorio de cada estacion
+
+El GTFS no dice donde esta una estacion mas alla de sus coordenadas, y el nucleo
+de Cercanias **no es una unidad administrativa**: el 41 cubre Murcia y Alacant, y
+Rodalies llega hasta Zaragoza y Teruel. Para poder filtrar por comunidad autonoma
+y provincia, `gtfs.stop` lleva cuatro columnas mas.
+
+| Columna | De donde sale |
+|---|---|
+| `provincia`, `poblacion`, `codigo_postal` | [Listado oficial de estaciones de Renfe](https://ssl.renfe.com/ftransit/Fichero_estaciones/estaciones.csv) |
+| `comunidad` | De la provincia, con una tabla estatica (47 provincias, sin huecos) |
+| `geo_origen` | `oficial` o `inferida` |
+
+El listado oficial cubre 1.027 de las 1.162 estaciones del GTFS. Para las 135
+restantes se toma la provincia de la **estacion etiquetada mas cercana**, y la
+fila queda marcada como `inferida`.
+
+Esa inferencia se valido dejando fuera cada estacion oficial y prediciendola con
+su vecina: **acerto el 90,9 %**, y los fallos se concentran en fronteras
+provinciales. Es un dato util, no es oficial, y cualquier analisis que necesite
+rigor lo excluye con `WHERE geo_origen = 'oficial'`. La poblacion **nunca** se
+infiere: eso seria inventarsela.
+
 ## La capa analitica
 
 ```

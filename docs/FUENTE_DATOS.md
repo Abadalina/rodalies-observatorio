@@ -4,8 +4,12 @@ Documento de referencia sobre lo que publica Renfe, que se ha comprobado y que
 supuestos hace el proyecto. Es el documento que hay que releer el dia que la
 ingesta empiece a devolver cosas raras.
 
-**Verificado el 25 de agosto de 2026** ejecutando `scripts/check_source.py`
-contra los endpoints en produccion.
+**Verificado el 25 y el 26 de agosto de 2026** ejecutando
+`scripts/check_source.py` contra los endpoints en produccion.
+
+**Alcance capturado: los quince nucleos de Cercanias de Espana.** El analisis
+se centra en Rodalies de Catalunya (nucleo `51`), pero se guarda todo: lo que
+no se capture hoy no existira nunca.
 
 ---
 
@@ -30,6 +34,18 @@ incluido. La documentacion del portal indica que los avisos se actualizan cada
 > portal (si lo estan `alerts` y `vehicle_positions`), pero se publica igual y es
 > el feed que sostiene todo este proyecto. Por eso la CI lo comprueba a diario:
 > lo que no esta en un catalogo puede desaparecer sin previo aviso.
+
+### Listado de estaciones (provincia y poblacion)
+
+`https://ssl.renfe.com/ftransit/Fichero_estaciones/estaciones.csv`
+
+CSV en **latin-1 y separado por punto y coma**, con 1.040 estaciones. Aporta lo
+que el GTFS no trae: `PROVINCIA`, `POBLACION`, `CP` y una marca `CERCANIAS`.
+El campo `CODIGO` casa con el `stop_id` del GTFS.
+
+Cubre 1.027 estaciones con provincia utilizable (algunas figuran como
+`DESCONOCIDO` y se descartan). Las que faltan se completan por cercania, ver
+`docs/MODELO_DATOS.md`.
 
 ### Horario programado (GTFS estatico)
 

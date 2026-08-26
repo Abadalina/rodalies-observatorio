@@ -219,3 +219,44 @@ compense a uno retrasado, lo que no le pasa a ningun viajero. La positiva mide l
 demora pero deja de ser la media de la distribucion. Publicar solo una obliga a
 elegir que se esconde; publicar las dos obliga a decir cual se usa, que es lo
 honesto.
+
+---
+
+## 16. Capturar toda Espana, analizar Catalunya
+
+**Decision.** `RODALIES_NUCLEOS=all` en produccion, pero paneles, narrativa y
+analisis centrados en Rodalies de Catalunya.
+
+**Alternativa descartada.** Capturar solo el nucleo 51, que es lo que el proyecto
+hizo durante sus primeras horas de vida.
+
+**Por que.** La captura es irreversible y el analisis no. Filtrar al presentar se
+puede cambiar cuando se quiera; recuperar un dia que no se capturo, no. El coste
+son unos 27 GB al ano frente a 9, sobre un disco de 232 GB: mas de siete anos de
+margen.
+
+Y hay una ganancia que no es solo de volumen. Con un solo nucleo, la pregunta es
+*"que linea de Rodalies va peor"*. Con los quince, es **"va Rodalies peor que
+Cercanias de Madrid"**, que es una pregunta que nadie mas puede responder porque
+nadie mas tiene la serie.
+
+**Coste asumido.** El horario completo pasa de 40.638 a 140.610 trenes y de
+504.000 a 1,9 millones de paradas programadas. La carga diaria pasa de 6 a 14
+segundos. Irrelevante.
+
+---
+
+## 17. Filtrar por territorio, no solo por nucleo
+
+**Decision.** Cada estacion lleva provincia y comunidad autonoma, y los paneles
+filtran por ahi.
+
+**Por que.** El nucleo es una division interna de Renfe: no se corresponde con
+ninguna frontera administrativa. El 41 cubre Murcia y Alacant a la vez, y
+Rodalies llega hasta Zaragoza y Teruel. Ademas, en una entrevista "comunidad
+autonoma" se entiende sin explicar nada y "nucleo 51" no.
+
+**Coste.** El listado oficial de Renfe no cubre todas las estaciones, asi que un
+12 % lleva la provincia inferida por cercania. Se marca en `geo_origen` en vez de
+disimularlo: un dato aproximado etiquetado es util; sin etiquetar, es una trampa.
+
