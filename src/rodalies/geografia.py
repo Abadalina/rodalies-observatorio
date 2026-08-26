@@ -7,9 +7,10 @@ Pero Renfe publica aparte un listado de estaciones con provincia y poblacion:
 
 De sus 1.027 estaciones con provincia utilizable, 669 coinciden con un stop_id
 del GTFS: un 57,6 % de las 1.162. Para el resto se infiere la provincia por
-cercania a la estacion etiquetada mas proxima, y **se marca** como inferida: una validacion dejando fuera cada estacion y prediciendola con su
-vecina acerto el 90,9 % de las veces, asi que el dato es util pero no es oficial
-y quien analice debe poder distinguirlo.
+cercania a la estacion etiquetada mas proxima, y **se marca** como inferida:
+una validacion dejando fuera cada estacion y prediciendola con su vecina
+acerto el 90,9 % de las veces, asi que el dato es util pero no es oficial y
+quien analice debe poder distinguirlo.
 
 La comunidad autonoma sale de la provincia con una tabla estatica: es una
 correspondencia administrativa fija, no un dato que haya que descargar.
