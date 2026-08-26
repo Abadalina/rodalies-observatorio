@@ -23,38 +23,66 @@ de datos a partir de noviembre. Cuando haya que elegir entre dos soluciones
 validas, gana **la mas demostrable y explicable en una entrevista**, no la mas
 ingeniosa.
 
-## 2. Lo unico urgente
+## 2. Lo unico urgente, y ya esta hecho
 
-**Que el ingestor este capturando cuanto antes.** El valor del proyecto es la
-serie historica y cada dia sin capturar es un dia irrecuperable. Un ingestor feo
-corriendo hoy vale mas que uno elegante dentro de tres semanas.
+El valor del proyecto es la serie historica: cada dia sin capturar es un dia
+irrecuperable. **La captura arranco el 26/08/2026 y corre sola en un VPS.**
 
-A fecha de hoy **la captura real todavia no ha empezado**. Ese es el siguiente
-paso, y esta detallado en la seccion 5.
+Lo que queda ya no tiene reloj: capturas de pantalla, panel publico, dataset
+publicado. Todo eso puede esperar semanas sin coste. Lo que no puede esperar es
+que la captura se pare sin que nadie se entere; de ahi el panel de salud y las
+comprobaciones de calidad.
 
-**Decision del 26/08/2026: la captura va en un VPS, no en el portatil.** El
-portatil se suspende, se apaga y en octubre viaja a Barcelona; cada suspension
-seria un agujero en la serie. En el servidor, ademas, Docker es nativo y no
-hace falta WSL. Guia completa en `docs/DESPLIEGUE.md`.
+## 3. Estado actual: EN PRODUCCION Y CAPTURANDO
 
-## 3. Estado actual: que esta hecho y como se verifico
+**Desde el 26/08/2026 a las 15:59 (CEST) el sistema captura datos reales de
+Renfe en un VPS, cada 60 segundos, sin intervencion.**
 
-Todo el codigo esta escrito y verificado **excepto el arranque de los
-contenedores**, porque el equipo de Alex no tenia Docker instalado.
+| | |
+|---|---|
+| Servidor | `212.227.107.53` (IONOS, Ubuntu 24.04.4 LTS) |
+| Recursos | 4 nucleos, 7,7 GB RAM, 232 GB disco |
+| Acceso | `ssh alex@212.227.107.53` (clave ed25519, sin contrasena) |
+| Ruta | `/home/alex/rodalies-observatorio` |
+| Repositorio | https://github.com/Abadalina/rodalies-observatorio (**publico**) |
+| Servicios | db, ingestor, api, grafana. Todos con `restart: unless-stopped` |
+| Copias | `scripts/backup.sh` en cron diario a las 03:30 |
 
-| Comprobacion | Resultado | Como |
-|---|---|---|
-| Tests | 102 pasan, 16 omitidos | `pytest` (los omitidos son de integracion, necesitan PostgreSQL) |
-| Cobertura | 66 % | umbral de 65 % sin base de datos; en CI con integracion sube |
-| Estilo | limpio | `ruff check` y `ruff format --check` |
-| Tipado | limpio | `mypy --strict` sobre 22 modulos |
-| SQL | 4 migraciones validas | analizador real de PostgreSQL (`pglast`) |
-| Fuente en vivo | los 6 endpoints parsean | `python scripts/check_source.py` |
-| Cuaderno | 13 celdas se ejecutan | ejecucion directa de las celdas de codigo |
+### Comprobado ejecutandolo, no leyendolo
 
-**Lo que NUNCA se ha ejecutado:** `docker compose up`. Ni una sola vez. Todo lo
-relativo a contenedores, roles de base de datos y esquema esta verificado
-leyendo codigo y validando SQL, no ejecutandolo contra un PostgreSQL real.
+| Comprobacion | Resultado |
+|---|---|
+| Tests | 102 pasan, 16 omitidos (integracion) |
+| Cobertura | 66 % (umbral 65 sin base de datos) |
+| Estilo | `ruff check` y `ruff format --check` limpios |
+| Tipado | `mypy --strict` limpio sobre 22 modulos |
+| Migraciones | Las 5 aplicadas en PostgreSQL real |
+| Calidad de datos | Las 8 comprobaciones en OK |
+| API | `/salud` responde `ok` con los dos feeds al dia |
+| Paneles | Grafana devuelve las 12 lineas con datos |
+| Copias | Volcado verificado con `pg_restore --list`, 19 tablas |
+
+### Como se opera
+
+```
+Portatil (editar) -> git push -> GitHub -> git pull en el VPS
+```
+
+GitHub es la fuente de la verdad; el servidor solo consume. Detalle importante:
+
+- Cambios en **codigo o migraciones**: hace falta `docker compose up -d --build`,
+  porque viajan dentro de la imagen.
+- Cambios en **paneles de Grafana**: basta `git pull`, porque estan montados
+  como volumen y Grafana los recarga cada 30 s.
+
+Para ver los paneles sin exponer ningun puerto, tunel SSH desde el portatil:
+
+```powershell
+ssh -N -L 3000:localhost:3000 -L 8000:localhost:8000 alex@212.227.107.53
+```
+
+Grafana en <http://localhost:3000>, API en <http://localhost:8000/docs>. Las
+credenciales estan en `reference/private/CREDENCIALES.md` (fuera de git).
 
 ## 4. La fuente de datos, ya verificada
 
@@ -77,128 +105,59 @@ Detalle completo y rarezas del fichero en `docs/FUENTE_DATOS.md`.
 
 ---
 
-## 5. El siguiente paso: arrancar la captura
+## 5. Los seis fallos que solo aparecieron al ejecutar de verdad
 
-Hay dos caminos y **no dependen el uno del otro**. El del VPS es el que importa.
+Ninguno era detectable sin Docker y PostgreSQL corriendo. Todos corregidos,
+subidos a GitHub y desplegados el 26/08/2026. Sirven de aviso: **la verificacion
+estatica tiene un techo**.
 
-### Camino A (prioritario): el VPS
+| # | Fallo | Por que no se veia antes |
+|---|---|---|
+| 1 | `demora_media_s` duplicada en `mv_line_daily` y ausente en `mv_station_daily` | Error semantico, no sintactico: el analizador daba la sentencia por valida |
+| 2 | `huecos_serie_24h` en ERROR recien instalado | Contaba las horas anteriores al nacimiento de la serie |
+| 3 | `/salud` devolvia HTTP 500 | `JSONResponse` no serializa fechas; los tests usaban filas sin fechas |
+| 4 | Variable `linea` sin resolver al cargar el panel | Estaba en `refresh: 2` (solo al cambiar el rango) |
+| 5 | `allValue` sin comillas SQL | Grafana inserta `allValue` **en crudo**, saltandose `:sqlstring`: llegaba `ARRAY[%]` |
+| 6 | La copia se verificaba despues de borrarla | El `pg_restore --list` corria sobre un fichero ya eliminado |
 
-Es lo unico con reloj: cada dia sin capturar es un dia irrecuperable, y las
-entrevistas son en noviembre. No necesita el portatil para nada.
+Del 3 aprendimos algo aplicable: **los dobles de prueba deben imitar lo que
+devuelve PostgreSQL de verdad**, fechas incluidas. Se comprobo que, con el
+codigo anterior, el test corregido falla; si no falla, no prueba nada.
 
-Todo esta preparado y documentado en **`docs/DESPLIEGUE.md`**. Resumen:
+Del 5, la leccion util para cualquier panel futuro: si una variable usa
+`allValue`, las comillas van **dentro** del propio `allValue`.
+
+## 6. Diagnostico cuando algo falle
 
 ```bash
-# En el servidor (Ubuntu 24.04), como root
-sudo bash scripts/bootstrap-vps.sh alex     # usuario, docker, ufw, swap, logs
+ssh alex@212.227.107.53
+cd rodalies-observatorio
 
-# Ya como alex
-git clone <url-del-repo> ~/rodalies-observatorio
-cd ~/rodalies-observatorio
-bash scripts/generar-env.sh                 # contrasenas NUEVAS, no las locales
-docker compose up -d --build
-docker compose logs -f ingestor
+docker compose ps                                   # los cuatro en Up (healthy)
+docker compose exec -T ingestor rodalies check      # las 8 comprobaciones
+docker compose exec -T ingestor rodalies stats      # cuanto historico hay
+docker compose logs --since 10m ingestor            # que esta haciendo
+docker compose logs --since 10m db | grep ERROR     # consultas que fallan
 ```
 
-Servidor recomendado: Hetzner CX22 (~4 EUR/mes, 2 vCPU, 4 GB, 40 GB). Con solo
-Rodalies son ~70.000 filas al dia, unos 9 GB al ano: el disco da para tres o
-cuatro anos.
+**El log de PostgreSQL es el mejor sitio para depurar los paneles.** Los fallos 4
+y 5 se resolvieron ahi: Grafana mostraba un generico "No data", pero la base de
+datos decia exactamente `syntax error at or near "%"`.
 
-Los paneles se ven sin abrir ningun puerto, con un tunel SSH:
+Para inspeccionar como lo hace Grafana, con el rol de solo lectura:
 
-```powershell
-ssh -N -L 3000:localhost:3000 -L 8000:localhost:8000 alex@<ip>
+```bash
+RO=$(grep '^READONLY_PASSWORD=' .env | cut -d= -f2)
+docker compose exec -T -e PGPASSWORD=$RO db psql -U rodalies_lectura -d rodalies \
+  -c "SELECT * FROM analytics.mv_line_daily ORDER BY paradas_observadas DESC LIMIT 10;"
 ```
 
-**El repositorio es PRIVADO** (https://github.com/Abadalina/rodalies-observatorio),
-asi que en el servidor hace falta credencial para clonar. La via recomendada es
-una **clave de despliegue** de solo lectura; el procedimiento esta en la seccion
-3 de `docs/DESPLIEGUE.md`. El script de aprovisionamiento se copia con `scp`
-desde el portatil para no tener que autenticar nada antes de empezar.
+Con el tunel SSH abierto tambien se puede consultar la API de Grafana desde el
+portatil, que es como se confirmo que los paneles ya devolvian datos:
 
-### Camino B (puede esperar): Docker en el portatil
-
-Solo sirve para la demo local y para desarrollar paneles. Estado real de la
-maquina el 26/08/2026, comprobado sobre el sistema:
-
-- **Docker Desktop esta instalado y arrancado.** Instalacion por usuario, en
-  `C:\Users\Alex\AppData\Local\Programs\DockerDesktop\` (no en `Program Files`,
-  por eso no aparece donde se suele buscar). `resources\bin` ya esta en el PATH
-  persistente.
-- **Falta activar WSL**, y es el bloqueo real:
-
-  ```
-  Esta aplicacion requiere el componente opcional Subsistema de Windows para Linux.
-  Instalelo ejecutando: wsl.exe --install --no-distribution
-  Codigo de error: Wsl/WSL_E_WSL_OPTIONAL_COMPONENT_REQUIRED
-  ```
-
-- En Windows 10 **Home** no hay alternativa: sin Hyper-V, sin WSL2 no hay motor.
-  La interfaz de Docker Desktop puede estar abierta y no arrancar nada.
-
-Para desbloquearlo, en PowerShell **como administrador**, y despues **reiniciar**:
-
-```powershell
-wsl.exe --install --no-distribution
+```bash
+curl -s -u "admin:CLAVE" http://localhost:3000/api/dashboards/uid/rodalies-punt
 ```
-
-No hace falta instalar ninguna distribucion: Docker trae la suya
-(`docker-desktop`). Al volver, usar una terminal **nueva** y comprobar con
-`docker version`. Si sigue fallando, el problema es WSL y no el proyecto:
-`wsl -l -v` deberia listar `docker-desktop` en `Running`.
-
-Luego, la demo (datos sinteticos, sin credenciales ni internet):
-
-```powershell
-cd C:\Users\Alex\Desktop\proyecto\rodalies-observatorio
-docker compose -f docker-compose.demo.yml up -d --build
-```
-
-- Paneles: <http://localhost:3001> (`admin` / `admin`)
-- API: <http://localhost:8001/docs>
-
-### Que hay que ver para dar un arranque por bueno
-
-1. Logs del ingestor con lineas `trip_updates: N filas nuevas de M entidades`.
-2. `rodalies stats` con observaciones > 0.
-3. `rodalies check` sin ningun `ERROR` (los `AVISO` iniciales son normales).
-4. Grafana con datos en el panel "Rodalies - Puntualidad".
-5. `curl localhost:8000/salud` devolviendo 200.
-
-**Si se arranca de noche (00:00-05:00), el feed va vacio y no habra filas.** No
-es un fallo: no hay trenes. Comprobado el 26/08 a las 02:20, el feed devolvia
-cero paradas informadas.
-
-## 6. Fallos probables en ese primer arranque
-
-Estan ordenados por probabilidad. Ninguno se ha podido reproducir sin Docker.
-
-**"permission denied for materialized view mv_line_daily" en Grafana.**
-Grafana entra con el rol `rodalies_lectura`. La migracion `004_roles.sql` le da
-permiso explicito sobre las cuatro vistas materializadas, pero solo si esas
-vistas ya existian cuando corrio. Si aparece: `docker compose exec ingestor
-rodalies migrate` y comprobar en `psql` que el `GRANT` esta.
-
-**Grafana no conecta con la base.** El rol `rodalies_lectura` se crea sin poder
-iniciar sesion; es el ingestor quien le pone contrasena al arrancar, leyendo
-`RODALIES_READONLY_PASSWORD`. Si el ingestor no ha llegado a arrancar, Grafana
-no puede entrar. Orden correcto: primero el ingestor, luego Grafana.
-
-**El panel esta vacio pero la ingesta funciona.** Las vistas materializadas se
-refrescan cada 15 minutos, con un refresco inmediato tras la primera captura. Si
-aun asi esta vacio, forzarlo: `rodalies refresh --blocking`. Y revisar que la
-variable **Origen** del panel coincide (`renfe` en produccion, `synthetic` en la
-demo): es el error mas tonto y el mas frecuente.
-
-**El ingestor se reinicia en bucle.** Casi siempre es la configuracion: Pydantic
-valida al arrancar y aborta con un valor fuera de rango. El mensaje dice que
-campo. Mirar `docker compose logs ingestor`.
-
-**Puertos ocupados.** 5433, 8000 y 3000 en produccion; 5434, 8001 y 3001 en la
-demo. Se cambian por variables en `.env`.
-
-**El primer `load-gtfs` tarda.** Descarga 16 MB y carga ~500.000 filas de
-`stop_times`. Un minuto largo es normal.
 
 ## 7. Reglas que no se rompen
 
@@ -315,36 +274,31 @@ real en el indice.
 
 ### Lo que falta, en orden
 
-1. **Subir a GitHub.** Bloquea el VPS, porque ahi se clona. Falta `gh` y
-   autenticacion; los comandos exactos estan mas abajo.
-2. **VPS capturando**, siguiendo `docs/DESPLIEGUE.md`. Es lo unico urgente.
-3. **Copias de seguridad** automaticas (cron 03:30) y sacadas de la maquina.
-   Probar una restauracion al menos una vez.
-4. **Capturas de pantalla** de los paneles con datos reales, en `docs/img/`,
-   enlazadas desde el README. Mejor con una o dos semanas de datos.
-5. **Badge de CI**: el README dice `Abadalina`, poner el usuario real.
-6. **Panel publico** con dominio y proxy TLS (seccion 6 de `DESPLIEGUE.md`).
-7. **Publicar el conjunto de datos** con ficha, rango temporal, zona horaria y
+1. **Capturas de pantalla** de los paneles con datos reales, en `docs/img/`,
+   enlazadas desde el README. Mejor con una o dos semanas de datos: es lo
+   primero que mira un reclutador y ahora mismo los graficos aun estan flacos.
+2. **Vigilar la primera semana**: `rodalies check` cada dos o tres dias. Si
+   `ingesta_reciente` sale en ERROR, el historico esta perdiendo datos.
+3. **Comprobar que el cron de copias funciona**: mirar `~/backup.log` y que
+   aparezcan ficheros nuevos en `backups/`. Sacar alguna copia fuera del
+   servidor (`scp`) y probar una restauracion.
+4. **Panel publico** con dominio y proxy TLS (seccion 6 de `DESPLIEGUE.md`),
+   para tener una URL que enlazar en el curriculum.
+5. **Publicar el conjunto de datos** con ficha, rango temporal, zona horaria y
    atribucion a Renfe (CC BY 4.0). Sin datos sinteticos dentro.
-8. **Solo entonces**, con meses de historico: el modelo de prediccion.
+6. **Solo entonces**, con meses de historico: el modelo de prediccion.
 
-### Comandos de la subida
+### Credenciales
 
-```powershell
-winget install --id GitHub.cli          # si hace falta, con permisos de admin
-gh auth login                           # abre el navegador
-cd C:\Users\Alex\Desktop\proyecto\rodalies-observatorio
-gh repo create rodalies-observatorio --public --source=. --remote=origin --push
-```
+No estan en el repositorio ni pueden estarlo. Viven en dos sitios:
 
-Alternativa sin `gh`: crear el repositorio vacio en github.com y despues
+- **En el servidor**: `/home/alex/rodalies-observatorio/.env` (permisos 600).
+- **En el portatil**: `reference/private/CREDENCIALES.md`, que esta en
+  `.gitignore` junto con el resto de `reference/private/`.
 
-```powershell
-git remote add origin https://github.com/<usuario>/rodalies-observatorio.git
-git push -u origin main
-```
-
-Despues de subir, cambiar `Abadalina` por el usuario real en el badge del README.
+Si se pierden las del servidor, se pueden leer del `.env`. Si se pierde el
+`.env`, **no hay copia**: habria que regenerar contrasenas y recrear el volumen,
+lo que destruiria el historico. De ahi que las copias de seguridad importen.
 
 ## 12. Si necesitas retomar una conversacion
 
