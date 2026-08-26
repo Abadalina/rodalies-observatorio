@@ -316,7 +316,7 @@ real en el indice.
    Probar una restauracion al menos una vez.
 4. **Capturas de pantalla** de los paneles con datos reales, en `docs/img/`,
    enlazadas desde el README. Mejor con una o dos semanas de datos.
-5. **Badge de CI**: el README dice `USUARIO`, poner el usuario real.
+5. **Badge de CI**: el README dice `Abadalina`, poner el usuario real.
 6. **Panel publico** con dominio y proxy TLS (seccion 6 de `DESPLIEGUE.md`).
 7. **Publicar el conjunto de datos** con ficha, rango temporal, zona horaria y
    atribucion a Renfe (CC BY 4.0). Sin datos sinteticos dentro.
@@ -338,7 +338,7 @@ git remote add origin https://github.com/<usuario>/rodalies-observatorio.git
 git push -u origin main
 ```
 
-Despues de subir, cambiar `USUARIO` por el usuario real en el badge del README.
+Despues de subir, cambiar `Abadalina` por el usuario real en el badge del README.
 
 ## 12. Si necesitas retomar una conversacion
 

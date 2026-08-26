@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Prepara un Ubuntu recien creado para alojar el observatorio.
 #
-#   curl -fsSL https://raw.githubusercontent.com/USUARIO/rodalies-observatorio/main/scripts/bootstrap-vps.sh -o bootstrap.sh
+#   curl -fsSL https://raw.githubusercontent.com/Abadalina/rodalies-observatorio/main/scripts/bootstrap-vps.sh -o bootstrap.sh
 #   sudo bash bootstrap.sh alex
 #
 # Es idempotente: se puede volver a ejecutar sin romper nada. No clona el
@@ -10,14 +10,14 @@
 
 set -euo pipefail
 
-USUARIO="${1:-rodalies}"
+Abadalina="${1:-rodalies}"
 ZONA="Europe/Madrid"
 
 log() { printf '\n\033[36m==> %s\033[0m\n' "$*"; }
 aviso() { printf '\033[33m    %s\033[0m\n' "$*"; }
 
 if [[ $EUID -ne 0 ]]; then
-    echo "Ejecutalo como root:  sudo bash $0 $USUARIO" >&2
+    echo "Ejecutalo como root:  sudo bash $0 $Abadalina" >&2
     exit 1
 fi
 
@@ -37,24 +37,24 @@ CONF
 sed -i 's|^//Unattended-Upgrade::Automatic-Reboot .*|Unattended-Upgrade::Automatic-Reboot "false";|' \
     /etc/apt/apt.conf.d/50unattended-upgrades || true
 
-log "Usuario sin privilegios: $USUARIO"
-if ! id -u "$USUARIO" >/dev/null 2>&1; then
-    adduser --disabled-password --gecos "" "$USUARIO"
+log "Usuario sin privilegios: $Abadalina"
+if ! id -u "$Abadalina" >/dev/null 2>&1; then
+    adduser --disabled-password --gecos "" "$Abadalina"
     aviso "Creado sin contrasena: solo entra por clave SSH."
 else
     aviso "Ya existia, no se toca."
 fi
-usermod -aG sudo "$USUARIO"
+usermod -aG sudo "$Abadalina"
 
 # Hereda las claves SSH de root para no quedarse fuera del servidor.
 if [[ -f /root/.ssh/authorized_keys ]]; then
-    install -d -m 700 -o "$USUARIO" -g "$USUARIO" "/home/$USUARIO/.ssh"
-    install -m 600 -o "$USUARIO" -g "$USUARIO" \
-        /root/.ssh/authorized_keys "/home/$USUARIO/.ssh/authorized_keys"
-    log "Claves SSH copiadas a $USUARIO"
+    install -d -m 700 -o "$Abadalina" -g "$Abadalina" "/home/$Abadalina/.ssh"
+    install -m 600 -o "$Abadalina" -g "$Abadalina" \
+        /root/.ssh/authorized_keys "/home/$Abadalina/.ssh/authorized_keys"
+    log "Claves SSH copiadas a $Abadalina"
 else
     aviso "root no tiene authorized_keys. Copia tu clave ANTES de cerrar SSH:"
-    aviso "  ssh-copy-id $USUARIO@<ip-del-servidor>"
+    aviso "  ssh-copy-id $Abadalina@<ip-del-servidor>"
 fi
 
 log "Docker Engine desde el repositorio oficial"
@@ -72,7 +72,7 @@ https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_C
 else
     aviso "Docker ya estaba instalado."
 fi
-usermod -aG docker "$USUARIO"
+usermod -aG docker "$Abadalina"
 systemctl enable --now docker
 
 log "Rotacion de logs de contenedor"
@@ -110,14 +110,14 @@ fi
 log "Listo"
 cat <<RESUMEN
 
-  Usuario:     $USUARIO  (sudo y docker)
+  Usuario:     $Abadalina  (sudo y docker)
   Zona:        $ZONA
   Cortafuegos: solo SSH
   Docker:      $(docker --version)
 
-  Siguiente paso, YA COMO $USUARIO (no como root):
+  Siguiente paso, YA COMO $Abadalina (no como root):
 
-    ssh $USUARIO@<ip-del-servidor>
+    ssh $Abadalina@<ip-del-servidor>
     git clone <url-del-repo> ~/rodalies-observatorio
     cd ~/rodalies-observatorio
     bash scripts/generar-env.sh        # crea .env con contrasenas nuevas

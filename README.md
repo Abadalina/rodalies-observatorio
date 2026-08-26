@@ -1,6 +1,6 @@
 # Observatorio de puntualidad de Rodalies
 
-[![CI](https://github.com/USUARIO/rodalies-observatorio/actions/workflows/ci.yml/badge.svg)](https://github.com/USUARIO/rodalies-observatorio/actions/workflows/ci.yml)
+[![CI](https://github.com/Abadalina/rodalies-observatorio/actions/workflows/ci.yml/badge.svg)](https://github.com/Abadalina/rodalies-observatorio/actions/workflows/ci.yml)
 [![Licencia: MIT](https://img.shields.io/badge/licencia-MIT-blue.svg)](LICENSE)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue.svg)](pyproject.toml)
 [![mypy: strict](https://img.shields.io/badge/mypy-strict-2C7A54.svg)](pyproject.toml)

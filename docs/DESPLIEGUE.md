@@ -50,7 +50,7 @@ sudo bash /tmp/repo/scripts/bootstrap-vps.sh alex
 O sin clonar nada todavia:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/USUARIO/rodalies-observatorio/main/scripts/bootstrap-vps.sh -o bootstrap.sh
+curl -fsSL https://raw.githubusercontent.com/Abadalina/rodalies-observatorio/main/scripts/bootstrap-vps.sh -o bootstrap.sh
 sudo bash bootstrap.sh alex
 ```
 
