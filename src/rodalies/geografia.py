@@ -5,7 +5,7 @@ Pero Renfe publica aparte un listado de estaciones con provincia y poblacion:
 
     https://ssl.renfe.com/ftransit/Fichero_estaciones/estaciones.csv
 
-De sus 1.027 estaciones con provincia utilizable, 669 coinciden con un `stop_id`
+De sus 1.027 estaciones con provincia utilizable, 669 coinciden con un stop_id
 del GTFS: un 57,6 % de las 1.162. Para el resto se infiere la provincia por
 cercania a la estacion etiquetada mas proxima, y **se marca** como inferida: una validacion dejando fuera cada estacion y prediciendola con su
 vecina acerto el 90,9 % de las veces, asi que el dato es util pero no es oficial
