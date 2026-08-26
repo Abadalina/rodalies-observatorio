@@ -278,37 +278,67 @@ pip install -e ".[dev,api,analysis]"
   levantar la demo y trastear con los paneles.
 - Antes de cualquier commit: `ruff format . && ruff check . && mypy && pytest`.
 
-## 11. Que hacer despues de que arranque
+## 11. Estado del repositorio y que sigue
 
-**Lo primero, y bloquea al VPS: el proyecto no es un repositorio git todavia.**
-Hay que subirlo a GitHub para poder clonarlo en el servidor.
+**Ya es un repositorio git** (`git init` el 26/08/2026) con **10 commits
+tematicos**, arbol limpio y nada pendiente de anadir:
 
-Al hacerlo hay una tension que el propio documento de portfolio de Alex senala:
-*"commits repartidos en el tiempo, no un volcado de un solo dia"*. Subir 86
-ficheros en un commit dice lo contrario de lo que interesa. Dos salidas honestas:
+```
+docs        documentacion tecnica, operativa y de portfolio
+chore(op)   despliegue, arranque y copias de seguridad
+feat        cuaderno exploratorio y muestra sintetica
+ci          estilo, tipado, integracion y vigilancia de la fuente
+test        bateria con capturas reales del feed
+feat        dashboards de Grafana provisionados
+feat(api)   API de solo lectura
+feat        parser GTFS-RT, fuentes y bucle continuo
+feat(db)    esquema particionado, analitica y calidad
+chore       estructura, licencia y configuracion
+```
 
-- Un commit inicial que reconozca lo que es (`estructura inicial del proyecto`)
-  y, a partir de ahi, commits reales conforme se opera y mejora.
-- O agrupar la subida en unos pocos commits tematicos (esquema, ingestor, API,
-  paneles, documentacion) que reflejen las piezas.
+**Los commits van SOLO a nombre de Alex.** Sin `Co-Authored-By`, sin menciones a
+herramientas. Es una preferencia explicita suya: respetarla en todo commit futuro.
 
-Lo que **no** hay que hacer es inventar fechas hacia atras: se nota y resta.
+Un `.gitattributes` fija LF en el repositorio. Sin el, clonar en Windows convierte
+los scripts a CRLF y fallan en el servidor con `bad interpreter: /bin/bash^M`,
+justo al desplegar.
 
-Despues, en este orden:
+Se comprobo antes de commitear que **no entra nada sensible**: `.env` y
+`reference/private/` (CV incluido) estan excluidos y no hay ninguna contrasena
+real en el indice.
 
-1. **VPS capturando**, siguiendo `docs/DESPLIEGUE.md`. Es lo unico urgente.
-2. **Copias de seguridad** automaticas (cron a las 03:30) y sacadas de la
-   maquina. Probar una restauracion al menos una vez.
-3. **Capturas de pantalla** de los paneles con datos reales, en `docs/img/`,
+### Lo que falta, en orden
+
+1. **Subir a GitHub.** Bloquea el VPS, porque ahi se clona. Falta `gh` y
+   autenticacion; los comandos exactos estan mas abajo.
+2. **VPS capturando**, siguiendo `docs/DESPLIEGUE.md`. Es lo unico urgente.
+3. **Copias de seguridad** automaticas (cron 03:30) y sacadas de la maquina.
+   Probar una restauracion al menos una vez.
+4. **Capturas de pantalla** de los paneles con datos reales, en `docs/img/`,
    enlazadas desde el README. Mejor con una o dos semanas de datos.
-4. **Badge de CI**: el README dice `USUARIO`, hay que poner el usuario real.
-5. **Panel publico** con dominio y proxy TLS (seccion 6 de `DESPLIEGUE.md`),
-   para tener una URL que enlazar en el curriculum.
-6. **Publicar el conjunto de datos** con ficha, rango temporal, zona horaria y
+5. **Badge de CI**: el README dice `USUARIO`, poner el usuario real.
+6. **Panel publico** con dominio y proxy TLS (seccion 6 de `DESPLIEGUE.md`).
+7. **Publicar el conjunto de datos** con ficha, rango temporal, zona horaria y
    atribucion a Renfe (CC BY 4.0). Sin datos sinteticos dentro.
-7. **Solo entonces**, con meses de historico: el modelo de prediccion. Es
-   propagacion sobre un grafo, no filas independientes, y hay que validarlo por
-   bloques temporales para no colar fuga de informacion.
+8. **Solo entonces**, con meses de historico: el modelo de prediccion.
+
+### Comandos de la subida
+
+```powershell
+winget install --id GitHub.cli          # si hace falta, con permisos de admin
+gh auth login                           # abre el navegador
+cd C:\Users\Alex\Desktop\proyecto\rodalies-observatorio
+gh repo create rodalies-observatorio --public --source=. --remote=origin --push
+```
+
+Alternativa sin `gh`: crear el repositorio vacio en github.com y despues
+
+```powershell
+git remote add origin https://github.com/<usuario>/rodalies-observatorio.git
+git push -u origin main
+```
+
+Despues de subir, cambiar `USUARIO` por el usuario real en el badge del README.
 
 ## 12. Si necesitas retomar una conversacion
 
