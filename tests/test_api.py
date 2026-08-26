@@ -7,7 +7,7 @@ de parametros, rango por defecto); el SQL se valida en los tests de integracion.
 
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta
 
 import pytest
 
@@ -105,7 +105,18 @@ def test_tren_sin_datos_da_404(monkeypatch):
 
 
 def _fila(feed: str, antiguedad: int, ok: bool = True) -> dict:
-    return {"feed": feed, "antiguedad_s": antiguedad, "ultima_ok": ok}
+    """Fila como la devuelve PostgreSQL: con marcas de tiempo de verdad.
+
+    Sin el datetime, el test pasaba y la API devolvia 500 en produccion, porque
+    JSONResponse no sabe serializar fechas por si mismo.
+    """
+    return {
+        "feed": feed,
+        "antiguedad_s": antiguedad,
+        "ultima_ok": ok,
+        "ultima_consulta": datetime(2026, 9, 15, 7, 30, tzinfo=UTC),
+        "ultimo_timestamp_feed": datetime(2026, 9, 15, 7, 29, tzinfo=UTC),
+    }
 
 
 def test_salud_ok(monkeypatch):

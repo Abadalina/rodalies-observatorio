@@ -13,6 +13,7 @@ from datetime import date, timedelta
 from typing import Any
 
 from fastapi import Depends, FastAPI, HTTPException, Query
+from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
 from ..config import Settings, load_settings
@@ -146,13 +147,18 @@ def salud() -> JSONResponse:
         detalle.append({"feed": feed, "estado": estado_feed, **(fila or {})})
 
     estado = "ok" if not degradados else "degradado"
+    # jsonable_encoder porque JSONResponse usa json.dumps a pelo y las filas
+    # traen marcas de tiempo. El resto de endpoints no falla porque FastAPI las
+    # codifica por su cuenta al devolver dict o list.
     return JSONResponse(
-        {
-            "estado": estado,
-            "limite_antiguedad_s": limite,
-            "feeds_degradados": degradados,
-            "feeds": detalle,
-        },
+        jsonable_encoder(
+            {
+                "estado": estado,
+                "limite_antiguedad_s": limite,
+                "feeds_degradados": degradados,
+                "feeds": detalle,
+            }
+        ),
         200 if estado == "ok" else 503,
     )
 
