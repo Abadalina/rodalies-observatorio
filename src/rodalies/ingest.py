@@ -200,6 +200,20 @@ class Ingestor:
 
         with session(self.settings.database_url) as conn:
             previous = Repository(conn).latest_feed_version()
+
+        # Si el filtro de nucleos ha cambiado, el horario en base se cargo con
+        # otro alcance y ya no sirve: hay que recargarlo aunque Renfe responda
+        # que el fichero no ha cambiado.
+        nucleos_actuales = sorted(self.settings.nucleo_codes)
+        nucleos_previos = sorted(previous.get("nucleos") or []) if previous else None
+        if previous and nucleos_previos != nucleos_actuales:
+            log.info(
+                "el filtro de nucleos ha cambiado (%s -> %s); se recarga el horario",
+                nucleos_previos or "todos",
+                nucleos_actuales or "todos",
+            )
+            force = True
+
         if previous and not force:
             etag, last_modified = previous.get("etag"), previous.get("last_modified")
 
@@ -223,7 +237,14 @@ class Ingestor:
             )
             if response.not_modified and target.exists() and not force:
                 log.info("el horario no ha cambiado (HTTP 304); no se recarga")
-                return {"skipped": True, "reason": "not_modified"}
+                # La geografia si se refresca: es un fichero distinto, con su
+                # propio ritmo, y antes se quedaba sin ejecutar por este atajo.
+                geo = 0
+                try:
+                    geo = self.load_geografia()
+                except Exception:
+                    log.exception("no se pudo resolver la geografia de las estaciones")
+                return {"skipped": True, "reason": "not_modified", "geografia": geo}
 
         keep = gs.NucleoFilter(self.settings.nucleo_codes)
         counts: dict[str, Any] = {}

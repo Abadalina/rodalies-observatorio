@@ -312,13 +312,21 @@ class Repository:
     def latest_feed_version(self) -> dict[str, Any] | None:
         row = self.conn.execute(
             """
-            SELECT version_id, downloaded_at, sha256, etag, last_modified, n_trips
+            SELECT version_id, downloaded_at, sha256, etag, last_modified, n_trips, nucleos
               FROM gtfs.feed_version ORDER BY downloaded_at DESC LIMIT 1
             """
         ).fetchone()
         if not row:
             return None
-        keys = ("version_id", "downloaded_at", "sha256", "etag", "last_modified", "n_trips")
+        keys = (
+            "version_id",
+            "downloaded_at",
+            "sha256",
+            "etag",
+            "last_modified",
+            "n_trips",
+            "nucleos",
+        )
         return dict(zip(keys, row, strict=True))
 
     def update_geografia(self, ubicaciones: Iterable[Any]) -> int:
