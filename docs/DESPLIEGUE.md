@@ -15,9 +15,27 @@ puede recapturar.
 | | Recomendado | Por que |
 |---|---|---|
 | Proveedor | Hetzner CX22 (~4 EUR/mes) | Barato y sobrado; vale cualquier otro |
-| Sistema | Ubuntu 24.04 LTS | Es para lo que esta escrito el script |
+| Sistema | Ubuntu 24.04 LTS | Ver la nota de abajo |
 | CPU / RAM | 2 vCPU / 4 GB | La ingesta apenas consume; el pico es construir la imagen |
 | Disco | 40 GB | Ver dimensionado abajo |
+
+### 24.04 o 26.04
+
+Las dos valen. `scripts/bootstrap-vps.sh` detecta la version sola
+(`$VERSION_CODENAME` de `/etc/os-release`), asi que no hay que tocar nada.
+
+Comprobado el 26/08/2026 en el repositorio oficial de Docker:
+
+| | 24.04 LTS (Noble Numbat) | 26.04 LTS (Resolute Raccoon) |
+|---|---|---|
+| Versiones de `docker-ce` publicadas | 70 | 16 |
+| Tiempo en la calle | ~2 anos | ~4 meses |
+| Soporte estandar hasta | 2029 | 2031 |
+
+**Recomendada: 24.04.** No porque 26.04 falle, sino porque esta es la maquina
+que sostiene el unico dato irrecuperable del proyecto y ahi conviene el
+aburrimiento antes que la novedad. Si prefieres el soporte mas largo, 26.04
+funciona igual.
 
 ### Dimensionado del disco
 
