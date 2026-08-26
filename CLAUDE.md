@@ -1,3 +1,6 @@
+**El repositorio es publico**: https://github.com/Abadalina/rodalies-observatorio
+No hace falta credencial para clonarlo en el servidor.
+
 # Contexto para Claude Code
 
 Este fichero se carga solo al abrir una sesion en esta carpeta. Contiene lo que
