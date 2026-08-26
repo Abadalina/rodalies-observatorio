@@ -85,8 +85,8 @@ cada dia que no corre es un dia que no se recupera.
 
 - **Captura continua** de los tres feeds GTFS-Realtime de Renfe (circulaciones,
   incidencias y posiciones) para toda Espana, con tolerancia a fallos.
-- **Territorio en cada estacion**: provincia y comunidad autonoma, del listado
-  oficial de Renfe donde existe e inferida por cercania donde no, siempre
+- **Territorio en cada estacion**: provincia y comunidad autonoma. Oficial en el
+  57,6 % (listado de Renfe) e inferida por cercania en el resto, siempre
   marcando cual es cual.
 - **Historico propio en PostgreSQL**, particionado por mes, idempotente y con
   registro de cada consulta al feed, tambien de las fallidas.

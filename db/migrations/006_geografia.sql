@@ -8,7 +8,8 @@
 -- Zaragoza y Teruel).
 --
 -- La fuente es el listado oficial de estaciones de Renfe, que trae provincia y
--- poblacion. Cubre ~58 % de las estaciones del GTFS; el resto se infiere por
+-- poblacion. Coincide con el 57,6 % de las estaciones del GTFS (669 de 1.162,
+-- porque listado y horario no cubren el mismo conjunto); el resto se infiere por
 -- cercania y queda MARCADO como inferido en `geo_origen`. Cualquier analisis
 -- que necesite rigor puede excluirlas con `WHERE geo_origen = 'oficial'`.
 -- =============================================================================

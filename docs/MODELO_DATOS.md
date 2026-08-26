@@ -137,9 +137,10 @@ y provincia, `gtfs.stop` lleva cuatro columnas mas.
 | `comunidad` | De la provincia, con una tabla estatica (47 provincias, sin huecos) |
 | `geo_origen` | `oficial` o `inferida` |
 
-El listado oficial cubre 1.027 de las 1.162 estaciones del GTFS. Para las 135
-restantes se toma la provincia de la **estacion etiquetada mas cercana**, y la
-fila queda marcada como `inferida`.
+El listado oficial trae 1.027 estaciones con provincia utilizable, pero solo
+**669 de ellas existen tambien en el GTFS** (el 57,6 % de las 1.162). Para las
+493 restantes se toma la provincia de la **estacion etiquetada mas cercana**, y
+la fila queda marcada como `inferida`.
 
 Esa inferencia se valido dejando fuera cada estacion oficial y prediciendola con
 su vecina: **acerto el 90,9 %**, y los fallos se concentran en fronteras

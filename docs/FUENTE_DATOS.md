@@ -43,9 +43,10 @@ CSV en **latin-1 y separado por punto y coma**, con 1.040 estaciones. Aporta lo
 que el GTFS no trae: `PROVINCIA`, `POBLACION`, `CP` y una marca `CERCANIAS`.
 El campo `CODIGO` casa con el `stop_id` del GTFS.
 
-Cubre 1.027 estaciones con provincia utilizable (algunas figuran como
-`DESCONOCIDO` y se descartan). Las que faltan se completan por cercania, ver
-`docs/MODELO_DATOS.md`.
+Trae 1.027 estaciones con provincia utilizable (algunas figuran como
+`DESCONOCIDO` y se descartan), pero **solo 669 coinciden con un `stop_id` del
+GTFS**: el listado y el horario no cubren exactamente el mismo conjunto. El
+42,4 % restante se completa por cercania, ver `docs/MODELO_DATOS.md`.
 
 ### Horario programado (GTFS estatico)
 

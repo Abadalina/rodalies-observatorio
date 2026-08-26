@@ -121,8 +121,8 @@ Los filtros de los paneles son **comunidad autonoma y provincia**, no el nucleo:
 un nucleo es una division interna de Renfe (el 41 cubre Murcia y Alacant, y
 Rodalies llega a Zaragoza y Teruel).
 
-La provincia sale del listado oficial donde existe (1.027 de 1.162 estaciones) y
-se infiere por cercania donde no, **marcada en `gtfs.stop.geo_origen`**. La
+La provincia sale del listado oficial donde coincide (669 de 1.162 estaciones,
+un 57,6 %) y se infiere por cercania donde no, **marcada en `gtfs.stop.geo_origen`**. La
 inferencia se valido al 90,9 %. Ver `docs/MODELO_DATOS.md`.
 
 Detalle completo y rarezas de los ficheros en `docs/FUENTE_DATOS.md`.

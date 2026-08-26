@@ -84,8 +84,9 @@ nadie mas puede hacer.
 
 **¿Como sabes en que provincia esta cada estacion?**
 El GTFS no lo dice. Renfe publica aparte un listado de estaciones con provincia
-y poblacion que cubre 1.027 de las 1.162; el resto lo infiero por cercania a la
-estacion etiquetada mas proxima. Valide esa inferencia dejando fuera cada
+y poblacion, pero listado y horario no cubren el mismo conjunto: solo coinciden
+669 de las 1.162, un 57,6 %. El resto lo infiero por cercania a la estacion
+etiquetada mas proxima. Valide esa inferencia dejando fuera cada
 estacion conocida y prediciendola con su vecina: acierta el 90,9 %, y los fallos
 estan en fronteras provinciales. Por eso cada fila lleva una marca de si el dato
 es oficial o inferido, y cualquier analisis serio puede excluir las inferidas.
