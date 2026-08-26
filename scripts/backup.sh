@@ -21,6 +21,17 @@ INTERNO="/tmp/rodalies_$SELLO.dump"
 EXTERNO="$DESTINO/rodalies_$SELLO.dump"
 
 docker compose exec -T db pg_dump -U "$USUARIO" -d "$BASE" -Fc -f "$INTERNO"
+
+# Se verifica ANTES de sacarlo y de borrarlo: un volcado que no se puede listar
+# no es una copia, es un fichero. Comprobarlo despues de borrar el original no
+# comprueba nada.
+if ! docker compose exec -T db pg_restore --list "$INTERNO" >/dev/null 2>&1; then
+    echo "ERROR: pg_restore no puede leer el volcado. No se borra ninguna copia anterior." >&2
+    docker compose exec -T db rm -f "$INTERNO" || true
+    exit 1
+fi
+TABLAS=$(docker compose exec -T db pg_restore --list "$INTERNO" | grep -c "TABLE DATA" || true)
+
 docker compose cp "db:$INTERNO" "$EXTERNO"
 docker compose exec -T db rm -f "$INTERNO"
 
@@ -29,13 +40,7 @@ if [[ "$TAM" -lt 1024 ]]; then
     echo "ERROR: la copia parece vacia ($TAM bytes). No se borra ninguna anterior." >&2
     exit 1
 fi
-
-# Comprobacion real: un volcado que no se puede listar no es una copia.
-if ! docker compose exec -T db pg_restore --list "$INTERNO" >/dev/null 2>&1; then
-    if ! command -v pg_restore >/dev/null 2>&1 || ! pg_restore --list "$EXTERNO" >/dev/null 2>&1; then
-        echo "AVISO: no se ha podido verificar el volcado con pg_restore --list." >&2
-    fi
-fi
+echo "Verificada: $TABLAS tablas con datos."
 
 printf 'Copia: %s (%s)\n' "$EXTERNO" "$(numfmt --to=iec "$TAM" 2>/dev/null || echo "$TAM B")"
 
