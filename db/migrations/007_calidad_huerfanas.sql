@@ -1,12 +1,18 @@
 -- =============================================================================
--- 003 - Comprobaciones de calidad de datos
+-- 007 - `circulaciones_sin_horario` no debe alarmar por marcas caducas
 --
--- Equivalente casero (y sin dependencias nuevas) a los tests de datos de dbt:
--- una vista que devuelve una fila por comprobacion, con estado OK / AVISO /
--- ERROR. La ejecutan `rodalies check`, el panel de Grafana y la CI.
+-- `matched_gtfs` guarda lo que se sabia EN EL MOMENTO de capturar: si el
+-- horario cargado no conocia ese tren, la fila queda marcada. Eso esta bien y
+-- se conserva, porque es la unica forma de detectar que el GTFS va atrasado.
 --
--- La idea es que un fallo de calidad se vea antes que en el analisis final:
--- una ingesta parada o un horario caducado no se notan mirando una media.
+-- Pero la comprobacion lo trataba como si fuera el estado actual. Al ampliar la
+-- captura a los quince nucleos y recargar el horario completo, 721 filas
+-- capturadas antes de la recarga seguian marcadas aunque su tren ya existiera,
+-- y la comprobacion declaraba ERROR mientras `observaciones_huerfanas` decia
+-- cero. Dos comprobaciones contradiciendose es peor que no tener ninguna.
+--
+-- Ahora se cuenta lo accionable: filas marcadas cuyo tren **sigue** sin
+-- aparecer en el horario.
 -- =============================================================================
 
 CREATE OR REPLACE VIEW analytics.v_quality_checks AS
