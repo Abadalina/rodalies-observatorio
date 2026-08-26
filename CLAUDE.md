@@ -107,8 +107,11 @@ Los paneles se ven sin abrir ningun puerto, con un tunel SSH:
 ssh -N -L 3000:localhost:3000 -L 8000:localhost:8000 alex@<ip>
 ```
 
-**Falta por hacer antes:** subir el repositorio a GitHub. El proyecto todavia
-**no es un repositorio git** (ver seccion 11).
+**El repositorio es PRIVADO** (https://github.com/Abadalina/rodalies-observatorio),
+asi que en el servidor hace falta credencial para clonar. La via recomendada es
+una **clave de despliegue** de solo lectura; el procedimiento esta en la seccion
+3 de `docs/DESPLIEGUE.md`. El script de aprovisionamiento se copia con `scp`
+desde el portatil para no tener que autenticar nada antes de empezar.
 
 ### Camino B (puede esperar): Docker en el portatil
 

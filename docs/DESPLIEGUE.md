@@ -57,19 +57,15 @@ minuto, no una web.
 
 ## 2. Preparar el servidor
 
-Entra como `root` con la clave SSH que diste al crear la maquina y ejecuta el
-script de aprovisionamiento:
+El repositorio es **privado**, asi que ni `git clone` ni `curl` funcionan sin
+credenciales. La forma mas simple de arrancar es copiar el script desde tu
+equipo, sin autenticar nada todavia.
 
-```bash
-git clone <url-del-repo> /tmp/repo
-sudo bash /tmp/repo/scripts/bootstrap-vps.sh alex
-```
+Desde tu portatil (PowerShell), en la carpeta del proyecto:
 
-O sin clonar nada todavia:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/Abadalina/rodalies-observatorio/main/scripts/bootstrap-vps.sh -o bootstrap.sh
-sudo bash bootstrap.sh alex
+```powershell
+scp scripts/bootstrap-vps.sh root@<ip-del-servidor>:/tmp/
+ssh root@<ip-del-servidor> "bash /tmp/bootstrap-vps.sh alex"
 ```
 
 El script es idempotente y hace:
@@ -114,13 +110,46 @@ Las tres lineas deben decir `127.0.0.1:...`, nunca `0.0.0.0:...`.
 
 ---
 
-## 3. Arrancar el proyecto
+## 3. Dar acceso al repositorio privado
+
+Para clonar en el servidor hace falta credencial. La opcion limpia es una
+**clave de despliegue**: es de solo lectura, vale solo para este repositorio y se
+revoca desde GitHub en un clic. Mejor que un token personal, que da acceso a
+todo lo tuyo y acaba en el historial del shell.
+
+En el servidor, ya como `alex`:
+
+```bash
+ssh-keygen -t ed25519 -C "vps-rodalies" -f ~/.ssh/id_ed25519 -N ""
+cat ~/.ssh/id_ed25519.pub
+```
+
+Copia lo que imprime y anadelo como clave de despliegue del repositorio. Desde tu
+portatil, con `gh` ya autenticado:
+
+```powershell
+gh repo deploy-key add clave.pub --repo Abadalina/rodalies-observatorio --title "vps-rodalies"
+```
+
+O a mano, en GitHub: *Settings -> Deploy keys -> Add deploy key*. **No** marques
+"Allow write access": el servidor solo tiene que leer.
+
+Comprueba que funciona:
+
+```bash
+ssh -T git@github.com     # debe saludarte por el nombre del repositorio
+```
+
+> Cuando el repositorio pase a publico, este paso desaparece: bastara clonar por
+> HTTPS sin credencial ninguna.
+
+## 4. Arrancar el proyecto
 
 Ya como `alex`, **no como root**:
 
 ```bash
 ssh alex@<ip-del-servidor>
-git clone <url-del-repo> ~/rodalies-observatorio
+git clone git@github.com:Abadalina/rodalies-observatorio.git ~/rodalies-observatorio
 cd ~/rodalies-observatorio
 
 bash scripts/generar-env.sh      # contrasenas nuevas; apunta la de Grafana
@@ -151,7 +180,7 @@ un fallo: no hay trenes. Vuelve a mirarlo por la manana.
 
 ---
 
-## 4. Ver los paneles sin abrir ni un puerto
+## 5. Ver los paneles sin abrir ni un puerto
 
 Todo escucha en `127.0.0.1`, asi que desde fuera no se ve nada. Para mirarlo tu
 mismo no hace falta exponer nada: un tunel SSH desde tu portatil.
@@ -170,7 +199,7 @@ perfectamente hasta que quieras enlazar el panel en el curriculum.
 
 ---
 
-## 5. Copias de seguridad
+## 6. Copias de seguridad
 
 El historico no se puede recapturar. Sin copia, un disco perdido son meses de
 trabajo.
@@ -220,7 +249,7 @@ docker compose exec db dropdb -U rodalies rodalies_prueba
 
 ---
 
-## 6. Panel publico con dominio (opcional)
+## 7. Panel publico con dominio (opcional)
 
 Solo cuando quieras enlazarlo desde el curriculum. Necesitas un dominio
 apuntando a la IP del servidor.
@@ -259,7 +288,7 @@ puede escribir nada. Aunque alguien se hiciera con esa credencial, solo leeria.
 
 ---
 
-## 7. Mantenimiento
+## 8. Mantenimiento
 
 ### Actualizar el proyecto
 
@@ -291,7 +320,7 @@ Docker arranca al inicio. Confirmalo con `docker compose ps`.
 
 ---
 
-## 8. Cuando algo falla
+## 9. Cuando algo falla
 
 | Sintoma | Causa habitual | Que mirar |
 |---|---|---|
@@ -306,7 +335,7 @@ El diagnostico detallado esta en [RUNBOOK.md](RUNBOOK.md).
 
 ---
 
-## 9. Lo que no hay que hacer
+## 10. Lo que no hay que hacer
 
 - `docker compose down -v`: borra el volumen con el historico.
 - Cambiar `POSTGRES_PASSWORD` con el volumen ya creado: la contrasena solo se
