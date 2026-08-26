@@ -1,0 +1,100 @@
+# Demostracion con datos SINTETICOS. No necesita `.env` ni conexion a internet.
+#
+#   docker compose -f docker-compose.demo.yml up -d --build
+#
+# Todo lo que escribe queda marcado con `source = 'synthetic'` y vive en
+# volumenes propios (`pgdata_demo`, `grafana_demo`), separados de los de
+# produccion. No puede tocar el historico real ni por accidente.
+#
+# Las credenciales de aqui son locales y publicas a proposito: no protegen nada
+# porque no hay nada que proteger, y asi la demo arranca sin configurar nada.
+
+name: rodalies-observatorio-demo
+
+x-app: &app
+  build:
+    context: .
+    dockerfile: docker/Dockerfile
+  restart: unless-stopped
+  init: true
+  logging:
+    driver: json-file
+    options: { max-size: "10m", max-file: "3" }
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: rodalies
+      POSTGRES_PASSWORD: demo-local
+      POSTGRES_DB: rodalies
+      LANG: C.UTF-8
+    volumes:
+      - pgdata_demo:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:${DEMO_POSTGRES_PORT:-5434}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rodalies -d rodalies"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+  ingestor:
+    <<: *app
+    depends_on:
+      db:
+        condition: service_healthy
+    environment: &env
+      RODALIES_DATABASE_URL: postgresql://rodalies:demo-local@db:5432/rodalies
+      RODALIES_READONLY_PASSWORD: demo-local
+      RODALIES_SOURCE: synthetic
+      RODALIES_NUCLEOS: "51"
+      # Mas rapido que en produccion para que el panel se llene en segundos.
+      RODALIES_POLL_SECONDS: "20"
+      RODALIES_REFRESH_SECONDS: "60"
+      RODALIES_LOG_LEVEL: INFO
+    command: ["rodalies", "run", "--migrate"]
+    volumes:
+      - ingestor_demo:/app/data
+
+  api:
+    <<: *app
+    depends_on:
+      db:
+        condition: service_healthy
+    environment: *env
+    command: ["uvicorn", "rodalies.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports:
+      - "127.0.0.1:${DEMO_API_PORT:-8001}:8000"
+
+  grafana:
+    image: grafana/grafana:11.4.0
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_USERS_DEFAULT_THEME: light
+      DB_HOST: db:5432
+      DB_NAME: rodalies
+      DB_USER: rodalies_lectura
+      DB_PASSWORD: demo-local
+    volumes:
+      - grafana_demo:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "127.0.0.1:${DEMO_GRAFANA_PORT:-3001}:3000"
+
+volumes:
+  # Desechables: contienen datos inventados. Borrarlos no pierde nada.
+  pgdata_demo:
+  grafana_demo:
+  ingestor_demo:

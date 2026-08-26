@@ -1,0 +1,111 @@
+# Captura real de Renfe. Exige las tres contrasenas de `.env`.
+#
+#   docker compose up -d --build
+#
+# La demostracion vive en un fichero APARTE (`docker-compose.demo.yml`), con sus
+# propios volumenes y credenciales. Estan separados a proposito por dos razones:
+# ni la demo puede pisar el historico real, y `compose` interpola el fichero
+# entero antes de filtrar por perfiles, asi que tenerlos juntos obligaria a
+# definir las contrasenas de produccion solo para arrancar la demo.
+#
+# Ningun puerto se publica en todas las interfaces. Para exponer el panel hace
+# falta un proxy inverso con TLS delante; ver docs/RUNBOOK.md.
+
+name: rodalies-observatorio
+
+x-app: &app
+  build:
+    context: .
+    dockerfile: docker/Dockerfile
+  restart: unless-stopped
+  init: true
+  logging:
+    driver: json-file
+    options: { max-size: "10m", max-file: "3" }
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-rodalies}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?define POSTGRES_PASSWORD en .env}
+      POSTGRES_DB: ${POSTGRES_DB:-rodalies}
+      LANG: C.UTF-8
+    volumes:
+      - pgdata_live:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5433}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-rodalies} -d ${POSTGRES_DB:-rodalies}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+  ingestor:
+    <<: *app
+    depends_on:
+      db:
+        condition: service_healthy
+    environment: &env
+      RODALIES_DATABASE_URL: postgresql://${POSTGRES_USER:-rodalies}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-rodalies}
+      RODALIES_READONLY_PASSWORD: ${READONLY_PASSWORD:?define READONLY_PASSWORD en .env}
+      RODALIES_SOURCE: renfe
+      RODALIES_FEED_FORMAT: ${RODALIES_FEED_FORMAT:-json}
+      RODALIES_NUCLEOS: ${RODALIES_NUCLEOS:-51}
+      RODALIES_POLL_SECONDS: ${RODALIES_POLL_SECONDS:-60}
+      RODALIES_REFRESH_SECONDS: ${RODALIES_REFRESH_SECONDS:-900}
+      RODALIES_INGEST_ALERTS: ${RODALIES_INGEST_ALERTS:-true}
+      RODALIES_INGEST_VEHICLE_POSITIONS: ${RODALIES_INGEST_VEHICLE_POSITIONS:-false}
+      RODALIES_ON_TIME_THRESHOLD_S: ${RODALIES_ON_TIME_THRESHOLD_S:-180}
+      RODALIES_LOG_LEVEL: ${RODALIES_LOG_LEVEL:-INFO}
+    command: ["rodalies", "run", "--migrate"]
+    volumes:
+      - ingestor_live:/app/data
+
+  api:
+    <<: *app
+    depends_on:
+      db:
+        condition: service_healthy
+    environment: *env
+    command: ["uvicorn", "rodalies.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports:
+      - "127.0.0.1:${API_PORT:-8000}:8000"
+
+  grafana:
+    image: grafana/grafana:11.4.0
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:?define GRAFANA_PASSWORD en .env}
+      # Cerrado por defecto. Abrirlo solo detras de un proxy con TLS.
+      GF_AUTH_ANONYMOUS_ENABLED: ${GRAFANA_ANONYMOUS:-false}
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_USERS_DEFAULT_THEME: light
+      GF_DASHBOARDS_MIN_REFRESH_INTERVAL: 30s
+      # Grafana entra con el rol de SOLO LECTURA, nunca con el dueno del esquema.
+      DB_HOST: db:5432
+      DB_NAME: ${POSTGRES_DB:-rodalies}
+      DB_USER: rodalies_lectura
+      DB_PASSWORD: ${READONLY_PASSWORD}
+    volumes:
+      - grafana_live:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "127.0.0.1:${GRAFANA_PORT:-3000}:3000"
+
+volumes:
+  # Estos volumenes son el proyecto. Ver docs/RUNBOOK.md antes de tocarlos.
+  pgdata_live:
+  grafana_live:
+  ingestor_live:
