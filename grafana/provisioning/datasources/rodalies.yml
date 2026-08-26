@@ -1,0 +1,23 @@
+# Origen de datos provisionado como codigo: nadie tiene que configurar nada a
+# mano para reproducir el proyecto. La contrasena llega por variable de entorno.
+apiVersion: 1
+
+datasources:
+  - name: Rodalies
+    uid: rodalies-pg
+    type: postgres
+    access: proxy
+    url: ${DB_HOST}
+    user: ${DB_USER}
+    database: ${DB_NAME}
+    isDefault: true
+    editable: false
+    secureJsonData:
+      password: ${DB_PASSWORD}
+    jsonData:
+      sslmode: disable
+      postgresVersion: 1600
+      timescaledb: false
+      maxOpenConns: 8
+      maxIdleConns: 2
+      connMaxLifetime: 14400

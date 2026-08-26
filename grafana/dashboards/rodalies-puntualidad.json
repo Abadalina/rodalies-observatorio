@@ -1,0 +1,707 @@
+{
+  "uid": "rodalies-punt",
+  "title": "Rodalies - Puntualidad",
+  "description": "Retrasos por linea, estacion y franja horaria a partir del historico propio.",
+  "tags": [
+    "rodalies",
+    "puntualidad"
+  ],
+  "timezone": "Europe/Madrid",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "graphTooltip": 1,
+  "refresh": "1m",
+  "time": {
+    "from": "now-30d",
+    "to": "now"
+  },
+  "timepicker": {},
+  "templating": {
+    "list": [
+      {
+        "name": "source",
+        "label": "Origen",
+        "type": "custom",
+        "query": "renfe,synthetic",
+        "current": {
+          "text": "renfe",
+          "value": "renfe"
+        },
+        "options": [
+          {
+            "text": "renfe",
+            "value": "renfe",
+            "selected": true
+          },
+          {
+            "text": "synthetic",
+            "value": "synthetic",
+            "selected": false
+          }
+        ],
+        "includeAll": false,
+        "multi": false
+      },
+      {
+        "name": "nucleo",
+        "label": "Nucleo",
+        "type": "query",
+        "datasource": {
+          "type": "postgres",
+          "uid": "rodalies-pg"
+        },
+        "query": "SELECT n.nombre AS __text, n.nucleo_id AS __value FROM gtfs.nucleo n WHERE n.nucleo_id IN (SELECT DISTINCT nucleo_id FROM gtfs.route) ORDER BY 1",
+        "refresh": 1,
+        "current": {
+          "text": "Barcelona (Rodalies)",
+          "value": "51"
+        },
+        "options": [],
+        "includeAll": false,
+        "multi": false
+      },
+      {
+        "name": "linea",
+        "label": "Linea",
+        "type": "query",
+        "datasource": {
+          "type": "postgres",
+          "uid": "rodalies-pg"
+        },
+        "query": "SELECT DISTINCT linea FROM analytics.mv_line_daily WHERE nucleo_id = '$nucleo' AND source = '$source' ORDER BY 1",
+        "refresh": 2,
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "options": [],
+        "includeAll": true,
+        "allValue": "%",
+        "multi": true
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Puntualidad",
+      "type": "stat",
+      "datasource": {
+        "type": "postgres",
+        "uid": "rodalies-pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "rodalies-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "\nSELECT round(100.0 * sum(paradas_puntuales) / NULLIF(sum(paradas_con_retraso), 0), 1)\n         AS \"Puntualidad (%)\"\n  FROM analytics.mv_line_daily\n WHERE service_date BETWEEN $__timeFrom()::date AND $__timeTo()::date\n   AND source = '$source'\n   AND nucleo_id = '$nucleo'\n   AND linea LIKE ANY (ARRAY[${linea:sqlstring}])\n",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": []
+          }
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 80
+              },
+              {
+                "color": "green",
+                "value": 90
+              }
+            ]
+          },
+          "unit": "percent",
+          "decimals": 1,
+          "min": 0,
+          "max": 100
+        },
+        "overrides": []
+      },
+      "description": "Porcentaje de paradas con retraso por debajo del umbral configurado en analytics.setting (180 s por defecto)."
+    },
+    {
+      "id": 2,
+      "title": "Retraso medio",
+      "type": "stat",
+      "datasource": {
+        "type": "postgres",
+        "uid": "rodalies-pg"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "rodalies-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "\nSELECT round(sum(retraso_medio_s * paradas_con_retraso)\n             / NULLIF(sum(paradas_con_retraso), 0), 0) AS \"Retraso medio (s)\"\n  FROM analytics.mv_line_daily\n WHERE service_date BETWEEN $__timeFrom()::date AND $__timeTo()::date\n   AND source = '$source'\n   AND nucleo_id = '$nucleo'\n   AND linea LIKE ANY (ARRAY[${linea:sqlstring}])\n",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": []
+          }
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 180
+              },
+              {
+                "color": "red",
+                "value": 300
+              }
+            ]
+          },
+          "unit": "s",
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "description": "Media ponderada por numero de observaciones."
+    },
+    {
+      "id": 3,
+      "title": "Trenes observados",
+      "type": "stat",
+      "datasource": {
+        "type": "postgres",
+        "uid": "rodalies-pg"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "rodalies-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "\nSELECT sum(trenes) AS \"Trenes observados\"\n  FROM analytics.mv_line_daily\n WHERE service_date BETWEEN $__timeFrom()::date AND $__timeTo()::date\n   AND source = '$source'\n   AND nucleo_id = '$nucleo'\n   AND linea LIKE ANY (ARRAY[${linea:sqlstring}])\n",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": []
+          }
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 4,
+      "title": "Observaciones",
+      "type": "stat",
+      "datasource": {
+        "type": "postgres",
+        "uid": "rodalies-pg"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "rodalies-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "\nSELECT sum(paradas_observadas) AS \"Observaciones\"\n  FROM analytics.mv_line_daily\n WHERE service_date BETWEEN $__timeFrom()::date AND $__timeTo()::date\n   AND source = '$source'\n   AND nucleo_id = '$nucleo'\n   AND linea LIKE ANY (ARRAY[${linea:sqlstring}])\n",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": []
+          }
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "description": "Filas de hechos acumuladas en el periodo: el tamano del historico."
+    },
+    {
+      "id": 5,
+      "title": "Puntualidad diaria por linea",
+      "type": "timeseries",
+      "datasource": {
+        "type": "postgres",
+        "uid": "rodalies-pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 24,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "rodalies-pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "\nSELECT service_date::timestamptz AS time,\n       linea AS metric,\n       round(100.0 * paradas_puntuales / NULLIF(paradas_con_retraso, 0), 1) AS puntualidad\n  FROM analytics.mv_line_daily\n WHERE service_date BETWEEN $__timeFrom()::date AND $__timeTo()::date\n   AND source = '$source'\n   AND nucleo_id = '$nucleo'\n   AND linea LIKE ANY (ARRAY[${linea:sqlstring}])\n ORDER BY 1\n",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": []
+          }
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "mean",
+            "min"
+          ],
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 5,
+            "showPoints": "auto",
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 6,
+      "title": "Ranking de lineas",
+      "type": "table",
+      "datasource": {
+        "type": "postgres",
+        "uid": "rodalies-pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 13,
+        "w": 12,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "rodalies-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "\nSELECT linea AS \"Linea\",\n       round(sum(retraso_medio_s * paradas_con_retraso)\n             / NULLIF(sum(paradas_con_retraso), 0), 0)              AS \"Retraso medio (s)\",\n       round(100.0 * sum(paradas_puntuales)\n             / NULLIF(sum(paradas_con_retraso), 0), 1)              AS \"Puntualidad (%)\",\n       max(retraso_p90_s)::int                                     AS \"P90 (s)\",\n       sum(trenes)                                                 AS \"Trenes\"\n  FROM analytics.mv_line_daily\n WHERE service_date BETWEEN $__timeFrom()::date AND $__timeTo()::date\n   AND source = '$source'\n   AND nucleo_id = '$nucleo'\n   AND linea LIKE ANY (ARRAY[${linea:sqlstring}])\n GROUP BY linea\n ORDER BY 2 DESC\n",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": []
+          }
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "countRows": false,
+          "fields": ""
+        }
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "description": "Ordenado por retraso medio. La mediana y el P90 estan en la API."
+    },
+    {
+      "id": 7,
+      "title": "Retraso medio por linea y franja horaria",
+      "type": "table",
+      "datasource": {
+        "type": "postgres",
+        "uid": "rodalies-pg"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 13,
+        "w": 12,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "rodalies-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "\nSELECT hora AS \"Hora\",\n       linea AS \"Linea\",\n       round(sum(retraso_medio_s * paradas_con_retraso)\n             / NULLIF(sum(paradas_con_retraso), 0), 0) AS \"Retraso medio (s)\"\n  FROM analytics.mv_line_hour\n WHERE service_date BETWEEN $__timeFrom()::date AND $__timeTo()::date\n   AND source = '$source'\n   AND nucleo_id = '$nucleo'\n   AND linea LIKE ANY (ARRAY[${linea:sqlstring}])\n GROUP BY hora, linea\n ORDER BY hora, linea\n",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": []
+          }
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "countRows": false,
+          "fields": ""
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 0,
+          "custom": {
+            "align": "center",
+            "cellOptions": {
+              "type": "color-background",
+              "mode": "gradient"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 120
+              },
+              {
+                "color": "orange",
+                "value": 240
+              },
+              {
+                "color": "red",
+                "value": 420
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "description": "Donde y cuando se acumula el retraso de verdad.",
+      "transformations": [
+        {
+          "id": "groupingToMatrix",
+          "options": {
+            "columnField": "Hora",
+            "rowField": "Linea",
+            "valueField": "Retraso medio (s)",
+            "emptyValue": "null"
+          }
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Peores estaciones",
+      "type": "table",
+      "datasource": {
+        "type": "postgres",
+        "uid": "rodalies-pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 22,
+        "w": 12,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "rodalies-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "\nSELECT estacion                                                    AS \"Estacion\",\n       round(sum(retraso_medio_s * paradas_con_retraso)\n             / NULLIF(sum(paradas_con_retraso), 0), 0)              AS \"Retraso medio (s)\",\n       max(retraso_max_s)                                          AS \"Peor retraso (s)\",\n       sum(paradas_observadas)                                     AS \"Observaciones\"\n  FROM analytics.mv_station_daily\n WHERE service_date BETWEEN $__timeFrom()::date AND $__timeTo()::date\n   AND source = '$source'\n   AND nucleo_id = '$nucleo'\n GROUP BY estacion\nHAVING sum(paradas_observadas) >= 20\n ORDER BY 2 DESC\n LIMIT 15\n",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": []
+          }
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "countRows": false,
+          "fields": ""
+        }
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "description": "Minimo de 20 observaciones para evitar rankings de una sola parada."
+    },
+    {
+      "id": 9,
+      "title": "Avisos activos",
+      "type": "table",
+      "datasource": {
+        "type": "postgres",
+        "uid": "rodalies-pg"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 22,
+        "w": 12,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "rodalies-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "\nSELECT last_seen_at AS \"Visto por ultima vez\",\n       array_to_string(lineas, ', ') AS \"Lineas\",\n       COALESCE(header_text, description_text) AS \"Aviso\"\n  FROM analytics.v_alertas_activas\n ORDER BY 1 DESC\n LIMIT 20\n",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": []
+          }
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "countRows": false,
+          "fields": ""
+        }
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "description": "Feed de incidencias de Renfe (GTFS-RT ServiceAlerts)."
+    }
+  ],
+  "annotations": {
+    "list": []
+  },
+  "links": []
+}
