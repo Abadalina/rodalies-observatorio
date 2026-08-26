@@ -1,14 +1,15 @@
 -- =============================================================================
--- 003 - Comprobaciones de calidad de datos
+-- 005 - Los huecos solo cuentan desde que existe la serie
 --
--- Equivalente casero (y sin dependencias nuevas) a los tests de datos de dbt:
--- una vista que devuelve una fila por comprobacion, con estado OK / AVISO /
--- ERROR. La ejecutan `rodalies check`, el panel de Grafana y la CI.
+-- La comprobacion `huecos_serie_24h` miraba las 24 horas anteriores sin mas, de
+-- modo que una instalacion recien arrancada declaraba ERROR por las horas
+-- previas a su propio nacimiento. Eso no es un hueco: es que todavia no habia
+-- nada que capturar.
 --
--- La idea es que un fallo de calidad se vea antes que en el analisis final:
--- una ingesta parada o un horario caducado no se notan mirando una media.
+-- Se vuelve a crear la vista con la condicion anadida. `003_quality.sql` queda
+-- igualmente corregido para las instalaciones nuevas; esta migracion existe para
+-- las que ya estaban en marcha, donde 003 no se puede editar.
 -- =============================================================================
-
 CREATE OR REPLACE VIEW analytics.v_quality_checks AS
 
 -- 1. La ingesta esta viva.
