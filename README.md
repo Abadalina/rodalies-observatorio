@@ -247,6 +247,8 @@ rodalies-observatorio/
 | [RUNBOOK.md](docs/RUNBOOK.md) | Que hacer cuando algo falla |
 | [ENTREVISTA.md](docs/ENTREVISTA.md) | Como contar el proyecto en noventa segundos |
 | [HISTORIA.md](docs/HISTORIA.md) | De donde sale esta version y que se corrigio |
+| [POST.md](docs/POST.md) | Borrador del articulo divulgativo |
+| [DESPLIEGUE.md](docs/DESPLIEGUE.md) | Montarlo en un VPS desde cero |
 
 ---
 
@@ -279,9 +281,10 @@ Limitaciones que conviene decir antes de que las pregunten:
 - [x] Tests unitarios y de integracion, `mypy --strict` y CI en GitHub Actions
 - [x] Cuaderno de analisis con pandas y NumPy
 - [x] Documentacion tecnica y operativa
-- [ ] Primer arranque completo con Docker
-- [ ] Capturas de pantalla de los paneles con datos reales
-- [ ] Despliegue publico con URL abierta
+- [x] **Capturando en produccion** desde el 26/08/2026, los quince nucleos
+- [x] Copias de seguridad automaticas, verificadas y fuera del servidor
+- [ ] Capturas de pantalla de los paneles (ver `docs/img/LEEME.md`)
+- [ ] Panel publico con dominio y TLS
 - [ ] Conjunto de datos publicado con ficha y licencia
 - [ ] Modelo de prediccion de retraso (cuando haya meses de historico)
 

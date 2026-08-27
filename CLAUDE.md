@@ -184,7 +184,22 @@ portatil, que es como se confirmo que los paneles ya devolvian datos:
 curl -s -u "admin:CLAVE" http://localhost:3000/api/dashboards/uid/rodalies-punt
 ```
 
-## 7. Reglas que no se rompen
+## 7. Congelado de cambios (desde el 27/08/2026)
+
+**El sistema captura bien. No desplegar cambios salvo que algo este roto.**
+
+El 27/08 la ingesta se rompio dos veces desplegando mejoras: una migracion con
+una columna duplicada y otra que recreaba vistas sin soltarlas antes. Las dos se
+recuperaron en minutos, pero cada despliegue arriesga un hueco en una serie que
+no se puede recapturar.
+
+Lo que le falta al proyecto no es funcionalidad, es calendario. Si hay que tocar
+algo, comprobar antes con `docker compose -f docker-compose.demo.yml up` en local.
+
+Se puede hacer sin riesgo, porque no toca el ingestor: capturas de pantalla,
+escribir el post, preparar el pitch, montar el proxy con TLS.
+
+## 8. Reglas que no se rompen
 
 - **El volumen `pgdata_live` es el proyecto.** Nada destructivo sin copia previa
   (`make backup` o `.\scripts\backup.ps1`). `pgdata_demo` es desechable.
@@ -203,7 +218,7 @@ curl -s -u "admin:CLAVE" http://localhost:3000/api/dashboards/uid/rodalies-punt
 
 ---
 
-## 8. Como llegamos hasta aqui
+## 9. Como llegamos hasta aqui
 
 Hay **tres carpetas** en `Desktop\proyecto\` y conviene no confundirlas:
 
@@ -227,7 +242,7 @@ con sus desacuerdos incluidos.
 **No borres las otras dos carpetas.** Sirven de evidencia de la evolucion
 arquitectonica, que es material de entrevista.
 
-## 9. Mapa del repositorio
+## 10. Mapa del repositorio
 
 ```
 src/rodalies/          config (Pydantic) · parsing (GTFS-RT) · gtfs_static
@@ -246,7 +261,7 @@ Documentacion por tema: `docs/ARQUITECTURA.md`, `docs/MODELO_DATOS.md`,
 `docs/FUENTE_DATOS.md`, `docs/DECISIONES.md`, `docs/RUNBOOK.md`,
 `docs/ENTREVISTA.md`, `docs/HISTORIA.md`.
 
-## 10. Entorno de trabajo
+## 11. Entorno de trabajo
 
 - Windows 10 Home (sin Hyper-V: Docker depende de WSL2). PowerShell y Git
   Bash disponibles; `winget` tambien.
@@ -268,7 +283,7 @@ pip install -e ".[dev,api,analysis]"
   levantar la demo y trastear con los paneles.
 - Antes de cualquier commit: `ruff format . && ruff check . && mypy && pytest`.
 
-## 11. Estado del repositorio y que sigue
+## 12. Estado del repositorio y que sigue
 
 **Ya es un repositorio git** (`git init` el 26/08/2026) con **10 commits
 tematicos**, arbol limpio y nada pendiente de anadir:
@@ -325,7 +340,7 @@ Si se pierden las del servidor, se pueden leer del `.env`. Si se pierde el
 `.env`, **no hay copia**: habria que regenerar contrasenas y recrear el volumen,
 lo que destruiria el historico. De ahi que las copias de seguridad importen.
 
-## 12. Si necesitas retomar una conversacion
+## 13. Si necesitas retomar una conversacion
 
 Lo que se decidio y por que esta en `docs/DECISIONES.md` (quince decisiones con
 su alternativa descartada) y en `docs/HISTORIA.md` (los trece defectos). Si algo
