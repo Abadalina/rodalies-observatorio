@@ -31,6 +31,21 @@ noventa segundos, no cuenta.
 
 ---
 
+## El dato que remata el pitch
+
+Si te dejan enseñar una cifra, esta:
+
+> Capturo los quince nucleos de Cercanias, asi que puedo comparar. En los
+> primeros dias, **Catalunya sale la peor de Espana**: 33 % de puntualidad frente
+> al 46 % de Madrid y el 79 % del Pais Vasco. Ojo, con dos dias de muestra eso no
+> es una conclusion, es una demostracion de que preguntas puede responder el
+> sistema. Con un mes ya lo sera.
+
+Esa ultima frase importa tanto como la cifra: demuestra que sabes cuando un dato
+todavia no aguanta el peso que le quieres poner encima.
+
+*(Cifras del 27/08/2026, dos dias de captura. Actualizarlas antes de usarlas.)*
+
 ## Preguntas que van a caer
 
 **¿Por que PostgreSQL y no una base de series temporales?**
