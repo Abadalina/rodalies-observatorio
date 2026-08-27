@@ -26,6 +26,14 @@ COMMENT ON FUNCTION analytics.linea_de_trip_id(text) IS
     'Linea comercial deducida del identificador. Solo como respaldo cuando el '
     'horario no conoce la circulacion; el GTFS es la fuente autorizada.';
 
+-- Las vistas se recrean, asi que hay que soltarlas antes: sin esto la
+-- migracion falla con DuplicateTable, la transaccion revierte y el ingestor
+-- entra en bucle de reinicio. Paso exactamente eso al desplegarla.
+DROP MATERIALIZED VIEW IF EXISTS analytics.mv_line_hour CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS analytics.mv_station_daily CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS analytics.mv_line_daily CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS analytics.mv_stop_final CASCADE;
+
 CREATE MATERIALIZED VIEW analytics.mv_stop_final AS
 SELECT DISTINCT ON (o.source, o.service_date, o.trip_id, o.stop_id)
        o.source,
