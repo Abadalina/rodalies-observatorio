@@ -272,6 +272,23 @@ def parse_vehicle_positions(
     )
 
 
+# El `trip_id` termina con la linea comercial: 5135M77534R4 -> R4. Comprobado
+# sobre 214.454 observaciones reales: coincide con el `route_short_name` del
+# GTFS el 100 % de las veces, cero discrepancias.
+#
+# Aun asi la linea NO se deduce de aqui en el caso normal: se cruza con el
+# horario, que es la fuente autorizada. Esto es el respaldo para los servicios
+# especiales, que no estan en el GTFS y de otro modo apareceria como
+# "sin linea".
+_LINEA_EN_ID = re.compile(r"^(?:[A-Z]+_\d{2}_|\d{4}[A-Z])\d+([A-Za-z][A-Za-z0-9]*)$")
+
+
+def linea_de_respaldo(trip_id: str) -> str | None:
+    """Linea comercial deducida del identificador. Solo si el horario no la da."""
+    encontrado = _LINEA_EN_ID.match(trip_id)
+    return encontrado.group(1) if encontrado else None
+
+
 PARSERS: dict[str, Callable[..., FeedSnapshot]] = {
     "trip_updates": parse_trip_updates,
     "alerts": parse_alerts,

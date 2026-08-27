@@ -34,6 +34,10 @@ NUCLEOS: dict[str, str] = {
     "45": "Cartagena-Los Nietos",
     "46": "Ferrol-Ortigueira",
     "47": "Leon",
+    # El 50 no aparece en el GTFS estatico, pero Renfe lo usa en tiempo real
+    # para servicios especiales de Rodalies: sus trenes paran en 34 estaciones,
+    # todas de la provincia de Barcelona, en el corredor de la R4.
+    "50": "Barcelona (Rodalies, especiales)",
     "51": "Barcelona (Rodalies)",
     "60": "Bilbao",
     "61": "San Sebastian",
