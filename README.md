@@ -1,4 +1,4 @@
-# Observatorio de puntualidad de Rodalies
+# Observatorio de puntualidad de Cercanias
 
 [![CI](https://github.com/Abadalina/rodalies-observatorio/actions/workflows/ci.yml/badge.svg)](https://github.com/Abadalina/rodalies-observatorio/actions/workflows/ci.yml)
 [![Licencia: MIT](https://img.shields.io/badge/licencia-MIT-blue.svg)](LICENSE)
@@ -9,29 +9,40 @@
 instante actual. Este proyecto construye el historico que no existe.**
 
 Un ingestor consulta los feeds GTFS-Realtime cada minuto y guarda cada
-observacion en PostgreSQL. Encima, una capa analitica en SQL responde a las tres
-preguntas que importan: **que linea, que estacion y que franja horaria acumulan
-retraso de verdad**.
+observacion en PostgreSQL. Captura **los quince nucleos de Cercanias de Espana**,
+de Ferrol a Malaga, y una capa analitica en SQL responde a las preguntas que el
+feed no puede: **que linea, que estacion y que franja horaria acumulan retraso de
+verdad, y como se comparan unas ciudades con otras**.
 
-## Enfoque: Rodalies de Catalunya, con toda Espana de contexto
+## Que se puede preguntar
 
-El proyecto **esta enfocado a Rodalies de Catalunya**. Es lo que se analiza, lo
-que enseñan los paneles por defecto y lo que da sentido a la pregunta.
+Cosas que hoy no responde nadie mas, porque nadie mas guarda la serie:
 
-Pero **captura los quince nucleos de Cercanias de Espana**, y lo hace por una
-razon que no tiene vuelta atras: lo que no se capture hoy no existira nunca. El
-almacenamiento cuesta unos 27 GB al ano; agosto de 2026 solo pasa una vez.
+- ¿Va Rodalies peor que Cercanias de Madrid? ¿Cuanto peor?
+- ¿Que linea de la red espanola es la menos puntual?
+- ¿A que hora conviene no coger la R4?
+- ¿El retraso se acumula a lo largo del recorrido o aparece de golpe?
+- ¿Empeora los viernes? ¿Y en agosto?
 
-Eso convierte una pregunta local en una comparativa: no solo *"que linea de
-Rodalies va peor"*, sino **"¿va Rodalies peor que Cercanias de Madrid?"**. Los
-datos se filtran por **comunidad autonoma y provincia**, no solo por nucleo,
-porque un nucleo es una division interna de Renfe y una comunidad la entiende
-cualquiera.
+Los datos se filtran por **comunidad autonoma, provincia, nucleo, linea y
+estacion**, asi que la misma serie sirve para una pregunta local y para una
+comparativa nacional.
 
-| Alcance | Que se hace con el |
+## Por que se llama Rodalies
+
+Porque empezo ahi. La pregunta original era sobre la R2 de Barcelona, y el
+analisis y los paneles siguen abriendo en Catalunya por defecto.
+
+Pero capturar solo un nucleo habria sido un error irreversible: **lo que no se
+captura hoy no existe nunca**. Ampliarlo a toda Espana costaba 27 GB al ano en
+vez de 9, sobre un disco de 232 GB. Y convirtio una pregunta local en una
+comparativa que nadie mas puede hacer.
+
+| | |
 |---|---|
-| **Rodalies de Catalunya** | El analisis, los paneles por defecto, la narrativa |
-| **Los otros catorce nucleos** | Se capturan y se guardan; disponibles para comparar |
+| **Alcance capturado** | Los quince nucleos de Cercanias de Espana |
+| **Vista por defecto** | Catalunya, de donde viene el proyecto |
+| **Se cambia** | Con un desplegable en el panel |
 
 ---
 
@@ -84,7 +95,7 @@ cada dia que no corre es un dia que no se recupera.
 ## Que hace
 
 - **Captura continua** de los tres feeds GTFS-Realtime de Renfe (circulaciones,
-  incidencias y posiciones) para toda Espana, con tolerancia a fallos.
+  incidencias y posiciones) de los quince nucleos, con tolerancia a fallos.
 - **Territorio en cada estacion**: provincia y comunidad autonoma. Oficial en el
   57,6 % (listado de Renfe) e inferida por cercania en el resto, siempre
   marcando cual es cual.
@@ -245,7 +256,7 @@ rodalies-observatorio/
 | [MODELO_DATOS.md](docs/MODELO_DATOS.md) | Esquema, particionado, indices y capa analitica |
 | [DECISIONES.md](docs/DECISIONES.md) | Decisiones con su alternativa descartada |
 | [RUNBOOK.md](docs/RUNBOOK.md) | Que hacer cuando algo falla |
-| [ENTREVISTA.md](docs/ENTREVISTA.md) | Como contar el proyecto en noventa segundos |
+| [COMO_FUNCIONA.md](docs/COMO_FUNCIONA.md) | **Empieza por aqui**: el planteamiento, las preguntas frecuentes y los limites |
 | [HISTORIA.md](docs/HISTORIA.md) | De donde sale esta version y que se corrigio |
 | [POST.md](docs/POST.md) | Borrador del articulo divulgativo |
 | [DESPLIEGUE.md](docs/DESPLIEGUE.md) | Montarlo en un VPS desde cero |

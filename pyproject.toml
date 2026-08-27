@@ -1,7 +1,7 @@
 [project]
 name = "rodalies-observatorio"
 version = "1.0.0"
-description = "Observatorio de puntualidad de Rodalies: captura continua de GTFS-Realtime, PostgreSQL, Grafana y API"
+description = "Observatorio de puntualidad de Cercanias Renfe: captura continua de GTFS-Realtime en los quince nucleos, PostgreSQL, Grafana y API"
 readme = "README.md"
 requires-python = ">=3.12"
 license = { text = "MIT" }

@@ -1,52 +1,64 @@
-# Como contar este proyecto
+# Como funciona, y por que asi
 
-Notas para explicarlo bien, no para el codigo. Si el proyecto no se cuenta en
-noventa segundos, no cuenta.
+Este documento explica el proyecto entero de arriba abajo: que problema resuelve,
+que decisiones lo sostienen y donde estan sus limites. Si solo vas a leer un
+fichero de `docs/`, que sea este.
 
----
-
-## El resumen de noventa segundos
-
-> Renfe publica en abierto la posicion y el retraso de sus trenes de Cercanias,
-> pero solo el **instante actual**: consultas el feed y ves que la R2 lleva ocho
-> minutos ahora mismo. No hay forma de saber si eso es normal un martes a las
-> ocho, porque ese historico no existe en ningun sitio.
->
-> Asi que lo construyo yo. Un ingestor en Python consulta el feed cada minuto y
-> guarda cada observacion en PostgreSQL. Encima hay una capa analitica en SQL con
-> vistas materializadas que responde a las tres preguntas que importan: que
-> linea, que estacion y que franja horaria acumulan retraso de verdad. Se ve en
-> Grafana, se consulta por API y se analiza en un notebook.
->
-> Todo el stack levanta con un comando, los tests corren en cada push y hay un
-> trabajo diario en la CI que comprueba que Renfe sigue publicando lo mismo.
->
-> Lo interesante no es el codigo: es que **el dataset no lo tiene nadie mas**.
-> Cada dia que corre, vale mas.
->
-> Y aunque el analisis se centra en Rodalies, capturo los quince nucleos de
-> Cercanias de Espana, porque lo que no captures hoy no existira nunca. Eso me
-> permite responder algo que no responde nadie: **si Rodalies va peor que
-> Cercanias de Madrid, y cuanto**.
+Para el detalle de cada pieza estan
+[ARQUITECTURA](ARQUITECTURA.md), [MODELO_DATOS](MODELO_DATOS.md) y
+[DECISIONES](DECISIONES.md).
 
 ---
 
-## El dato que remata el pitch
+## El planteamiento
 
-Si te dejan enseñar una cifra, esta:
+Renfe publica en abierto la posicion y el retraso de sus trenes de Cercanias,
+pero solo el **instante actual**: consultas el feed y ves que la R2 lleva ocho
+minutos ahora mismo. No hay forma de saber si eso es normal un martes a las ocho,
+porque ese historico no existe en ningun sitio.
 
-> Capturo los quince nucleos de Cercanias, asi que puedo comparar. En los
-> primeros dias, **Catalunya sale la peor de Espana**: 33 % de puntualidad frente
-> al 46 % de Madrid y el 79 % del Pais Vasco. Ojo, con dos dias de muestra eso no
-> es una conclusion, es una demostracion de que preguntas puede responder el
-> sistema. Con un mes ya lo sera.
+Este proyecto lo construye. Un ingestor en Python consulta los feeds cada minuto
+y guarda cada observacion en PostgreSQL. Encima, una capa analitica en SQL con
+vistas materializadas responde a lo que el feed no puede: que linea, que estacion
+y que franja horaria acumulan retraso, y como se comparan unas ciudades con
+otras. Se consulta desde Grafana, desde una API de solo lectura o desde un
+cuaderno de pandas.
 
-Esa ultima frase importa tanto como la cifra: demuestra que sabes cuando un dato
-todavia no aguanta el peso que le quieres poner encima.
+Todo el stack levanta con un comando, los tests corren en cada push y un trabajo
+diario en la CI comprueba que Renfe sigue publicando lo que el parser espera.
 
-*(Cifras del 27/08/2026, dos dias de captura. Actualizarlas antes de usarlas.)*
+**Lo valioso no es el codigo, es la serie.** El codigo se reescribe en un fin de
+semana; los datos de un dia que no se capturo no vuelven.
 
-## Preguntas que van a caer
+Por eso captura los quince nucleos de Cercanias, no solo Catalunya, aunque el
+proyecto naciera de una pregunta sobre la R2: ampliar el alcance costaba 27 GB al
+ano en vez de 9, y no hacerlo habria sido irreversible.
+
+---
+
+## Un ejemplo de lo que ya se puede medir
+
+Con dos dias de captura (26-27 de agosto de 2026), agrupando por comunidad
+autonoma:
+
+| Comunidad | Observaciones | Puntualidad | Retraso medio |
+|---|---:|---:|---:|
+| Catalunya | 12.271 | 33,4 % | 538 s |
+| Comunidad de Madrid | 14.349 | 45,8 % | 334 s |
+| Pais Vasco | 6.340 | 79,0 % | 135 s |
+
+Catalunya sale la peor de las nueve comunidades con muestra suficiente.
+
+**Pero dos dias no son una muestra.** La captura empezo a las 16:00 del dia 26,
+asi que las horas de la manana estan medidas una sola vez y las de la tarde dos.
+Cualquier patron horario de ahora mismo es ruido. La tabla esta aqui para mostrar
+**que tipo de pregunta** responde el sistema, no para responderla todavia: eso
+necesita tres o cuatro semanas.
+
+Saber cuando un dato aun no aguanta el peso que se le quiere poner encima forma
+parte del trabajo tanto como capturarlo.
+
+## Preguntas frecuentes
 
 **¿Por que PostgreSQL y no una base de series temporales?**
 Porque el dato no es solo una serie: hay que cruzar observaciones con el horario
@@ -142,23 +154,30 @@ aparte.
 
 ---
 
-## Lo que conviene ensenar, en este orden
+## Por donde empezar a leer
 
-1. **El panel de Grafana.** Es lo unico que se entiende sin explicacion.
-2. **El panel de salud de la ingesta.** Demuestra que esto lleva semanas
-   corriendo solo, que es la parte dificil de verdad.
-3. **`db/migrations/002_analytics.sql`.** `DISTINCT ON`, `percentile_cont`,
-   `FILTER`, refresco concurrente. Es el fichero que ensena SQL de nivel.
-4. **`docs/HISTORIA.md`.** La tabla de trece defectos corregidos, con donde
-   estaba cada uno. Pocos proyectos junior traen una revision adversarial de
-   su propio codigo.
-5. **`analytics.v_quality_checks`.** Pocos proyectos junior traen tests de datos.
-6. **El historial de commits.** Repartido en el tiempo, no volcado en un dia.
+En este orden, de lo mas visible a lo mas interno:
 
-## Lo que conviene decir sin que lo pregunten
+| | Que hay ahi |
+|---|---|
+| Los paneles de Grafana | Lo unico que se entiende sin explicacion previa |
+| `db/migrations/002_analytics.sql` | El corazon analitico: `DISTINCT ON` para quedarse con la ultima observacion de cada tren, `percentile_cont`, agregados con `FILTER` y refresco concurrente |
+| `src/rodalies/parsing.py` | La normalizacion del feed. Un solo parser para los dos formatos de Renfe, con el porque documentado |
+| `src/rodalies/ingest.py` | El bucle: como sobrevive a un fallo de red sin dejar hueco en la serie |
+| `analytics.v_quality_checks` | Los tests de datos: ocho comprobaciones sobre lo ya ingerido |
+| [HISTORIA.md](HISTORIA.md) | El proyecto se escribio dos veces. Aqui estan los trece defectos que salieron al compararlas |
 
-- Que los datos sinteticos existen y **por que**, antes de que alguien los
-  descubra y piense otra cosa.
-- Que se mide lo que Renfe publica, no lo que ocurre.
-- Que el proyecto empezo verificando la fuente **antes** de escribir codigo,
-  porque era el unico riesgo que podia tirar todo lo demas.
+## Limitaciones
+
+- **Se mide lo que Renfe publica, no lo que ocurre.** Si un tren desaparece
+  del feed no queda registro de su retraso, y eso no es lo mismo que haber
+  llegado puntual.
+- **Una supresion no es un retraso.** Un tren que no pasa es peor que uno que
+  llega tarde, asi que se cuenta aparte y queda fuera del porcentaje de
+  puntualidad.
+- **Hay datos sinteticos en el repositorio**, para la demostracion y los
+  tests. Van marcados con `source = 'synthetic'`, viven en un volumen
+  separado y no entran en ningun agregado real.
+- **Renfe tambien publica datos raros**: retrasos de casi exactamente menos
+  24 horas, trenes que no estan en su propio horario. Se guardan marcados en
+  vez de limpiarlos en silencio; estan en [FUENTE_DATOS](FUENTE_DATOS.md).

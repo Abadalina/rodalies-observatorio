@@ -259,7 +259,7 @@ reference/private/     CV, CLAUDE.md original y notas de portfolio (gitignored)
 
 Documentacion por tema: `docs/ARQUITECTURA.md`, `docs/MODELO_DATOS.md`,
 `docs/FUENTE_DATOS.md`, `docs/DECISIONES.md`, `docs/RUNBOOK.md`,
-`docs/ENTREVISTA.md`, `docs/HISTORIA.md`.
+`docs/COMO_FUNCIONA.md`, `docs/HISTORIA.md`, `docs/DESPLIEGUE.md`.
 
 ## 11. Entorno de trabajo
 
