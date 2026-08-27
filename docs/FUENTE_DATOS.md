@@ -184,6 +184,18 @@ Cosas del fichero real que rompen un lector de CSV ingenuo. El fixture
 | El retraso viene en segundos | `retrasos_fuera_de_rango` en `v_quality_checks` |
 | La cabecera trae `timestamp` valido | Si falta, el feed **se rechaza** y el fallo queda en `rt.feed_poll` |
 
+**Rarezas del feed observadas en produccion**
+
+Estas no son fallos del proyecto: son cosas que Renfe publica y que conviene
+conocer antes de analizar.
+
+| Rareza | Detalle |
+|---|---|
+| **Retrasos de −24 horas** | Retrasos entre −85.500 y −86.400 s, es decir, casi exactamente un dia. Renfe calcula la prevision contra el dia de servicio equivocado. Vistos en Madrid y Barcelona el 26-27/08/2026. La comprobacion `retrasos_fuera_de_rango` los detecta |
+| **Servicios especiales** | Identificadores como `SPECIAL_10_91507C7`, fuera del formato habitual y ausentes del GTFS estatico. El nucleo va tras el prefijo; se guardan con `matched_gtfs = false` |
+| **Feed sin la clave `entity`** | Fuera del horario de servicio (00:00-05:00) el JSON no trae ni la lista vacia. El parser lo trata como cero entidades |
+| **Adelantos imposibles** | Un tren "adelantado" 63 minutos en Rodalies. Fisicamente absurdo para cercanias; se guarda tal cual y se marca |
+
 **Limites conocidos**
 
 - Se mide **lo que Renfe publica**, no lo que ocurre. Si un tren desaparece del

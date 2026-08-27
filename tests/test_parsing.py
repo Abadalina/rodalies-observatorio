@@ -107,7 +107,18 @@ def test_to_utc_descarta_valores_imposibles():
 
 @pytest.mark.parametrize(
     ("identificador", "nucleo"),
-    [("5135M77534R4", "51"), ("1035M19799C1", "10"), ("XX123", None), ("", None), (None, None)],
+    [
+        ("5135M77534R4", "51"),
+        ("1035M19799C1", "10"),
+        # Servicio especial anadido por Renfe: el nucleo va tras el prefijo.
+        # Visto en produccion el 27/08/2026; sin este caso el tren se guardaba
+        # sin nucleo y desaparecia de cualquier analisis territorial.
+        ("SPECIAL_10_91507C7", "10"),
+        ("SPECIAL_51_12345R2N", "51"),
+        ("XX123", None),
+        ("", None),
+        (None, None),
+    ],
 )
 def test_nucleo_of(identificador, nucleo):
     assert nucleo_of(identificador) == nucleo

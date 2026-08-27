@@ -15,6 +15,7 @@ Todas las funciones de este modulo son puras: entra un dict, salen dataclasses.
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Any
@@ -80,12 +81,27 @@ def feed_timestamp(feed: dict[str, Any]) -> datetime:
     return ts
 
 
+# Renfe anade servicios especiales con identificadores que no siguen el formato
+# habitual: SPECIAL_10_91507C7 en vez de 1036X91507C7. El nucleo va igualmente
+# dentro, entre guiones bajos.
+_ESPECIAL = re.compile(r"^[A-Z]+_(\d{2})_")
+
+
 def nucleo_of(identifier: str | None) -> str | None:
-    """Los dos primeros caracteres del id identifican el nucleo de Cercanias."""
+    """Nucleo de Cercanias al que pertenece un identificador.
+
+    Normalmente son los dos primeros caracteres del `trip_id`. Los servicios
+    especiales (`SPECIAL_10_...`) lo llevan tras el prefijo: sin este caso, esos
+    trenes se guardaban sin nucleo y quedaban fuera de cualquier analisis
+    territorial.
+    """
     if not identifier or len(identifier) < 2:
         return None
     prefix = identifier[:2]
-    return prefix if prefix.isdigit() else None
+    if prefix.isdigit():
+        return prefix
+    especial = _ESPECIAL.match(identifier)
+    return especial.group(1) if especial else None
 
 
 def _text(node: Any, lang_preference: tuple[str, ...] = ("es", "ca", "en")) -> str | None:
