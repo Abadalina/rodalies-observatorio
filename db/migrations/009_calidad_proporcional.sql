@@ -1,12 +1,16 @@
 -- =============================================================================
--- 003 - Comprobaciones de calidad de datos
+-- 009 - `retrasos_fuera_de_rango` debe medir proporcion, no cantidad
 --
--- Equivalente casero (y sin dependencias nuevas) a los tests de datos de dbt:
--- una vista que devuelve una fila por comprobacion, con estado OK / AVISO /
--- ERROR. La ejecutan `rodalies check`, el panel de Grafana y la CI.
+-- La comprobacion declaraba ERROR a partir de 50 observaciones absurdas en siete
+-- dias. Con 672.000 observaciones acumuladas eso son 1.096, un 0,16 % del total,
+-- y la comprobacion llevaba en ERROR permanente sin que hubiera nada roto.
 --
--- La idea es que un fallo de calidad se vea antes que en el analisis final:
--- una ingesta parada o un horario caducado no se notan mirando una media.
+-- Un umbral absoluto no sirve para una serie que crece: lo que importa es que
+-- proporcion de lo capturado es absurda, no cuantas filas son.
+--
+-- El grueso de esas rarezas (793 de 1.096, un 72 %) son retrasos de casi
+-- exactamente -24 h: un fallo de dia de servicio en el origen, no del proyecto.
+-- Se guardan tal cual y se vigila que no se disparen.
 -- =============================================================================
 
 CREATE OR REPLACE VIEW analytics.v_quality_checks AS
