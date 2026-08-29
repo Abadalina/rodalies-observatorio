@@ -1,12 +1,14 @@
 -- =============================================================================
--- 003 - Comprobaciones de calidad de datos
+-- 010 - Vigilar tambien las estaciones desconocidas
 --
--- Equivalente casero (y sin dependencias nuevas) a los tests de datos de dbt:
--- una vista que devuelve una fila por comprobacion, con estado OK / AVISO /
--- ERROR. La ejecutan `rodalies check`, el panel de Grafana y la CI.
+-- Habia comprobacion para las circulaciones que no aparecen en el horario, pero
+-- no para las paradas. El 29/08/2026 se detectaron a mano 166 observaciones
+-- apuntando a dos estaciones (70005 en Madrid y 15214 en Asturias) que Renfe
+-- publica en tiempo real pero no incluye en su propio `stops.txt`.
 --
--- La idea es que un fallo de calidad se vea antes que en el analisis final:
--- una ingesta parada o un horario caducado no se notan mirando una media.
+-- Las observaciones se conservan, como siempre. Lo que faltaba era enterarse sin
+-- tener que buscarlo: si Renfe empieza a reportar paradas que no documenta, es
+-- una senal de que el catalogo se ha quedado atras.
 -- =============================================================================
 
 CREATE OR REPLACE VIEW analytics.v_quality_checks AS
