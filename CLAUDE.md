@@ -40,14 +40,24 @@ Renfe en un VPS, cada 60 segundos, sin intervencion.**
 
 | | |
 |---|---|
-| Servidor | `212.227.107.53` (IONOS, Ubuntu 24.04.4 LTS) |
-| Recursos | 4 nucleos, 7,7 GB RAM, 232 GB disco |
+| Servidor | `212.227.107.53` (IONOS, Ubuntu 24.04.4 LTS, 4 nucleos / 7,7 GB / 232 GB) |
 | Acceso | `ssh alex@212.227.107.53` (clave ed25519, sin contrasena) |
 | Ruta | `/home/alex/rodalies-observatorio` |
 | Repositorio | https://github.com/Abadalina/rodalies-observatorio (**publico**) |
 | Servicios | db, ingestor, api, grafana. Todos con `restart: unless-stopped` |
-| Copias | `scripts/backup.sh` en cron diario a las 03:30, retencion 14 dias |
-| Copias fuera del servidor | `C:\Users\Alex\Backups\rodalies\` en el portatil |
+| Alcance | **Los quince nucleos** de Cercanias (`RODALIES_NUCLEOS=all`) |
+| Copias | Cron diario 03:30 CEST, retencion 14 dias |
+| Copias externas | `C:\Users\Alex\Backups\rodalies\` en el portatil |
+
+### Cifras al 30/08/2026 (cinco dias de captura)
+
+| | |
+|---|---|
+| Observaciones | **879.254** |
+| Dias con datos | 26, 27, 28, 29 y 30 de agosto |
+| Consultas al feed | 10.348, **cero fallos** |
+| Ritmo | ~200-330 filas/minuto en horario de servicio |
+| Copias automaticas | Ejecutadas las noches del 27, 28, 29 y 30 |
 
 ### Comprobado ejecutandolo, no leyendolo
 
@@ -128,7 +138,7 @@ inferencia se valido al 90,9 %. Ver `docs/MODELO_DATOS.md`.
 
 Detalle completo y rarezas de los ficheros en `docs/FUENTE_DATOS.md`.
 
-## 5. Los ocho fallos que solo aparecieron al ejecutar de verdad
+## 5. Los once fallos que solo aparecieron al ejecutar de verdad
 
 Ninguno era detectable sin Docker y PostgreSQL corriendo. Todos corregidos,
 subidos a GitHub y desplegados el 26/08/2026. Sirven de aviso: **la verificacion
@@ -144,6 +154,9 @@ estatica tiene un techo**.
 | 6 | La copia se verificaba despues de borrarla | El `pg_restore --list` corria sobre un fichero ya eliminado |
 | 7 | Con HTTP 304 la geografia no se resolvia nunca | El atajo del horario sin cambios devolvia antes de llegar a ella |
 | 8 | Al ampliar a toda Espana, el horario seguia filtrado por el nucleo 51 | Renfe respondia 304 y no se recargaba, pese a que el alcance habia cambiado |
+| 9 | La migracion 008 recreaba vistas sin soltarlas antes | `DuplicateTable`, transaccion revertida y el ingestor en bucle de reinicio |
+| 10 | `retrasos_fuera_de_rango` usaba un umbral absoluto | Con 672.000 filas, un 0,16 % de rarezas son 1.096: ERROR permanente sin nada roto |
+| 11 | No habia comprobacion de estaciones desconocidas | Solo se vigilaban los trenes huerfanos; 166 observaciones apuntaban a paradas fuera del catalogo |
 
 Del 3 aprendimos algo aplicable: **los dobles de prueba deben imitar lo que
 devuelve PostgreSQL de verdad**, fechas incluidas. Se comprobo que, con el
@@ -151,6 +164,10 @@ codigo anterior, el test corregido falla; si no falla, no prueba nada.
 
 Del 5, la leccion util para cualquier panel futuro: si una variable usa
 `allValue`, las comillas van **dentro** del propio `allValue`.
+
+Del 10, la que mas se repite: **en una serie que crece, los umbrales van en
+proporcion, no en cantidad**. Cualquier comprobacion con un numero absoluto
+acabara saltando sola.
 
 ## 6. Diagnostico cuando algo falle
 
