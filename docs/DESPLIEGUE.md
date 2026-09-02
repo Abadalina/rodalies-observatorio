@@ -62,7 +62,7 @@ El repositorio es publico, asi que no hace falta credencial ninguna. Entra como
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Abadalina/rodalies-observatorio/main/scripts/bootstrap-vps.sh -o bootstrap.sh
-sudo bash bootstrap.sh alex
+sudo bash bootstrap.sh <usuario>
 ```
 
 El script es idempotente y hace:
@@ -71,7 +71,7 @@ El script es idempotente y hace:
   horario ferroviario.
 - Actualizaciones de seguridad automaticas **sin reinicio automatico**: un
   reinicio inesperado interrumpe la captura.
-- Usuario `alex` con `sudo` y `docker`, sin contrasena (solo clave SSH), que
+- Usuario `<usuario>` con `sudo` y `docker`, sin contrasena (solo clave SSH), que
   hereda las claves de `root`.
 - Docker Engine desde el repositorio oficial, mas el plugin de Compose.
 - Rotacion de logs de contenedor (10 MB x 3), para que no se coman el disco.
@@ -84,11 +84,11 @@ El script es idempotente y hace:
 Comprueba en **otra terminal** que puedes entrar como el usuario nuevo:
 
 ```bash
-ssh alex@<ip-del-servidor>
+ssh <usuario>@<ip-del-servidor>
 ```
 
 Si no puedes, no cierres la sesion de root: copia primero tu clave con
-`ssh-copy-id alex@<ip>`. Quedarse fuera del propio servidor es el error clasico.
+`ssh-copy-id <usuario>@<ip>`. Quedarse fuera del propio servidor es el error clasico.
 
 ### Sobre Docker y el cortafuegos
 
@@ -109,10 +109,10 @@ Las tres lineas deben decir `127.0.0.1:...`, nunca `0.0.0.0:...`.
 
 ## 3. Arrancar el proyecto
 
-Ya como `alex`, **no como root**:
+Ya como `<usuario>`, **no como root**:
 
 ```bash
-ssh alex@<ip-del-servidor>
+ssh <usuario>@<ip-del-servidor>
 git clone https://github.com/Abadalina/rodalies-observatorio.git ~/rodalies-observatorio
 cd ~/rodalies-observatorio
 
@@ -150,7 +150,7 @@ Todo escucha en `127.0.0.1`, asi que desde fuera no se ve nada. Para mirarlo tu
 mismo no hace falta exponer nada: un tunel SSH desde tu portatil.
 
 ```powershell
-ssh -N -L 3000:localhost:3000 -L 8000:localhost:8000 alex@<ip-del-servidor>
+ssh -N -L 3000:localhost:3000 -L 8000:localhost:8000 <usuario>@<ip-del-servidor>
 ```
 
 Con esa terminal abierta, en tu navegador:
@@ -183,7 +183,7 @@ crontab -e
 ```
 
 ```cron
-30 3 * * * cd /home/alex/rodalies-observatorio && /usr/bin/bash scripts/backup.sh >> /home/alex/backup.log 2>&1
+30 3 * * * cd $HOME/rodalies-observatorio && /usr/bin/bash scripts/backup.sh >> $HOME/backup.log 2>&1
 ```
 
 A las 03:30 no hay servicio ferroviario, asi que la copia no compite con la
@@ -195,7 +195,7 @@ Una copia que vive en el mismo disco que los datos no es una copia. Desde tu
 portatil, semanalmente:
 
 ```powershell
-scp alex@<ip>:~/rodalies-observatorio/backups/*.dump C:\Users\Alex\Backups\rodalies\
+scp <usuario>@<ip>:~/rodalies-observatorio/backups/*.dump C:\Backups\rodalies\
 ```
 
 ### Probar la restauracion

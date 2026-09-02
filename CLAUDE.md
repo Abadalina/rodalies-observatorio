@@ -6,7 +6,13 @@ No hace falta credencial para clonarlo en el servidor.
 Este fichero se carga solo al abrir una sesion en esta carpeta. Contiene lo que
 hay que saber para retomar el proyecto sin haber vivido las sesiones anteriores.
 
-**Ultima actualizacion: 26 de agosto de 2026.**
+**Ultima actualizacion: 2 de septiembre de 2026.**
+
+> **Datos de la instalacion concreta.** Este fichero vive en un repositorio
+> publico, asi que no lleva ni la IP del servidor, ni el usuario de SSH, ni las
+> rutas del portatil. Todo eso esta en `CLAUDE.local.md`, que esta en
+> `.gitignore` y solo existe en la maquina de quien opera el sistema. Donde aqui
+> pone `<usuario>@<ip-del-servidor>`, alli esta el valor real.
 
 ---
 
@@ -17,11 +23,9 @@ instante actual: nadie guarda el historico. Este proyecto lo construye
 capturando el feed GTFS-Realtime cada minuto y guardandolo en PostgreSQL, con
 capa analitica en SQL, paneles de Grafana y API.
 
-Es el **proyecto insignia del portfolio** de Alejandro Abadal (Alex), que se
-traslada a Barcelona a finales de octubre de 2026 y hara entrevistas de perfil
-de datos a partir de noviembre. Cuando haya que elegir entre dos soluciones
-validas, gana **la mas demostrable y explicable en una entrevista**, no la mas
-ingeniosa.
+Es un **proyecto de portfolio de perfil de datos**. Cuando haya que elegir entre
+dos soluciones validas, gana **la mas demostrable y explicable en una
+entrevista**, no la mas ingeniosa.
 
 ## 2. Lo unico urgente, y ya esta hecho
 
@@ -40,14 +44,14 @@ Renfe en un VPS, cada 60 segundos, sin intervencion.**
 
 | | |
 |---|---|
-| Servidor | `212.227.107.53` (IONOS, Ubuntu 24.04.4 LTS, 4 nucleos / 7,7 GB / 232 GB) |
-| Acceso | `ssh alex@212.227.107.53` (clave ed25519, sin contrasena) |
-| Ruta | `/home/alex/rodalies-observatorio` |
+| Servidor | VPS de 4 nucleos / 8 GB / 232 GB, Ubuntu 24.04 LTS |
+| Acceso | `ssh <usuario>@<ip-del-servidor>` (clave ed25519, sin contrasena) |
+| Ruta | `~/rodalies-observatorio` |
 | Repositorio | https://github.com/Abadalina/rodalies-observatorio (**publico**) |
 | Servicios | db, ingestor, api, grafana. Todos con `restart: unless-stopped` |
 | Alcance | **Los quince nucleos** de Cercanias (`RODALIES_NUCLEOS=all`) |
 | Copias | Cron diario 03:30 CEST, retencion 14 dias |
-| Copias externas | `C:\Users\Alex\Backups\rodalies\` en el portatil |
+| Copias externas | Semanales por `scp` a una carpeta del portatil |
 
 ### Cifras al 30/08/2026 (cinco dias de captura)
 
@@ -89,7 +93,7 @@ GitHub es la fuente de la verdad; el servidor solo consume. Detalle importante:
 Para ver los paneles sin exponer ningun puerto, tunel SSH desde el portatil:
 
 ```powershell
-ssh -N -L 3000:localhost:3000 -L 8000:localhost:8000 alex@212.227.107.53
+ssh -N -L 3000:localhost:3000 -L 8000:localhost:8000 <usuario>@<ip-del-servidor>
 ```
 
 Grafana en <http://localhost:3000>, API en <http://localhost:8000/docs>. Las
@@ -172,7 +176,7 @@ acabara saltando sola.
 ## 6. Diagnostico cuando algo falle
 
 ```bash
-ssh alex@212.227.107.53
+ssh <usuario>@<ip-del-servidor>
 cd rodalies-observatorio
 
 docker compose ps                                   # los cuatro en Up (healthy)
@@ -198,7 +202,7 @@ Con el tunel SSH abierto tambien se puede consultar la API de Grafana desde el
 portatil, que es como se confirmo que los paneles ya devolvian datos:
 
 ```bash
-curl -s -u "admin:CLAVE" http://localhost:3000/api/dashboards/uid/rodalies-punt
+curl -s -u "admin:$CLAVE_GRAFANA" http://localhost:3000/api/dashboards/uid/rodalies-punt
 ```
 
 ## 7. Congelado de cambios (desde el 27/08/2026)
@@ -232,17 +236,17 @@ escribir el post, preparar el pitch, montar el proxy con TLS.
   primaria y de todos los agregados, y los volumenes estan separados.
 - **No ampliar el alcance** antes de que la captura lleve semanas corriendo.
   Nada de prediccion, grafos, meteorologia ni frontend todavia.
+- **Nada privado en un fichero versionado.** Ni IP, ni usuario de SSH, ni rutas
+  del portatil, ni contrasenas. Van en `CLAUDE.local.md`, `.env` o
+  `reference/private/`, los tres fuera de git.
 
 ---
 
 ## 9. Como llegamos hasta aqui
 
-Hay **tres carpetas** en `Desktop\proyecto\` y conviene no confundirlas:
-
-| Carpeta | Que es |
-|---|---|
-| `rodalies-puntualidad` | v1 minima. Dentro, `archive/alternative-implementation` es la v2 extensa |
-| **`rodalies-observatorio`** | **esta. La version buena, fusion de las dos** |
+Esta version es la **fusion de dos implementaciones previas**: una v1 minima y
+una v2 extensa, escritas por separado. Las dos se conservan en local como
+evidencia de la evolucion arquitectonica; no forman parte del repositorio.
 
 Se escribieron dos analisis comparativos independientes que **no coincidian en
 la recomendacion**. Gano el que proponia construir sobre la v2 extensa y
@@ -256,9 +260,6 @@ esta en `docs/HISTORIA.md`, y los dos analisis originales se conservan en
 `docs/analisis-comparativo-previo.md` y `docs/comparativa-implementaciones.md`
 con sus desacuerdos incluidos.
 
-**No borres las otras dos carpetas.** Sirven de evidencia de la evolucion
-arquitectonica, que es material de entrevista.
-
 ## 10. Mapa del repositorio
 
 ```
@@ -271,7 +272,7 @@ tests/                 unitarios + integracion, con capturas reales de Renfe
 docs/                  ver la tabla del README
 scripts/               bootstrap-vps.sh · generar-env.sh · backup.sh
                        check_source.py · backup.ps1 · rodalies.ps1
-reference/private/     CV, CLAUDE.md original y notas de portfolio (gitignored)
+reference/private/     notas privadas y credenciales (gitignored)
 ```
 
 Documentacion por tema: `docs/ARQUITECTURA.md`, `docs/MODELO_DATOS.md`,
@@ -282,10 +283,9 @@ Documentacion por tema: `docs/ARQUITECTURA.md`, `docs/MODELO_DATOS.md`,
 
 - Windows 10 Home (sin Hyper-V: Docker depende de WSL2). PowerShell y Git
   Bash disponibles; `winget` tambien.
-- Docker Desktop en `C:\Users\Alex\AppData\Local\Programs\DockerDesktop\`.
+- Docker Desktop instalado en el portatil.
 - Python global: 3.14. El proyecto pide **3.12+** y la CI usa 3.12.
-- **Los entornos virtuales de sesiones anteriores estaban en la carpeta temporal
-  y ya no existen.** Para trabajar en local:
+- Para trabajar en local:
 
 ```powershell
 python -m venv .venv
@@ -302,8 +302,8 @@ pip install -e ".[dev,api,analysis]"
 
 ## 12. Estado del repositorio y que sigue
 
-**Ya es un repositorio git** (`git init` el 26/08/2026) con **10 commits
-tematicos**, arbol limpio y nada pendiente de anadir:
+**Ya es un repositorio git** (`git init` el 26/08/2026) con commits tematicos,
+arbol limpio y nada pendiente de anadir:
 
 ```
 docs        documentacion tecnica, operativa y de portfolio
@@ -318,29 +318,27 @@ feat(db)    esquema particionado, analitica y calidad
 chore       estructura, licencia y configuracion
 ```
 
-**Los commits van SOLO a nombre de Alex.** Sin `Co-Authored-By`, sin menciones a
-herramientas. Es una preferencia explicita suya: respetarla en todo commit futuro.
-
 Un `.gitattributes` fija LF en el repositorio. Sin el, clonar en Windows convierte
 los scripts a CRLF y fallan en el servidor con `bad interpreter: /bin/bash^M`,
 justo al desplegar.
 
-Se comprobo antes de commitear que **no entra nada sensible**: `.env` y
-`reference/private/` (CV incluido) estan excluidos y no hay ninguna contrasena
-real en el indice.
+Se comprobo antes de commitear que **no entra nada sensible**: `.env`,
+`CLAUDE.local.md` y `reference/private/` estan excluidos y no hay ninguna
+contrasena real en el indice.
 
 ### Lo que falta, en orden
 
 1. **Capturas de pantalla** de los paneles con datos reales, en `docs/img/`,
    enlazadas desde el README. Mejor con una o dos semanas de datos: es lo
-   primero que mira un reclutador y ahora mismo los graficos aun estan flacos.
+   primero que mira quien abre el repositorio y ahora mismo los graficos aun
+   estan flacos.
 2. **Vigilar la primera semana**: `rodalies check` cada dos o tres dias. Si
    `ingesta_reciente` sale en ERROR, el historico esta perdiendo datos.
 3. **Comprobar que el cron de copias funciona**: mirar `~/backup.log` y que
    aparezcan ficheros nuevos en `backups/`. Sacar alguna copia fuera del
    servidor (`scp`) y probar una restauracion.
 4. **Panel publico** con dominio y proxy TLS (seccion 6 de `DESPLIEGUE.md`),
-   para tener una URL que enlazar en el curriculum.
+   para tener una URL que enlazar.
 5. **Publicar el conjunto de datos** con ficha, rango temporal, zona horaria y
    atribucion a Renfe (CC BY 4.0). Sin datos sinteticos dentro.
 6. **Solo entonces**, con meses de historico: el modelo de prediccion.
@@ -349,7 +347,7 @@ real en el indice.
 
 No estan en el repositorio ni pueden estarlo. Viven en dos sitios:
 
-- **En el servidor**: `/home/alex/rodalies-observatorio/.env` (permisos 600).
+- **En el servidor**: `~/rodalies-observatorio/.env` (permisos 600).
 - **En el portatil**: `reference/private/CREDENCIALES.md`, que esta en
   `.gitignore` junto con el resto de `reference/private/`.
 

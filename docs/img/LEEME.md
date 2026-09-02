@@ -8,7 +8,7 @@ repositorio. Se hacen a mano en cinco minutos.
 Abre el tunel y dejalo abierto:
 
 ```powershell
-ssh -N -L 3000:localhost:3000 -L 8000:localhost:8000 alex@212.227.107.53
+ssh -N -L 3000:localhost:3000 -L 8000:localhost:8000 <usuario>@<ip-del-servidor>
 ```
 
 Entra en <http://localhost:3000> con `admin` y la contrasena de
