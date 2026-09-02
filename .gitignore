@@ -1,6 +1,5 @@
 # Secretos y configuracion local
 reference/private/
-CLAUDE.local.md
 .env
 .env.local
 

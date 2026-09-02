@@ -34,7 +34,7 @@ Porque empezo ahi. La pregunta original era sobre la R2 de Barcelona, y el
 analisis y los paneles siguen abriendo en Catalunya por defecto.
 
 Pero capturar solo un nucleo habria sido un error irreversible: **lo que no se
-captura hoy no existe nunca**. Ampliarlo a toda Espana costaba 27 GB al ano en
+captura hoy no existe nunca**. Ampliarlo a toda Espana costaba 22 GB al ano en
 vez de 9, sobre un disco de 232 GB. Y convirtio una pregunta local en una
 comparativa que nadie mas puede hacer.
 
@@ -66,7 +66,7 @@ marcado con `source = 'synthetic'`.
 ## Capturar datos reales
 
 ```bash
-cp .env.example .env      # rellena POSTGRES_PASSWORD, READONLY_PASSWORD y GRAFANA_PASSWORD
+bash scripts/generar-env.sh    # .env con contrasenas aleatorias, permisos 600
 docker compose up -d --build
 docker compose logs -f ingestor
 ```
@@ -74,11 +74,48 @@ docker compose logs -f ingestor
 - Paneles: <http://localhost:3000>
 - API: <http://localhost:8000/docs>
 
+No hay mas pasos. El ingestor aplica las migraciones al arrancar, descarga el
+horario programado solo y refresca la capa analitica en cuanto entra la primera
+captura, para que los paneles no salgan vacios los primeros quince minutos.
+
 Ningun puerto se publica fuera de `127.0.0.1`. Para exponer el panel hace falta
 un proxy inverso con TLS delante; esta explicado en
 [docs/RUNBOOK.md](docs/RUNBOOK.md).
 
 En Windows: `.\scripts\rodalies.ps1 demo` o `.\scripts\rodalies.ps1 up`.
+
+## Montar tu propio observatorio en un VPS
+
+El proyecto esta hecho para que lo levante cualquiera, no solo quien lo
+escribio. En un Ubuntu 22.04 o 24.04 recien creado, como `root`:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Abadalina/rodalies-observatorio/main/scripts/instalar.sh -o instalar.sh
+sudo bash instalar.sh
+```
+
+Eso es todo. El instalador prepara el servidor (usuario sin privilegios, Docker,
+`ufw` con solo SSH abierto, swap, zona horaria), clona el repositorio, genera las
+contrasenas, levanta los cuatro servicios y espera a que empiece a capturar. Se
+descarga antes de ejecutarse, en vez de `curl | bash`, para que puedas leer lo
+que vas a correr como root: son cien lineas.
+
+Termina imprimiendo la contrasena de Grafana y el tunel SSH con el que ver los
+paneles desde tu equipo. Es idempotente: si lo vuelves a ejecutar, no pisa el
+`.env` ni el historico.
+
+Un par de cosas que conviene saber antes:
+
+| | |
+|---|---|
+| **Alcance por defecto** | Solo el nucleo 51, Catalunya. Para toda Espana, `RODALIES_NUCLEOS=all` en `.env` |
+| **Espacio** | ~9 GB al ano con el nucleo 51; ~22 GB con los quince (medido) |
+| **Maquina** | Sobra con 2 nucleos y 4 GB. La captura es ligera; lo que crece es el disco |
+| **Copias** | No estan automatizadas por ti: monta el cron de [docs/DESPLIEGUE.md](docs/DESPLIEGUE.md) |
+
+Si prefieres hacerlo paso a paso, o el servidor no es Ubuntu, el proceso
+completo y el porque de cada decision estan en
+[docs/DESPLIEGUE.md](docs/DESPLIEGUE.md).
 
 ---
 

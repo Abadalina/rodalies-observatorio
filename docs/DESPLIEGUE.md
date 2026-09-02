@@ -8,6 +8,21 @@ Cada suspension es un agujero en la serie historica, y los agujeros se ven en el
 panel de salud de la ingesta. El historico es el activo del proyecto y no se
 puede recapturar.
 
+## El atajo, si no quieres leer la guia
+
+Sobre un Ubuntu recien creado, como `root`, esto hace del tiron todo lo que
+cuentan las secciones 2 y 3:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Abadalina/rodalies-observatorio/main/scripts/instalar.sh -o instalar.sh
+sudo bash instalar.sh
+```
+
+El resto de la guia sigue mereciendo la pena por dos motivos: explica **por que**
+cada paso es como es, y cubre lo que el instalador deliberadamente no hace
+—copias de seguridad automaticas (seccion 5) y panel publico con TLS (seccion
+6)—, porque son decisiones tuyas y no de un script.
+
 ---
 
 ## 1. Que servidor
@@ -45,7 +60,13 @@ de servicio (05:00-23:00; de noche el feed va vacio).
 | Alcance | Filas/dia | Filas/ano | Disco/ano con indices |
 |---|---:|---:|---:|
 | Rodalies Barcelona (`51`) | ~70.000 | ~26 M | **~9 GB** |
-| Los quince nucleos (`all`) | ~380.000 | ~139 M | ~49 GB |
+| Los quince nucleos (`all`) | ~176.000 | ~64 M | ~22 GB |
+
+La fila de `all` es **medida**, no estimada: 879.254 observaciones en los cinco
+primeros dias de captura con `RODALIES_NUCLEOS=all`. La estimacion previa
+(~380.000 filas/dia) doblaba la realidad, porque daba por informadas todas las
+paradas de cada circulacion y el feed solo publica las proximas. La fila del
+nucleo 51 sigue siendo una estimacion.
 
 Con 40 GB y solo Barcelona tienes para unos tres o cuatro anos. Si algun dia
 activas `RODALIES_NUCLEOS=all`, dimensiona antes.

@@ -5,8 +5,6 @@ quedó en `archive/alternative-implementation/`. Ninguna gana entera. Este docum
 recoge qué hace mejor cada una, tres defectos verificados ejecutándolas y en qué orden
 conviene fusionarlas.
 
-Versión visual del informe: <https://claude.ai/code/artifact/96bac8fa-daf1-40f8-9c10-89e30cabc25a>
-
 Fecha: 25 de agosto de 2026.
 
 ---
