@@ -618,6 +618,16 @@ INSERT INTO analytics.refresh_state (clave, hasta)
      VALUES ('stop_final', now() - interval '2 minutes')
 ON CONFLICT (clave) DO NOTHING;
 
+-- Las funciones de mantenimiento nuevas, fuera del alcance de PUBLIC, como las
+-- de la migracion 004: PostgreSQL concede EXECUTE a PUBLIC por defecto, y
+-- `rebuild_analytics()` vacia las cuatro tablas antes de rehacerlas. Al rol de
+-- lectura le faltaria el permiso de TRUNCATE para llegar a hacer dano, pero la
+-- regla del proyecto es que refrescar no es una operacion de lectura.
+REVOKE ALL ON FUNCTION analytics.refresh_incremental() FROM PUBLIC;
+REVOKE ALL ON FUNCTION analytics.rebuild_analytics() FROM PUBLIC;
+REVOKE ALL ON FUNCTION analytics.stop_final_merge(timestamptz, timestamptz) FROM PUBLIC;
+REVOKE ALL ON FUNCTION analytics.agregados_merge(date, date) FROM PUBLIC;
+
 GRANT SELECT ON analytics.mv_stop_final        TO rodalies_lectura;
 GRANT SELECT ON analytics.mv_line_daily        TO rodalies_lectura;
 GRANT SELECT ON analytics.mv_station_daily     TO rodalies_lectura;

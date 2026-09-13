@@ -101,7 +101,7 @@ jobs:
           rodalies migrate
           rodalies load-gtfs
           rodalies poll
-          rodalies refresh --blocking
+          rodalies refresh --rebuild
       - name: Comprobaciones de calidad
         run: rodalies check
       - name: El historico tiene datos

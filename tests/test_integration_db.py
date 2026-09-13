@@ -358,3 +358,130 @@ def test_el_rol_de_solo_lectura_no_puede_escribir(migrada):
         conn.execute("SELECT count(*) FROM rt.observation").fetchone()
         with pytest.raises(psycopg.errors.InsufficientPrivilege):
             conn.execute("DELETE FROM rt.observation")
+
+
+def _observacion_hace(minutos: int, retraso: int, trip="5135M12345R2N", stop="71801"):
+    """Como `observacion`, pero anclada al reloj real y en el pasado.
+
+    El refresco incremental trabaja sobre ventanas de `feed_timestamp` medidas
+    contra `now()`, asi que estos tests no pueden usar la fecha fija del resto:
+    con una marca de tiempo en el futuro no se incorporaria nada.
+    """
+    momento = datetime.now(UTC) - timedelta(minutes=minutos)
+    return StopObservation(
+        feed_timestamp=momento,
+        trip_id=trip,
+        stop_id=stop,
+        route_id="51T0001R2N",
+        nucleo="51",
+        stop_sequence=1,
+        arrival_time=momento,
+        arrival_delay_s=retraso,
+        trip_delay_s=retraso,
+    )
+
+
+def _marca_de_agua(conn, cuando) -> None:
+    conn.execute(
+        "INSERT INTO analytics.refresh_state (clave, hasta) VALUES ('stop_final', %s) "
+        "ON CONFLICT (clave) DO UPDATE SET hasta = EXCLUDED.hasta",
+        (cuando,),
+    )
+
+
+def test_refresco_incremental_incorpora_lo_nuevo(limpia):
+    """El camino que corre cada quince minutos en produccion, para siempre."""
+    with session(limpia) as conn:
+        repo = Repository(conn)
+        conn.execute("TRUNCATE analytics.mv_stop_final, analytics.mv_line_daily")
+        _marca_de_agua(conn, datetime.now(UTC) - timedelta(hours=1))
+        repo.insert_observations(
+            [_observacion_hace(30, 60), _observacion_hace(20, 420)], source="renfe"
+        )
+
+        pasos = {p: f for p, f, _ in repo.refresh_analytics()}
+        delay = conn.execute("SELECT delay_s FROM analytics.mv_stop_final").fetchall()
+        agregados = conn.execute("SELECT count(*) FROM analytics.mv_line_daily").fetchone()[0]
+
+    assert pasos["mv_stop_final"] == 1  # dos observaciones, una sola parada
+    assert delay == [(420,)]  # gana la ultima, como en el refresco completo
+    assert agregados == 1
+
+
+def test_el_refresco_incremental_no_toca_lo_recien_insertado(limpia):
+    """La ventana se cierra dos minutos antes de ahora, y por un buen motivo.
+
+    Una observacion se inserta unos segundos despues del `feed_timestamp` que
+    lleva dentro. Si la marca de agua llegara hasta `now()`, una fila que
+    aterrizase un instante despues quedaria por debajo de la marca y no se
+    incorporaria nunca: perdida silenciosa, que es la peor clase.
+    """
+    with session(limpia) as conn:
+        repo = Repository(conn)
+        conn.execute("TRUNCATE analytics.mv_stop_final")
+        _marca_de_agua(conn, datetime.now(UTC) - timedelta(hours=1))
+        repo.insert_observations([_observacion_hace(0, 300)], source="renfe")
+
+        repo.refresh_analytics()
+        recien = conn.execute("SELECT count(*) FROM analytics.mv_stop_final").fetchone()[0]
+
+        # La misma observacion, ya fuera del margen, si entra.
+        _marca_de_agua(conn, datetime.now(UTC) - timedelta(hours=1))
+        conn.execute("UPDATE analytics.refresh_state SET hasta = now() - interval '1 hour'")
+        repo.insert_observations([_observacion_hace(10, 300, stop="71802")], source="renfe")
+        repo.refresh_analytics()
+        despues = conn.execute("SELECT count(*) FROM analytics.mv_stop_final").fetchone()[0]
+
+    assert recien == 0, "una observacion de hace un instante no debe incorporarse aun"
+    assert despues == 1, "una observacion pasado el margen si debe incorporarse"
+
+
+def test_el_refresco_incremental_es_idempotente(limpia):
+    """Repetir una ventana no puede cambiar el resultado."""
+    with session(limpia) as conn:
+        repo = Repository(conn)
+        conn.execute("TRUNCATE analytics.mv_stop_final")
+        _marca_de_agua(conn, datetime.now(UTC) - timedelta(hours=1))
+        repo.insert_observations([_observacion_hace(30, 120)], source="renfe")
+
+        repo.refresh_analytics()
+        primera = conn.execute(
+            "SELECT source, service_date, trip_id, stop_id, delay_s FROM analytics.mv_stop_final"
+        ).fetchall()
+
+        conn.execute("UPDATE analytics.refresh_state SET hasta = now() - interval '1 hour'")
+        repo.refresh_analytics()
+        segunda = conn.execute(
+            "SELECT source, service_date, trip_id, stop_id, delay_s FROM analytics.mv_stop_final"
+        ).fetchall()
+
+    assert primera == segunda
+
+
+def test_la_marca_de_agua_en_el_futuro_se_denuncia(limpia):
+    """Un refresco parado no vacia los paneles: los congela. Hay que verlo."""
+    with session(limpia) as conn:
+        repo = Repository(conn)
+        repo.insert_observations([_observacion_hace(30, 60)], source="renfe")
+        _marca_de_agua(conn, datetime.now(UTC) + timedelta(days=2))
+        checks = {c[0]: (c[1], c[2]) for c in repo.quality_checks()}
+
+    estado, detalle = checks["capa_analitica_al_dia"]
+    assert estado == "ERROR"
+    assert "futuro" in detalle
+
+
+def test_el_rol_de_lectura_no_puede_refrescar(migrada):
+    """Refrescar no es una operacion de lectura (regla de la migracion 004)."""
+    import psycopg
+
+    with session(migrada) as conn:
+        Repository(conn).ensure_readonly_role("clave-de-prueba")
+
+    partes = migrada.split("@")
+    url_lectura = "postgresql://rodalies_lectura:clave-de-prueba@" + partes[-1]
+    with (
+        psycopg.connect(url_lectura) as conn,
+        pytest.raises(psycopg.errors.InsufficientPrivilege),
+    ):
+        conn.execute("SELECT * FROM analytics.rebuild_analytics()")
