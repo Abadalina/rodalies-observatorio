@@ -52,8 +52,12 @@ def _parser() -> argparse.ArgumentParser:
     run = sub.add_parser("run", help="bucle de ingesta continuo")
     run.add_argument("--migrate", action="store_true", help="migra antes de arrancar")
 
-    refresh = sub.add_parser("refresh", help="refresca las vistas materializadas")
-    refresh.add_argument("--blocking", action="store_true", help="sin CONCURRENTLY")
+    refresh = sub.add_parser("refresh", help="incorpora lo nuevo a la capa analitica")
+    refresh.add_argument(
+        "--rebuild",
+        action="store_true",
+        help="rehace la capa analitica entera desde las observaciones (minutos)",
+    )
 
     sub.add_parser("check", help="comprobaciones de calidad de datos")
     sub.add_parser("stats", help="resumen del historico")
@@ -130,8 +134,11 @@ def _cmd_refresh(settings: Settings, args: Namespace) -> int:
     from .ingest import Ingestor
 
     with Ingestor(settings) as ingestor:
-        for vista, ms in ingestor.refresh_analytics(concurrently=not args.blocking):
-            print(f"{vista}: {ms} ms")
+        pasos = ingestor.rebuild_analytics() if args.rebuild else ingestor.refresh_analytics()
+        if not pasos:
+            print("nada nuevo que incorporar")
+        for paso, filas, ms in pasos:
+            print(f"{paso}: {filas} filas ({ms} ms)")
     return EXIT_OK
 
 

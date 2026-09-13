@@ -100,7 +100,7 @@ def test_la_ultima_observacion_es_la_que_cuenta(limpia):
         repo.insert_observations(
             [observacion(0, 60), observacion(2, 240), observacion(4, 420)], source="renfe"
         )
-        repo.refresh_analytics(concurrently=False)
+        repo.rebuild_analytics()
         filas = conn.execute(
             "SELECT delay_s FROM analytics.mv_stop_final WHERE trip_id = %s",
             ("5135M12345R2N",),
@@ -127,7 +127,7 @@ def test_agregados_por_linea(limpia):
             ],
             source="renfe",
         )
-        repo.refresh_analytics(concurrently=False)
+        repo.rebuild_analytics()
         linea, paradas, puntuales, pct = conn.execute(
             """
             SELECT linea, paradas_observadas, paradas_puntuales, pct_puntualidad
@@ -147,7 +147,7 @@ def test_los_datos_sinteticos_no_contaminan_los_reales(limpia):
         repo = Repository(conn)
         repo.insert_observations([observacion(0, 60)], source="renfe")
         repo.insert_observations([observacion(0, 3600, trip="SINT-1")], source="synthetic")
-        repo.refresh_analytics(concurrently=False)
+        repo.rebuild_analytics()
         por_origen = dict(
             conn.execute(
                 "SELECT source, count(*) FROM analytics.mv_stop_final GROUP BY source"
@@ -167,13 +167,13 @@ def test_umbral_de_puntualidad_es_configurable(limpia):
         repo.insert_observations([observacion(0, 240)], source="renfe")
 
         repo.sync_settings({"on_time_threshold_s": 180})
-        repo.refresh_analytics(concurrently=False)
+        repo.rebuild_analytics()
         estricto = conn.execute("SELECT paradas_puntuales FROM analytics.mv_line_daily").fetchone()[
             0
         ]
 
         repo.sync_settings({"on_time_threshold_s": 300})
-        repo.refresh_analytics(concurrently=False)
+        repo.rebuild_analytics()
         laxo = conn.execute("SELECT paradas_puntuales FROM analytics.mv_line_daily").fetchone()[0]
 
     assert (estricto, laxo) == (0, 1)
@@ -273,7 +273,7 @@ def test_una_supresion_no_cuenta_como_impuntual(limpia):
         repo = Repository(conn)
         repo.sync_settings({"on_time_threshold_s": 180})
         repo.insert_observations([observacion(0, 60), suprimida], source="renfe")
-        repo.refresh_analytics(concurrently=False)
+        repo.rebuild_analytics()
         observadas, con_retraso, suprimidas, puntuales, pct = conn.execute(
             """
             SELECT paradas_observadas, paradas_con_retraso, paradas_suprimidas,

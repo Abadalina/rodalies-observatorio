@@ -260,3 +260,43 @@ autonoma" se entiende sin explicar nada y "nucleo 51" no.
 12 % lleva la provincia inferida por cercania. Se marca en `geo_origen` en vez de
 disimularlo: un dato aproximado etiquetado es util; sin etiquetar, es una trampa.
 
+
+---
+
+## 18. La capa analitica se mantiene al dia, no se recalcula
+
+**Decision.** Las cuatro vistas materializadas pasan a ser tablas que se
+mantienen incrementalmente: cada pasada incorpora solo las observaciones nuevas,
+delimitadas por una marca de agua sobre `feed_timestamp`, y rehace los agregados
+unicamente de los dias que toca ese lote.
+
+**Por que.** El recalculo completo corria dentro del mismo bucle que captura el
+feed, y su coste crece con el historico mientras que el historico solo crece. Con
+19 dias y 5,2 millones de observaciones costaba 253 s cada quince minutos: el
+ingestor pasaba el 22 % del tiempo sin poder consultar a Renfe. El intervalo real
+entre consultas habia subido de 60 s a 74 s y el peor hueco de 80 s a 324 s,
+ganando unos 13 s de recalculo por cada dia que pasaba. No se perdian trenes,
+pero si resolucion temporal, que tampoco se recaptura.
+
+Como una observacion nunca se modifica, rehacer los 19 dias para incorporar los
+ultimos quince minutos era tirar el 99,9 % del trabajo.
+
+**Alternativa descartada.** Sacar el refresco a su propio proceso para que no le
+robara tiempo a la captura. Habria quitado el sintoma dejando el problema: el
+coste seguiria creciendo hasta ocupar la maquina entera, solo que sin que se
+notara en el intervalo de captura hasta que fuera tarde.
+
+**Coste.** Dos funciones y una marca de agua que mantener, y un modo de fallo
+nuevo: si el refresco se parase, los paneles no se vaciarian, se quedarian
+congelados en el ultimo dato bueno. De ahi la comprobacion
+`capa_analitica_al_dia`, que vigila la marca **y tambien que no apunte al
+futuro** (con un reloj mal puesto, `now() - hasta` sale negativo y negativo no
+parece retraso).
+
+**Como se comprobo.** Sobre una copia real de produccion con 874.592
+observaciones: se guardo el resultado del recalculo completo, se aplico la
+migracion y se rehizo la capa; la comparacion `EXCEPT` en los dos sentidos dio
+cero filas de diferencia en las cuatro tablas. Despues se borro todo y se
+reprodujeron los cinco dias en 75 pasadas incrementales de seis horas: cero
+diferencias otra vez. Una pasada en regimen normal cuesta 0,77 s frente a 6,7 s
+del recalculo completo sobre esos mismos datos.

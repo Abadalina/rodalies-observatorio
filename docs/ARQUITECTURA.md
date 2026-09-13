@@ -18,7 +18,7 @@ flowchart LR
     subgraph datos["db (PostgreSQL)"]
         GTFS[("gtfs.*<br/>horario programado")]
         OBS[("rt.observation<br/>particionada por mes")]
-        AN[("analytics.*<br/>vistas materializadas")]
+        AN[("analytics.*<br/>tablas mantenidas<br/>incrementalmente")]
     end
 
     GRA["grafana<br/>paneles como codigo"]
@@ -56,7 +56,7 @@ externas:
 | Tarea | Cadencia | Que hace |
 |---|---|---|
 | Consulta de feeds | 60 s | Descarga, normaliza e inserta observaciones |
-| Refresco analitico | 15 min, **y una vez en cuanto entra la primera captura** | `REFRESH MATERIALIZED VIEW CONCURRENTLY` |
+| Refresco analitico | 15 min, **y una vez en cuanto entra la primera captura** | Incorpora solo lo capturado desde la marca de agua |
 | Recarga del horario | 24 h | Descarga condicional del GTFS y recarga por COPY |
 
 La cadencia de consulta se programa **desde el reloj, no desde el final del
@@ -140,7 +140,8 @@ lleva, y es una decision, no una carencia:
   indices. PostgreSQL con particionado mensual va sobrado durante anos.
 - **Planificacion**: tres tareas periodicas en un bucle. Airflow anadiria mas
   piezas que trabajo hace.
-- **Transformaciones**: vistas materializadas en SQL, versionadas en migraciones.
+- **Transformaciones**: SQL versionado en migraciones, sobre tablas que se
+  mantienen incrementalmente (ver `docs/MODELO_DATOS.md`).
   dbt aportaria linaje y documentacion, pero tambien otro tiempo de ejecucion y
   otro lenguaje de plantillas. Lo que si aporta dbt de verdad —los tests de
   datos— esta cubierto por `analytics.v_quality_checks`.

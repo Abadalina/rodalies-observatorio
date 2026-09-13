@@ -403,11 +403,27 @@ class Repository:
         row = self.conn.execute("SELECT rt.ensure_partitions(%s, %s)", (back, ahead)).fetchone()
         return int(row[0]) if row else 0
 
-    def refresh_analytics(self, concurrently: bool = True) -> list[tuple[str, int]]:
+    def refresh_analytics(self) -> list[tuple[str, int, int]]:
+        """Incorpora a la capa analitica lo capturado desde la ultima pasada.
+
+        Devuelve un paso por cada cosa que ha tocado; si no habia nada nuevo no
+        devuelve ninguno, que es lo normal si se llama dos veces seguidas.
+        """
         filas = self.conn.execute(
-            "SELECT vista, duracion_ms FROM analytics.refresh_all(%s)", (concurrently,)
+            "SELECT paso, filas, duracion_ms FROM analytics.refresh_incremental()"
         ).fetchall()
-        return [(str(v), int(ms)) for v, ms in filas]
+        return [(str(p), int(f), int(ms)) for p, f, ms in filas]
+
+    def rebuild_analytics(self) -> list[tuple[str, int, int]]:
+        """Rehace la capa analitica entera desde las observaciones crudas.
+
+        Es la red de seguridad: las observaciones son la fuente de verdad y todo
+        lo demas se deriva de ellas. Cuesta minutos, no segundos.
+        """
+        filas = self.conn.execute(
+            "SELECT paso, filas, duracion_ms FROM analytics.rebuild_analytics()"
+        ).fetchall()
+        return [(str(p), int(f), int(ms)) for p, f, ms in filas]
 
     def quality_checks(self) -> list[tuple[str, str, str]]:
         filas = self.conn.execute(

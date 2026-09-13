@@ -171,10 +171,36 @@ del retraso realmente sufrido. `DISTINCT ON` es la forma de PostgreSQL de
 resolver ese "primero por grupo" sin funcion de ventana ni subconsulta
 correlacionada.
 
-Todas las vistas materializadas tienen **indice unico**, requisito para
-`REFRESH MATERIALIZED VIEW CONCURRENTLY`, que recalcula sin bloquear a Grafana.
-`analytics.refresh_all()` las refresca en el orden correcto y, si el refresco
-concurrente fallara, cae al bloqueante en vez de dejar la vista sin actualizar.
+### Se mantienen al dia, no se recalculan
+
+Las cuatro empezaron siendo vistas materializadas y **desde la migracion 011 son
+tablas normales que se mantienen incrementalmente**. Conservan el prefijo `mv_`
+porque el nombre lo usan los paneles, la API y el cuaderno, y renombrarlas no
+arregla nada.
+
+El motivo del cambio esta medido: recalcularlas enteras costaba 253 s con 19 dias
+de historico y crecia unos 13 s por dia, dentro del mismo bucle que captura el
+feed. El intervalo real entre consultas habia pasado de 60 s a 74 s y el peor
+hueco de 80 s a 324 s. Como una observacion nunca se modifica, rehacer los 19
+dias para incorporar los ultimos quince minutos era tirar el 99,9 % del trabajo.
+
+Ahora:
+
+- `analytics.refresh_incremental()` incorpora solo lo capturado desde la **marca
+  de agua** (`analytics.refresh_state`) y rehace los agregados **de los dias que
+  toca ese lote**. El coste depende del lote, no del historico.
+- `analytics.rebuild_analytics()` lo rehace todo desde las observaciones crudas.
+  Es la red de seguridad, porque la fuente de verdad son siempre ellas.
+
+La ventana incremental se cierra **dos minutos antes de ahora**: una observacion
+se inserta unos segundos despues del `feed_timestamp` que lleva dentro, y si la
+marca de agua llegara hasta `now()`, una fila que aterrizase un instante despues
+quedaria por debajo de la marca y no se incorporaria jamas. Dos minutos de
+retraso en los paneles no los nota nadie; una fila que falta en el analisis, si.
+
+La comprobacion de calidad `capa_analitica_al_dia` vigila esa marca. Sin ella, un
+refresco parado no vaciaria los paneles: los dejaria congelados en el ultimo dato
+bueno, que se parece demasiado a que todo va bien.
 
 ## Metricas: por que no basta con la media
 

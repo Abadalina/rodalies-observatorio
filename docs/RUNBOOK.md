@@ -202,7 +202,8 @@ tiene reconstruccion posible.
 2. **Nunca editar una migracion ya aplicada**: el ejecutor compara checksums y
    avisa, pero no puede deshacer lo que ya corrio en produccion.
 3. Aplicar con `make migrate` (tambien se aplica sola al arrancar el ingestor).
-4. Si la migracion cambia una vista materializada, refrescar: `make refresh`.
+4. Si la migracion cambia la forma de la capa analitica, rehacerla:
+   `rodalies refresh --rebuild`.
 
 ---
 

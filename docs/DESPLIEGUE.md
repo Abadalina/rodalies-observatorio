@@ -312,7 +312,7 @@ Docker arranca al inicio. Confirmalo con `docker compose ps`.
 | `check` da ERROR en `ingesta_reciente` | La fuente no responde o el ingestor murio | `docker compose logs ingestor`; `python scripts/check_source.py` |
 | Grafana dice "permission denied for materialized view" | El rol de lectura sin permisos | `docker compose exec ingestor rodalies migrate` |
 | Grafana no conecta con la base | El ingestor no ha llegado a poner la contrasena al rol | Arrancar primero el ingestor y reiniciar Grafana |
-| Paneles vacios con ingesta viva | Vistas sin refrescar, o variable **Origen** mal | `rodalies refresh --blocking`; comprobar que Origen es `renfe` |
+| Paneles vacios con ingesta viva | Vistas sin refrescar, o variable **Origen** mal | `rodalies refresh --rebuild`; comprobar que Origen es `renfe` |
 | El ingestor se reinicia en bucle | Configuracion invalida | `docker compose logs ingestor`: Pydantic dice que campo |
 | Disco lleno | Historico creciendo | `docs/RUNBOOK.md`, seccion "El disco se esta llenando" |
 

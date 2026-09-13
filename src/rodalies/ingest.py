@@ -370,9 +370,13 @@ class Ingestor:
 
     # -- mantenimiento --------------------------------------------------------
 
-    def refresh_analytics(self, concurrently: bool = True) -> list[tuple[str, int]]:
+    def refresh_analytics(self) -> list[tuple[str, int, int]]:
         with session(self.settings.database_url) as conn:
-            return Repository(conn).refresh_analytics(concurrently)
+            return Repository(conn).refresh_analytics()
+
+    def rebuild_analytics(self) -> list[tuple[str, int, int]]:
+        with session(self.settings.database_url) as conn:
+            return Repository(conn).rebuild_analytics()
 
     def prepare(self) -> None:
         """Puesta a punto al arrancar: particiones y umbrales del entorno."""
@@ -439,8 +443,8 @@ class Ingestor:
 
             if now >= next_refresh:
                 try:
-                    for vista, ms in self.refresh_analytics():
-                        log.info("vista refrescada: %s (%d ms)", vista, ms)
+                    for paso, filas, ms in self.refresh_analytics():
+                        log.info("capa analitica: %s, %d filas (%d ms)", paso, filas, ms)
                 except Exception:
                     log.exception("fallo al refrescar la capa analitica")
                 next_refresh = time.monotonic() + self.settings.refresh_seconds

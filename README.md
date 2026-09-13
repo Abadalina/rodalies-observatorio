@@ -139,7 +139,8 @@ cada dia que no corre es un dia que no se recupera.
 - **Historico propio en PostgreSQL**, particionado por mes, idempotente y con
   registro de cada consulta al feed, tambien de las fallidas.
 - **Analisis en SQL**: puntualidad, mediana y percentiles por linea, estacion y
-  franja horaria, con vistas materializadas y refresco concurrente.
+  franja horaria, sobre una capa que se mantiene al dia incrementalmente en
+  lugar de recalcularse entera.
 - **Paneles de Grafana** provisionados como codigo, conectados con un rol de
   solo lectura.
 - **API de solo lectura** con FastAPI y documentacion automatica.
