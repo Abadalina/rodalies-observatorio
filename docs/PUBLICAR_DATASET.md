@@ -126,6 +126,6 @@ Zenodo da dos DOI por registro: uno de la version concreta y uno **de concepto**
 que apunta siempre a la ultima. En el README va el de concepto.
 
 ```markdown
-[![DOI del software](https://zenodo.org/badge/DOI/XX.XXXX/zenodo.XXXXXXX.svg)](https://doi.org/XX.XXXX/zenodo.XXXXXXX)
+[![DOI del software](https://zenodo.org/badge/DOI/10.5281/zenodo.22750872.svg)](https://doi.org/10.5281/zenodo.22750872)
 [![DOI de los datos](https://zenodo.org/badge/DOI/XX.XXXX/zenodo.YYYYYYY.svg)](https://doi.org/XX.XXXX/zenodo.YYYYYYY)
 ```

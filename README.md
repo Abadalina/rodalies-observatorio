@@ -4,6 +4,7 @@
 [![Licencia: MIT](https://img.shields.io/badge/licencia-MIT-blue.svg)](LICENSE)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue.svg)](pyproject.toml)
 [![mypy: strict](https://img.shields.io/badge/mypy-strict-2C7A54.svg)](pyproject.toml)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22750872.svg)](https://doi.org/10.5281/zenodo.22750872)
 
 **Renfe publica en abierto el retraso de sus trenes de Cercanias, pero solo el
 instante actual. Este proyecto construye el historico que no existe.**
@@ -381,6 +382,27 @@ Limitaciones que conviene decir antes de que las pregunten:
 - [ ] Capturas de pantalla de los paneles (ver `docs/img/LEEME.md`)
 - [x] **Conjunto de datos publicado** con ficha, caveats medidos y licencia
 - [ ] Modelo de prediccion de retraso (cuando haya meses de historico)
+
+## Como citarlo
+
+El proyecto esta archivado en Zenodo con DOI. El de abajo es el **DOI de
+concepto**: apunta siempre a la ultima version, asi que un enlace puesto hoy
+sigue siendo valido cuando se publique la siguiente.
+
+> Abadal Goula, A. (2026). *Observatorio de Rodalies: historico de puntualidad
+> de Cercanias de Renfe* [Software]. Zenodo.
+> https://doi.org/10.5281/zenodo.22750872
+
+```bibtex
+@software{abadal_rodalies_2026,
+  author    = {Abadal Goula, Alejandro},
+  title     = {Observatorio de Rodalies: historico de puntualidad de Cercanias de Renfe},
+  year      = {2026},
+  publisher = {Zenodo},
+  doi       = {10.5281/zenodo.22750872},
+  url       = {https://github.com/Abadalina/rodalies-observatorio}
+}
+```
 
 ## Licencia
 
