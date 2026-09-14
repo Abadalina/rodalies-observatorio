@@ -641,3 +641,51 @@ def test_todas_las_consultas_de_la_api_se_ejecutan(migrada):
                 conn.execute(sql, parametros).fetchall()
             except psycopg.Error as exc:
                 raise AssertionError(f"la consulta {nombre} no se puede ejecutar: {exc}") from exc
+
+
+def test_el_horario_se_archiva_una_sola_vez_por_version(limpia, tmp_path):
+    """El horario de Renfe es una ventana movil: si no se archiva, se pierde.
+
+    Y se archiva UNA vez por contenido: Renfe republica el mismo fichero varias
+    veces al dia, y guardarlo cada vez serian quince copias identicas de 16 MB.
+    """
+    import zipfile
+
+    from rodalies.config import Settings
+    from rodalies.ingest import Ingestor
+
+    zip_path = tmp_path / "gtfs" / "fomento_transit.zip"
+    zip_path.parent.mkdir(parents=True)
+    with zipfile.ZipFile(zip_path, "w") as z:
+        z.writestr("agency.txt", "agency_id,agency_name\n1,Renfe\n")
+
+    ajustes = Settings(database_url=limpia, export_dir=str(tmp_path / "export"))
+    with session(limpia) as conn:
+        repo = Repository(conn)
+        with Ingestor(ajustes) as ingestor:
+            primero = ingestor.archivar_horario(zip_path, "a" * 64, repo)
+            assert primero and primero.endswith(".zip")
+            assert (zip_path.parent / "archivo" / primero).exists()
+
+            # Todavia no se ha registrado la version, asi que el repositorio no
+            # sabe de ese sha: archivar otra vez no debe duplicar el fichero.
+            repo.record_feed_version(source="renfe", sha256="a" * 64, archivo=primero)
+            conn.commit()
+            segundo = ingestor.archivar_horario(zip_path, "a" * 64, repo)
+
+    assert segundo == primero
+    copias = list((zip_path.parent / "archivo").glob("*.zip"))
+    assert len(copias) == 1, f"se ha archivado dos veces: {copias}"
+
+
+def test_archivar_el_horario_nunca_rompe_la_carga(limpia, tmp_path):
+    """Perder el horario de un dia es una lastima; parar la captura, un desastre."""
+    from rodalies.config import Settings
+    from rodalies.ingest import Ingestor
+
+    ajustes = Settings(database_url=limpia, export_dir=str(tmp_path / "export"))
+    with session(limpia) as conn:
+        repo = Repository(conn)
+        with Ingestor(ajustes) as ingestor:
+            # Un fichero que no existe: copiarlo tiene que fallar por dentro.
+            assert ingestor.archivar_horario(tmp_path / "no-existe.zip", "b" * 64, repo) is None

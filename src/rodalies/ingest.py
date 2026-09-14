@@ -18,6 +18,7 @@ import time
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 
 from .config import Settings
@@ -182,6 +183,40 @@ class Ingestor:
 
     # -- horario programado ---------------------------------------------------
 
+    def archivar_horario(self, zip_path: Path, digest: str, repo: Repository) -> str | None:
+        """Guarda una copia de esta version del horario. Devuelve su nombre.
+
+        El horario que publica Renfe es una ventana movil de unas cuatro semanas
+        vista: el que se descarga hoy no dice nada de lo que estaba programado
+        hace un mes. Sin archivarlo, esa pregunta no se puede responder jamas,
+        igual que pasaria con las observaciones si no se guardaran.
+
+        Nunca hace fallar la carga: si el disco esta lleno o el directorio no se
+        puede crear, se registra y se sigue. Perder el horario de un dia es una
+        lastima; parar la captura por ello, un desastre.
+        """
+        if not self.settings.gtfs_archivar or not digest:
+            return None
+        try:
+            ya = repo.archivo_de_sha(digest)
+            if ya:
+                return ya
+            destino_dir = zip_path.parent / "archivo"
+            destino_dir.mkdir(parents=True, exist_ok=True)
+            from datetime import datetime as _dt
+
+            nombre = f"{_dt.now().strftime('%Y%m%d')}_{digest[:12]}.zip"
+            destino = destino_dir / nombre
+            if not destino.exists():
+                import shutil
+
+                shutil.copy2(zip_path, destino)
+                log.info("horario archivado: %s (%.1f MB)", nombre, destino.stat().st_size / 1e6)
+            return nombre
+        except Exception:
+            log.exception("no se pudo archivar el horario; la carga sigue igualmente")
+            return None
+
     def load_gtfs(self, *, force: bool = False, path: str | None = None) -> dict[str, Any]:
         """Descarga y carga el GTFS estatico. Devuelve un resumen.
 
@@ -335,12 +370,15 @@ class Ingestor:
                 else:
                     counts["shape"] = 0
                     log.info("el GTFS no trae %s: el mapa no tendra trazado", gs.SHAPES_FILE)
+                digest = gs.sha256_of(target)
+                archivo = self.archivar_horario(target, digest, repo)
                 repo.record_feed_version(
                     source=self.settings.source,
                     url=str(target)
                     if path or self.settings.source == "synthetic"
                     else self.settings.gtfs_static_url,
-                    sha256=gs.sha256_of(target),
+                    sha256=digest,
+                    archivo=archivo,
                     etag=getattr(response, "etag", None),
                     last_modified=getattr(response, "last_modified", None),
                     nucleos=list(self.settings.nucleo_codes) or None,

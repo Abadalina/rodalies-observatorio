@@ -294,13 +294,31 @@ class Repository:
         return written
 
     def record_feed_version(self, **fields: Any) -> int:
+        # Todo lo que no sea obligatorio entra a NULL. Antes habia que pasar los
+        # once campos o psycopg fallaba con un KeyError poco claro, y anadir uno
+        # nuevo obligaba a tocar a todos los que llaman.
+        for opcional in (
+            "url",
+            "sha256",
+            "archivo",
+            "etag",
+            "last_modified",
+            "nucleos",
+            "n_routes",
+            "n_trips",
+            "n_stops",
+            "n_stop_times",
+            "duration_ms",
+        ):
+            fields.setdefault(opcional, None)
         row = self.conn.execute(
             """
             INSERT INTO gtfs.feed_version (
-                source, url, sha256, etag, last_modified, nucleos,
+                source, url, sha256, archivo, etag, last_modified, nucleos,
                 n_routes, n_trips, n_stops, n_stop_times, duration_ms
             ) VALUES (
-                %(source)s, %(url)s, %(sha256)s, %(etag)s, %(last_modified)s, %(nucleos)s,
+                %(source)s, %(url)s, %(sha256)s, %(archivo)s, %(etag)s, %(last_modified)s,
+                %(nucleos)s,
                 %(n_routes)s, %(n_trips)s, %(n_stops)s, %(n_stop_times)s, %(duration_ms)s
             ) RETURNING version_id
             """,
@@ -309,6 +327,19 @@ class Repository:
         if row is None:  # pragma: no cover
             raise RuntimeError("PostgreSQL no devolvio el identificador de version")
         return int(row[0])
+
+    def archivo_de_sha(self, sha256: str) -> str | None:
+        """Nombre del zip ya archivado para ese contenido, si lo hay.
+
+        Renfe republica el mismo fichero varias veces al dia; archivarlo cada
+        vez seria guardar quince copias identicas de 16 MB.
+        """
+        row = self.conn.execute(
+            "SELECT archivo FROM gtfs.feed_version "
+            "WHERE sha256 = %s AND archivo IS NOT NULL LIMIT 1",
+            (sha256,),
+        ).fetchone()
+        return str(row[0]) if row and row[0] else None
 
     def latest_feed_version(self) -> dict[str, Any] | None:
         row = self.conn.execute(

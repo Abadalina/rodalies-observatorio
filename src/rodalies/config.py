@@ -78,6 +78,11 @@ class Settings(BaseSettings):
     poll_seconds: int = Field(default=60, ge=20, le=3600)
     refresh_seconds: int = Field(default=900, ge=60, le=86_400)
     gtfs_reload_seconds: int = Field(default=86_400, ge=3600, le=604_800)
+    # Guardar una copia de cada version del horario. El horario que publica
+    # Renfe es una ventana movil de unas cuatro semanas vista: sin archivarlo no
+    # hay forma de saber que estaba programado hace un mes. Son 16 MB por
+    # version y unas quince versiones al mes.
+    gtfs_archivar: bool = True
     http_timeout: int = Field(default=30, ge=5, le=300)
     http_retries: int = Field(default=3, ge=1, le=10)
 
