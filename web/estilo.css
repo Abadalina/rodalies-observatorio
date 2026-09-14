@@ -208,3 +208,7 @@ footer {
 
 .tenue { color: var(--tenue); }
 footer p { margin: .4rem 0; }
+
+.migas { margin: 0 0 .8rem; font-size: .88rem; color: var(--tenue); }
+.migas a { color: var(--tenue); }
+.enlaces--cabecera { margin-top: 1rem; font-weight: 600; }

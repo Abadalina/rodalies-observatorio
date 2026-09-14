@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mapa en vivo · Observatorio de Rodalies</title>
+<meta name="description" content="Donde esta cada tren de Rodalies ahora mismo, con su retraso.">
+<link rel="stylesheet" href="/vendor/leaflet.css">
+<link rel="stylesheet" href="/estilo.css">
+<link rel="stylesheet" href="/mapa.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>🚂</text></svg>">
+</head>
+<body class="cuerpo-mapa">
+
+<header class="barra">
+  <a class="marca" href="/">Observatorio de Rodalies</a>
+  <div class="barra-estado">
+    <span class="punto punto--espera" id="punto"></span>
+    <span id="resumen">cargando trenes…</span>
+  </div>
+  <div class="barra-acciones">
+    <label class="conmutador">
+      <input type="checkbox" id="todo-espana">
+      <span>toda Espana</span>
+    </label>
+  </div>
+</header>
+
+<div id="mapa"></div>
+
+<div class="leyenda" id="leyenda">
+  <strong>Retraso</strong>
+  <ul>
+    <li><i class="bolita" data-tono="puntual"></i>hasta 3 min</li>
+    <li><i class="bolita" data-tono="leve"></i>3 a 5 min</li>
+    <li><i class="bolita" data-tono="tarde"></i>5 a 15 min</li>
+    <li><i class="bolita" data-tono="grave"></i>mas de 15 min</li>
+    <li><i class="bolita" data-tono="adelantado"></i>adelantado</li>
+  </ul>
+  <p class="pie-leyenda">Posicion publicada por Renfe, no estimada.
+     Se actualiza cada 30 s.</p>
+</div>
+
+<script src="/vendor/leaflet.js"></script>
+<script src="/mapa.js"></script>
+</body>
+</html>

@@ -218,6 +218,52 @@ def alertas(limite: int = Query(50, ge=1, le=200)) -> list[dict[str, Any]]:
     return db.fetch(queries.ALERTAS, {"limite": limite})
 
 
+@app.get("/posiciones", tags=["en vivo"], summary="Donde esta cada tren ahora")
+def posiciones(
+    nucleo: str | None = Query(None, description="Nucleo de Cercanias; 51 es Catalunya"),
+    source: str = Query("renfe", pattern="^(renfe|synthetic)$"),
+) -> list[dict[str, Any]]:
+    """Ultima posicion conocida de cada tren en circulacion, con su retraso.
+
+    Solo trenes vistos en los ultimos diez minutos: si Renfe deja de publicar
+    uno, desaparece del mapa en vez de quedarse clavado donde se le vio por
+    ultima vez, que es lo que haria creer que sigue ahi.
+    """
+    return db.fetch(queries.POSICIONES, {"nucleo": nucleo, "source": source})
+
+
+@app.get("/trazados", tags=["en vivo"], summary="Geometria de las vias")
+def trazados(
+    nucleo: str | None = Query(None, description="Nucleo de Cercanias; 51 es Catalunya"),
+) -> list[dict[str, Any]]:
+    """El trazado real de cada recorrido, para dibujar la red de fondo."""
+    return db.fetch(queries.TRAZADOS, {"nucleo": nucleo})
+
+
+@app.get(
+    "/trenes/{trip_id}/historial",
+    tags=["puntualidad"],
+    summary="Como se ha portado un tren estos dias",
+)
+def historial_tren(
+    trip_id: str,
+    dias: int = Query(14, ge=1, le=90),
+    source: str = Query("renfe", pattern="^(renfe|synthetic)$"),
+) -> dict[str, Any]:
+    """Ficha del tren y su retraso dia a dia.
+
+    Devuelve la ficha aunque no haya historico: que un tren no haya circulado
+    estos dias es una respuesta, no un error.
+    """
+    ficha = db.fetch(queries.FICHA_TREN, {"trip_id": trip_id})
+    dias_sueltos = db.fetch(
+        queries.HISTORIAL_TREN, {"trip_id": trip_id, "dias": dias, "source": source}
+    )
+    if not ficha and not dias_sueltos:
+        raise HTTPException(404, f"el tren {trip_id} no aparece ni en el horario ni en la serie")
+    return {"tren": ficha[0] if ficha else {"trip_id": trip_id}, "dias": dias_sueltos}
+
+
 @app.get("/trenes/{trip_id}", tags=["puntualidad"], summary="Trayectoria de un tren")
 def tren(trip_id: str, service_date: date | None = None) -> list[dict[str, Any]]:
     filas = db.fetch(queries.TRAYECTORIA, {"trip_id": trip_id, "service_date": service_date})

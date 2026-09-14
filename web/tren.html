@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ficha de tren · Observatorio de Rodalies</title>
+<link rel="stylesheet" href="/estilo.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>🚂</text></svg>">
+</head>
+<body>
+
+<header class="cabecera">
+  <div class="contenido">
+    <p class="migas"><a href="/">Observatorio</a> · <a href="/mapa.html">mapa en vivo</a></p>
+    <h1 id="titulo">Cargando…</h1>
+    <p class="lema" id="subtitulo"></p>
+  </div>
+</header>
+
+<main class="contenido">
+
+  <section class="cifras">
+    <div class="cifra"><strong id="media-7">—</strong><span>retraso medio, 7 dias</span></div>
+    <div class="cifra"><strong id="media-14">—</strong><span>retraso medio, 14 dias</span></div>
+    <div class="cifra"><strong id="punt-14">—</strong><span>puntualidad, 14 dias</span></div>
+    <div class="cifra"><strong id="peor">—</strong><span>su peor retraso</span></div>
+  </section>
+
+  <section>
+    <h2>Dia a dia</h2>
+    <p class="apunte" id="apunte-dias">Cada dia que este tren ha circulado desde que se captura.</p>
+    <div class="tabla-envoltorio">
+      <table>
+        <thead>
+          <tr>
+            <th>Dia</th>
+            <th class="num">Retraso medio</th>
+            <th class="num">Mediana</th>
+            <th class="num">Peor</th>
+            <th class="num">Puntualidad</th>
+            <th class="num">Paradas</th>
+          </tr>
+        </thead>
+        <tbody id="cuerpo-dias"><tr><td colspan="6" class="cargando">cargando…</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Su ultimo recorrido</h2>
+    <p class="apunte">Parada a parada, con el retraso registrado en cada una.</p>
+    <div class="tabla-envoltorio">
+      <table>
+        <thead>
+          <tr>
+            <th>Estacion</th>
+            <th class="num">Prevista</th>
+            <th class="num">Real</th>
+            <th class="num">Retraso</th>
+          </tr>
+        </thead>
+        <tbody id="cuerpo-paradas"><tr><td colspan="4" class="cargando">cargando…</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+
+<footer class="contenido">
+  <p>Datos de <strong>Renfe Operadora</strong>, publicados en abierto bajo
+     <a href="https://creativecommons.org/licenses/by/4.0/deed.es" rel="license">CC BY 4.0</a>.</p>
+</footer>
+
+<script src="/tren.js"></script>
+</body>
+</html>

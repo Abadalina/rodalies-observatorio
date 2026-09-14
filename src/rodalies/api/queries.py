@@ -75,6 +75,78 @@ SELECT service_date, paradas_observadas, paradas_con_retraso, trenes,
  ORDER BY service_date
 """
 
+POSICIONES = """
+-- Donde esta cada tren AHORA, con su retraso.
+--
+-- Dos DISTINCT ON en vez de un JOIN sobre todo el historico: de cada tren
+-- interesa su ultima posicion y su ultima observacion, y nada mas. La ventana
+-- de diez minutos es lo que acota el trabajo a unos cientos de filas por muy
+-- grande que se haga la serie.
+WITH ultima_posicion AS (
+    SELECT DISTINCT ON (trip_id)
+           trip_id, latitude, longitude, current_status, stop_id, feed_timestamp
+      FROM rt.vehicle_position
+     WHERE source = %(source)s
+       AND feed_timestamp > now() - interval '10 minutes'
+       AND latitude IS NOT NULL
+       AND trip_id IS NOT NULL
+     ORDER BY trip_id, feed_timestamp DESC
+), ultimo_retraso AS (
+    SELECT DISTINCT ON (trip_id)
+           trip_id, nucleo_id,
+           COALESCE(arrival_delay_s, departure_delay_s, trip_delay_s) AS retraso_s
+      FROM rt.observation
+     WHERE source = %(source)s
+       AND feed_timestamp > now() - interval '10 minutes'
+     ORDER BY trip_id, feed_timestamp DESC
+)
+SELECT p.trip_id,
+       COALESCE(r.route_short_name,
+                analytics.linea_de_trip_id(p.trip_id),
+                'sin linea')                       AS linea,
+       t.trip_headsign                             AS destino,
+       d.nucleo_id,
+       p.latitude                                  AS lat,
+       p.longitude                                 AS lon,
+       d.retraso_s,
+       p.current_status                            AS estado,
+       s.stop_name                                 AS parada,
+       p.feed_timestamp                            AS visto
+  FROM ultima_posicion p
+  LEFT JOIN ultimo_retraso d ON d.trip_id = p.trip_id
+  LEFT JOIN gtfs.trip  t ON t.trip_id  = p.trip_id
+  LEFT JOIN gtfs.route r ON r.route_id = t.route_id
+  LEFT JOIN gtfs.stop  s ON s.stop_id  = p.stop_id
+ WHERE (%(nucleo)s::text IS NULL OR d.nucleo_id = %(nucleo)s::text)
+ ORDER BY linea, p.trip_id
+"""
+
+TRAZADOS = """
+-- La geometria de las vias por las que circula algo hoy, para pintar la red de
+-- fondo. Se agrupan los puntos en una sola fila por trazado: mandar 123.734
+-- filas sueltas al navegador seria absurdo cuando son 144 lineas.
+SELECT t.shape_id,
+       COALESCE(r.route_short_name, 'sin linea') AS linea,
+       -- Cinco decimales es un metro. Con seis, el fichero pesa un tercio mas
+       -- para dibujar una via con precision de diez centimetros en un mapa
+       -- donde un pixel son veinte metros.
+       array_agg(ARRAY[round(s.lat::numeric, 5), round(s.lon::numeric, 5)]
+                 ORDER BY s.punto) AS puntos
+  FROM gtfs.shape s
+  JOIN (
+      -- UNA fila por trazado. Con `DISTINCT shape_id, route_id, nucleo_id` un
+      -- mismo trazado usado por dos rutas salia dos veces y duplicaba cada
+      -- punto de la linea.
+      SELECT DISTINCT ON (shape_id) shape_id, route_id, nucleo_id
+        FROM gtfs.trip
+       WHERE shape_id IS NOT NULL
+       ORDER BY shape_id
+  ) t ON t.shape_id = s.shape_id
+  LEFT JOIN gtfs.route r ON r.route_id = t.route_id
+ WHERE (%(nucleo)s::text IS NULL OR t.nucleo_id = %(nucleo)s::text)
+ GROUP BY t.shape_id, r.route_short_name
+"""
+
 TRAYECTORIA = """
 SELECT stop_id, estacion, stop_sequence, scheduled_arrival, arrival_time,
        delay_s, schedule_relationship, last_seen
@@ -82,6 +154,43 @@ SELECT stop_id, estacion, stop_sequence, scheduled_arrival, arrival_time,
  WHERE trip_id = %(trip_id)s
    AND (%(service_date)s::date IS NULL OR service_date = %(service_date)s::date)
  ORDER BY service_date DESC, stop_sequence NULLS LAST, scheduled_arrival
+"""
+
+HISTORIAL_TREN = """
+-- Como se ha portado ESTE tren los ultimos dias, uno a uno.
+--
+-- El umbral de puntualidad no se escribe aqui: sale de analytics.setting_value,
+-- igual que en los agregados, para que cambiar que se considera puntual sea un
+-- UPDATE y no una reescritura de media capa analitica.
+SELECT service_date,
+       count(*)                                                  AS paradas,
+       count(*) FILTER (WHERE delay_s IS NOT NULL)                AS con_dato,
+       round(avg(delay_s) FILTER (WHERE delay_s IS NOT NULL))     AS retraso_medio_s,
+       percentile_cont(0.5) WITHIN GROUP (ORDER BY delay_s)       AS retraso_mediano_s,
+       max(delay_s)                                              AS retraso_max_s,
+       round(100.0 * count(*) FILTER (
+                 WHERE delay_s <= analytics.setting_value('on_time_threshold_s'))
+             / NULLIF(count(*) FILTER (WHERE delay_s IS NOT NULL), 0), 1) AS pct_puntualidad
+  FROM analytics.mv_stop_final
+ WHERE trip_id = %(trip_id)s
+   AND source = %(source)s
+   AND service_date >= current_date - %(dias)s::int
+ GROUP BY service_date
+ ORDER BY service_date DESC
+"""
+
+FICHA_TREN = """
+-- Los cuatro datos de cabecera: que linea es, a donde va y de donde sale.
+SELECT t.trip_id,
+       COALESCE(r.route_short_name,
+                analytics.linea_de_trip_id(t.trip_id),
+                'sin linea')                  AS linea,
+       r.route_long_name                      AS recorrido,
+       t.trip_headsign                        AS destino,
+       t.nucleo_id
+  FROM gtfs.trip t
+  LEFT JOIN gtfs.route r ON r.route_id = t.route_id
+ WHERE t.trip_id = %(trip_id)s
 """
 
 ALERTAS = """

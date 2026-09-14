@@ -1,0 +1,103 @@
+/* El mapa ocupa la pantalla entera menos la barra. */
+html, body.cuerpo-mapa { height: 100%; }
+
+body.cuerpo-mapa {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.barra {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: .7rem 1.1rem;
+  background: var(--fondo-alt);
+  border-bottom: 1px solid var(--borde);
+  z-index: 500;
+}
+
+.marca {
+  font-weight: 650;
+  color: var(--texto);
+  text-decoration: none;
+  letter-spacing: -.01em;
+}
+
+.barra-estado {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  color: var(--tenue);
+  font-size: .88rem;
+}
+
+.barra-acciones { margin-left: auto; }
+
+.conmutador {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  font-size: .88rem;
+  color: var(--tenue);
+  cursor: pointer;
+  user-select: none;
+}
+
+#mapa {
+  flex: 1;
+  min-height: 0;
+  background: var(--fondo);
+}
+
+/* En tema oscuro los mosaicos de OSM deslumbran; se apagan sin recolorearlos,
+   que es lo que hace que un mapa oscuro parezca un negativo. */
+@media (prefers-color-scheme: dark) {
+  .hoja-mosaicos { filter: brightness(.72) saturate(.85); }
+}
+
+/* -- leyenda --------------------------------------------------------------- */
+
+.leyenda {
+  position: absolute;
+  right: 1rem;
+  bottom: 1.5rem;
+  z-index: 500;
+  max-width: 14rem;
+  padding: .8rem .95rem;
+  border: 1px solid var(--borde);
+  border-radius: .6rem;
+  background: var(--fondo-alt);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, .12);
+  font-size: .82rem;
+}
+
+.leyenda strong { display: block; margin-bottom: .45rem; font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; color: var(--tenue); }
+.leyenda ul { margin: 0; padding: 0; list-style: none; }
+.leyenda li { display: flex; align-items: center; gap: .5rem; padding: .12rem 0; }
+
+.bolita { width: .75rem; height: .75rem; border-radius: 50%; flex: none; border: 1px solid rgba(0,0,0,.25); }
+.bolita[data-tono="puntual"]    { background: #2e9e5b; }
+.bolita[data-tono="leve"]       { background: #d9a441; }
+.bolita[data-tono="tarde"]      { background: #e07a3c; }
+.bolita[data-tono="grave"]      { background: #c4342c; }
+.bolita[data-tono="adelantado"] { background: #4a7fd4; }
+
+.pie-leyenda { margin: .6rem 0 0; color: var(--tenue); font-size: .76rem; line-height: 1.45; }
+
+@media (max-width: 560px) {
+  .leyenda { right: .6rem; bottom: .6rem; max-width: 11rem; padding: .6rem .7rem; }
+  .leyenda .pie-leyenda { display: none; }
+}
+
+/* -- burbuja del tren ------------------------------------------------------ */
+
+.leaflet-popup-content { margin: .7rem .85rem; font: 14px/1.5 system-ui, sans-serif; }
+.leaflet-popup-content-wrapper { border-radius: .5rem; }
+
+.ficha-linea { display: inline-block; padding: .1rem .4rem; border-radius: .25rem; background: var(--acento); color: #fff; font-weight: 650; font-size: .8rem; }
+.ficha-destino { margin: .35rem 0 .1rem; font-weight: 600; }
+.ficha-retraso { font-size: 1.15rem; font-weight: 650; margin: .2rem 0; }
+.ficha-dato { color: #666; font-size: .82rem; margin: .1rem 0; }
+.ficha-enlace { display: inline-block; margin-top: .4rem; font-size: .82rem; }

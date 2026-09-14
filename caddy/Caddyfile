@@ -15,7 +15,15 @@
 	encode zstd gzip
 	root * /srv
 
-	# La API, detras del mismo dominio para no pelearse con CORS.
+	# El trazado de las vias cambia como mucho una vez al dia, cuando Renfe
+	# publica horario nuevo. Es lo mas pesado que sirve este sitio (unos 700 kB
+	# para Catalunya), asi que se cachea un dia entero en vez de un minuto.
+	handle_path /api/trazados* {
+		header Cache-Control "public, max-age=86400"
+		reverse_proxy api:8000
+	}
+
+	# El resto de la API, detras del mismo dominio para no pelearse con CORS.
 	handle_path /api/* {
 		# Media hora de cache en el navegador y en cualquier intermedio: los
 		# agregados cambian cada quince minutos, no cada peticion. Es lo que
