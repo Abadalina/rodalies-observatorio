@@ -44,6 +44,7 @@ flowchart LR
 | `ingestor` | Bucle continuo: consulta feeds, carga horario, refresca vistas | Un solo proceso, sin planificador externo: menos piezas que se puedan caer |
 | `api` | FastAPI de solo lectura sobre la capa analitica | Da una URL que se puede abrir y documentacion automatica en `/docs` |
 | `grafana` | Paneles provisionados desde ficheros del repositorio | Reproducible desde cero; entra con un rol de **solo lectura**, nunca con el dueno del esquema |
+| `web` | Proxy inverso con TLS automatico y la web estatica | **El unico servicio que escucha fuera de la maquina.** Va tras el perfil `publico`: quien no quiera panel publico no lo levanta, y entonces nada escucha salvo SSH |
 
 El ingestor y la API **comparten imagen**: mismo codigo, distinto comando. Evita
 que se desincronicen y ahorra una construccion entera en la CI.

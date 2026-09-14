@@ -236,42 +236,75 @@ docker compose exec db dropdb -U rodalies rodalies_prueba
 
 ## 6. Panel publico con dominio (opcional)
 
-Solo cuando quieras enlazarlo desde el curriculum. Necesitas un dominio
-apuntando a la IP del servidor.
+Solo si quieres una direccion que enlazar. Levanta la web —mapa en vivo,
+estadisticas y ficha de cada tren— y la API, **nunca Grafana ni la base de
+datos**.
 
-Caddy es lo mas corto porque gestiona los certificados solo:
+Necesitas un nombre apuntando a la IP del servidor. Un dominio propio si lo
+tienes; si no, un subdominio gratuito de [DuckDNS](https://www.duckdns.org) vale
+igual y saca certificado sin problema. Ojo con el formulario de DuckDNS: rellena
+la IP desde la que estas navegando, asi que hay que **sustituirla por la del
+servidor** y dejar la casilla de IPv6 vacia.
 
-```bash
-sudo apt install -y caddy
-sudo tee /etc/caddy/Caddyfile > /dev/null <<'CADDY'
-rodalies.tudominio.com {
-    reverse_proxy 127.0.0.1:3000
-}
-api.rodalies.tudominio.com {
-    reverse_proxy 127.0.0.1:8000
-}
-CADDY
-sudo ufw allow 80,443/tcp
-sudo systemctl restart caddy
-```
-
-Y en `.env`, para que el panel se pueda ver sin credenciales:
+Comprueba que resuelve antes de seguir:
 
 ```bash
-GRAFANA_ANONYMOUS=true
+getent hosts tu-nombre.duckdns.org   # debe devolver la IP del servidor
 ```
+
+Despues, tres pasos:
 
 ```bash
-docker compose up -d grafana
+# 1. El nombre, en el .env (no se versiona: el repositorio no lleva la
+#    direccion de nadie dentro)
+echo "RODALIES_DOMINIO=tu-nombre.duckdns.org" >> .env
+
+# 2. Abrir los dos puertos. El 80 hace falta aunque todo vaya por https:
+#    es por donde Let's Encrypt comprueba que el dominio es tuyo.
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+
+# 3. Levantar solo el proxy. El resto de servicios ni se tocan, asi que esto
+#    NO interrumpe la captura.
+docker compose --profile publico up -d web
 ```
 
-Lo que **no** hay que hacer nunca: abrir el 5432 ni el 3000 directamente en el
-cortafuegos. El proxy va delante y la base no se toca desde fuera.
+El certificado se pide y se renueva solo. Para ver si ha salido:
 
-Recuerda que Grafana entra a PostgreSQL con el rol `rodalies_lectura`, que no
-puede escribir nada. Aunque alguien se hiciera con esa credencial, solo leeria.
+```bash
+docker compose logs web | grep -i "certificate obtained"
+curl -sI https://tu-nombre.duckdns.org/ | head -1
+```
 
----
+### Que queda expuesto y que no
+
+| | |
+|---|---|
+| Web y API | **si**, es el objetivo |
+| Grafana | **no**. Entra con contrasena y se ve por el tunel SSH |
+| PostgreSQL | **no**. Nunca ha escuchado fuera de `localhost` |
+
+La API sale en solo lectura por partida doble: no tiene ni una sentencia de
+escritura, y ademas se conecta con el rol `rodalies_lectura`, que no puede
+escribir aunque se lo pidan. Comprobarlo:
+
+```bash
+RO=$(grep '^READONLY_PASSWORD=' .env | cut -d= -f2)
+docker compose exec -T -e PGPASSWORD=$RO db   psql -U rodalies_lectura -d rodalies -c "DELETE FROM rt.observation WHERE false;"
+# ERROR: permission denied for table observation
+```
+
+### Cambiar la configuracion del proxy
+
+El Caddyfile se monta como **directorio**, no como fichero suelto. Es a
+proposito: un bind mount de un fichero queda atado a su inodo y `git pull` no
+edita los ficheros, los reemplaza, con lo que el contenedor se quedaria viendo
+el original borrado y las recargas no harian nada sin dar ningun error.
+
+```bash
+git pull
+docker compose exec web caddy reload --config /etc/caddy/Caddyfile
+```
 
 ## 7. Mantenimiento
 

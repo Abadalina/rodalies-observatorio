@@ -141,9 +141,13 @@ cada dia que no corre es un dia que no se recupera.
 - **Analisis en SQL**: puntualidad, mediana y percentiles por linea, estacion y
   franja horaria, sobre una capa que se mantiene al dia incrementalmente en
   lugar de recalcularse entera.
+- **Web publica** con mapa en vivo —cada tren donde esta *de verdad*, con la
+  posicion que publica Renfe, no interpolada— ficha historica de cada tren y
+  pagina de estadisticas. Servida tras un proxy con TLS automatico.
 - **Paneles de Grafana** provisionados como codigo, conectados con un rol de
   solo lectura.
-- **API de solo lectura** con FastAPI y documentacion automatica.
+- **API abierta** con FastAPI y documentacion automatica, en solo lectura y
+  conectada con un rol de PostgreSQL que no puede escribir.
 - **Cuaderno** de analisis exploratorio con pandas y NumPy.
 - **Comprobaciones de calidad de datos** y vigilancia diaria de la fuente en CI.
 
@@ -155,8 +159,10 @@ flowchart LR
     ST["GTFS estatico<br/>a diario"] --> ING
     ING["ingestor<br/>Python"] --> DB[("PostgreSQL<br/>gtfs + rt + analytics")]
     DB --> GRA["Grafana<br/>rol de solo lectura"]
-    DB --> API["FastAPI"]
+    DB --> API["FastAPI<br/>rol de solo lectura"]
     DB --> NB["Cuaderno"]
+    API --> WEB["web<br/>Caddy + TLS"]
+    WEB --> USR(["mapa, estadisticas<br/>y ficha de cada tren"])
 ```
 
 Detalle en [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md).
@@ -332,8 +338,10 @@ Limitaciones que conviene decir antes de que las pregunten:
 - [x] Documentacion tecnica y operativa
 - [x] **Capturando en produccion** desde el 26/08/2026, los quince nucleos
 - [x] Copias de seguridad automaticas, verificadas y fuera del servidor
+- [x] **Web publica** con mapa en vivo, estadisticas y TLS automatico
+- [x] Posicion GPS de cada tren, capturada y particionada por mes
+- [x] Cada version del horario archivada (Renfe solo publica una ventana movil)
 - [ ] Capturas de pantalla de los paneles (ver `docs/img/LEEME.md`)
-- [ ] Panel publico con dominio y TLS
 - [ ] Conjunto de datos publicado con ficha y licencia
 - [ ] Modelo de prediccion de retraso (cuando haya meses de historico)
 
