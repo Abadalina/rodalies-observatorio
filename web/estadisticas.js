@@ -123,7 +123,11 @@ async function cargar() {
     }
     const datos = [...porHora.entries()]
       .sort((a, b) => a[0] - b[0])
-      .filter(([, v]) => v.paradas >= 100)
+      // Mil paradas de suelo, el mismo criterio que la comprobacion de calidad
+      // `observaciones_huerfanas`: por debajo de eso una proporcion la decide el
+      // ruido. Sin este filtro, las 0h y las 4h salian al 100 % con cuatro
+      // trenes y aplastaban la escala de todas las horas con servicio.
+      .filter(([, v]) => v.paradas >= 1000)
       .map(([h, v]) => {
         const pct = v.suma / v.paradas;
         return {
