@@ -72,7 +72,16 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    environment: *env
+    environment:
+      <<: *env
+      # La API entra con el rol de SOLO LECTURA, igual que Grafana, y no con el
+      # dueño del esquema. Es de solo lectura por diseño —solo ejecuta SELECT—
+      # pero desde que esta publicada en internet el diseño no basta: si algun
+      # dia se cuela un fallo, la diferencia entre leer y borrar la tiene que
+      # poner PostgreSQL, no la buena intencion del codigo.
+      #
+      # Comprobado que las trece consultas de la API funcionan con este rol.
+      RODALIES_DATABASE_URL: postgresql://rodalies_lectura:${READONLY_PASSWORD}@db:5432/${POSTGRES_DB:-rodalies}
     command: ["uvicorn", "rodalies.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
     ports:
       - "127.0.0.1:${API_PORT:-8000}:8000"

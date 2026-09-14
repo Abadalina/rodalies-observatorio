@@ -42,7 +42,14 @@
 
 	header {
 		-Server
+		# Un año, y que el navegador lo recuerde: tras la primera visita ya no
+		# intenta http ni una vez, asi que no hay ese primer salto en claro que
+		# alguien en la misma red pueda interceptar.
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
 		X-Content-Type-Options "nosniff"
+		# La pagina no tiene sentido dentro de un marco ajeno, y no permitirlo
+		# cierra el clickjacking sin depender de nada mas.
+		X-Frame-Options "DENY"
 		Referrer-Policy "strict-origin-when-cross-origin"
 		# La pagina solo carga lo suyo y el mapa. Sin esto, cualquier script
 		# inyectado podria llamar a donde quisiera.
