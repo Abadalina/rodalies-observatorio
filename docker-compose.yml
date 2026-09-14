@@ -127,7 +127,11 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      # El DIRECTORIO, no el fichero suelto. Un bind mount de un fichero queda
+      # atado a su inodo, y `git pull` no edita los ficheros: los reemplaza.
+      # Montando el fichero, el contenedor se quedaba viendo el original
+      # borrado y cualquier cambio de configuracion no hacia nada, en silencio.
+      - ./caddy:/etc/caddy:ro
       - ./web:/srv:ro
       - caddy_data:/data
       - caddy_config:/config
