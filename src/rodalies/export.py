@@ -16,8 +16,34 @@ from .db import session
 log = logging.getLogger(__name__)
 
 EXPORT_SQL = """
-SELECT service_date, linea, nucleo_id, stop_id, estacion, trip_id,
-       scheduled_arrival, arrival_time, delay_s, schedule_relationship, source
+SELECT service_date,
+       nucleo_id,
+       linea,
+       trip_id,
+       -- El numero comercial es lo unico que identifica al mismo tren de un dia
+       -- para otro: Renfe reparte un trip_id nuevo cada jornada. Sin esta
+       -- columna, quien descargue el CSV no puede seguir un tren en el tiempo.
+       analytics.numero_de_trip_id(trip_id) AS numero_tren,
+       stop_id,
+       estacion,
+       provincia,
+       comunidad,
+       stop_sequence,
+       scheduled_arrival,
+       arrival_time,
+       delay_s,
+       schedule_relationship,
+       -- False = el horario no reconocia esa circulacion cuando se capturo. La
+       -- fila se guarda igual y se publica marcada: quien quiera rigor puede
+       -- excluirla, y quien no lo sepa no deberia enterarse tarde.
+       matched_gtfs,
+       -- Cuando se tomo la ultima lectura. Importa mas de lo que parece: entre
+       -- el 26/08 y el 14/09 el intervalo de captura se degrado de 60 s a 74 s
+       -- antes de corregirse, asi que la lectura final es unos segundos mas
+       -- antigua en los dias del medio. Con esta columna ese sesgo se puede
+       -- anular aplicando un corte uniforme; sin ella, no.
+       last_seen,
+       source
   FROM analytics.mv_stop_final
  WHERE service_date BETWEEN %s AND %s
    AND source = %s
