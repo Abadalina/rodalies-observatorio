@@ -222,6 +222,44 @@ SELECT t.trip_id,
  WHERE t.trip_id = %(trip_id)s
 """
 
+RESUMEN = """
+-- Las cifras de cabecera de la pagina de estadisticas, de una sola pasada.
+SELECT (SELECT sum(trenes) FROM analytics.mv_trenes_dia
+         WHERE source = %(source)s AND service_date BETWEEN %(desde)s AND %(hasta)s
+           AND (%(nucleo)s::text IS NULL OR nucleo_id = %(nucleo)s::text)) AS trenes,
+       sum(paradas_observadas)                                   AS paradas,
+       count(DISTINCT service_date)                              AS dias,
+       count(DISTINCT linea)                                     AS lineas,
+       sum(paradas_suprimidas)                                   AS suprimidas,
+       round(sum(retraso_medio_s * paradas_con_retraso)
+             / NULLIF(sum(paradas_con_retraso), 0), 1)           AS retraso_medio_s,
+       round(100.0 * sum(paradas_puntuales)
+             / NULLIF(sum(paradas_con_retraso), 0), 1)           AS pct_puntualidad,
+       round(100.0 * sum(paradas_muy_tarde)
+             / NULLIF(sum(paradas_con_retraso), 0), 1)           AS pct_muy_tarde
+  FROM analytics.mv_line_daily
+ WHERE source = %(source)s
+   AND service_date BETWEEN %(desde)s AND %(hasta)s
+   AND (%(nucleo)s::text IS NULL OR nucleo_id = %(nucleo)s::text)
+"""
+
+SEMANA = """
+-- Puntualidad por dia de la semana. Un lunes no se parece a un domingo, y
+-- mezclarlos esconde justo lo que interesa de una red de cercanias.
+SELECT dia_semana,
+       sum(paradas_observadas)                                   AS paradas,
+       round(sum(retraso_medio_s * paradas_con_retraso)
+             / NULLIF(sum(paradas_con_retraso), 0), 1)           AS retraso_medio_s,
+       round(sum(pct_puntualidad * paradas_con_retraso)
+             / NULLIF(sum(paradas_con_retraso), 0), 1)           AS pct_puntualidad
+  FROM analytics.mv_line_hour
+ WHERE source = %(source)s
+   AND service_date BETWEEN %(desde)s AND %(hasta)s
+   AND (%(nucleo)s::text IS NULL OR nucleo_id = %(nucleo)s::text)
+ GROUP BY dia_semana
+ ORDER BY dia_semana
+"""
+
 ALERTAS = """
 SELECT alert_id, header_text, description_text, effect,
        active_start, active_end, last_seen_at, lineas

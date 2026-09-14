@@ -1,0 +1,140 @@
+/* Graficas: ejes y rejilla recesivos, el dato por delante. */
+
+:root {
+  --serie: #1d4f91;
+  --serie-area: rgba(29, 79, 145, .1);
+  --rejilla: #e8e4dc;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --serie: #6ba3e8;
+    --serie-area: rgba(107, 163, 232, .14);
+    --rejilla: #2b2823;
+  }
+}
+
+.grafica {
+  margin: 0;
+  padding: 1rem .6rem .4rem;
+  border: 1px solid var(--borde);
+  border-radius: .7rem;
+  background: var(--fondo-alt);
+  box-shadow: var(--sombra);
+}
+
+.lienzo { position: relative; }
+.lienzo svg { display: block; overflow: visible; }
+
+.rejilla {
+  stroke: var(--rejilla);
+  stroke-width: 1;
+}
+
+.marca-eje {
+  fill: var(--tenue);
+  font: 11px/1 system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 2px, como manda la guia: una linea fina se lee mejor que una gruesa. */
+.linea-serie {
+  fill: none;
+  stroke: var(--serie);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.area { fill: var(--serie-area); stroke: none; }
+
+.punto-serie {
+  fill: var(--serie);
+  stroke: var(--fondo-alt);
+  stroke-width: 1.5;
+}
+
+.guia {
+  stroke: var(--tenue);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  pointer-events: none;
+}
+
+.foco {
+  fill: var(--serie);
+  stroke: var(--fondo-alt);
+  stroke-width: 2.5;
+  pointer-events: none;
+}
+
+.barra {
+  fill: var(--serie);
+  transition: opacity .12s ease;
+}
+
+.barra--activa { opacity: .78; }
+
+/* -- globo de valores -------------------------------------------------------- */
+
+.globo {
+  position: absolute;
+  z-index: 10;
+  transform: translateY(-100%);
+  padding: .5rem .7rem;
+  border-radius: .5rem;
+  background: var(--texto);
+  color: var(--fondo-alt);
+  font-size: .78rem;
+  line-height: 1.45;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .25);
+}
+
+.globo strong { font-weight: 650; }
+
+/* -- filtros ------------------------------------------------------------------ */
+
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1.4rem;
+}
+
+.filtros label {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  font-size: .85rem;
+  color: var(--tenue);
+}
+
+.filtros select {
+  font: inherit;
+  font-size: .85rem;
+  color: var(--texto);
+  background: var(--fondo-alt);
+  border: 1px solid var(--borde);
+  border-radius: .45rem;
+  padding: .35rem .6rem;
+  cursor: pointer;
+}
+
+.filtros select:focus-visible { outline: 2px solid var(--acento); outline-offset: 1px; }
+
+/* -- barra dentro de la tabla -------------------------------------------------- */
+
+.carril {
+  width: 100%;
+  min-width: 5rem;
+  height: .55rem;
+  border-radius: 999px;
+  background: var(--rejilla);
+  overflow: hidden;
+}
+
+.carril-relleno { height: 100%; border-radius: 999px; }
+
+td:has(.carril) { width: 30%; }

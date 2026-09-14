@@ -37,13 +37,30 @@ const capaTrenes = L.layerGroup().addTo(mapa);
 
 // -- color segun el retraso ---------------------------------------------------
 
+// Escala de severidad, validada y no elegida a ojo. Antes eran CINCO bandas y
+// dos de ellas, "3 a 5 min" y "5 a 15 min", quedaban a una distancia de color de
+// 14,8 sobre 15: indistinguibles incluso con vision normal, no digamos con
+// daltonismo. No habia ambar que lo arreglara, porque entre el verde y el rojo
+// no caben cinco escalones. Se fusionan en una sola banda "tarde" y las cuatro
+// que quedan pasan la validacion.
+//
+// El ambar se queda por debajo de 3:1 de contraste contra el fondo claro, cosa
+// que se admite solo si el color no va solo: por eso la leyenda y el globo
+// siempre traen el texto al lado.
+const ESCALA = {
+  claro:  { adelantado: "#2563eb", puntual: "#15803d", tarde: "#f59e0b", grave: "#b91c1c" },
+  oscuro: { adelantado: "#4a90e8", puntual: "#30a865", tarde: "#d9a12b", grave: "#e8635c" },
+};
+
 function tono(segundos) {
-  if (segundos === null || segundos === undefined) return { color: "#9ca3af", nombre: "sin dato" };
-  if (segundos < -60) return { color: "#3b82f6", nombre: "adelantado" };
-  if (segundos <= 180) return { color: "#21b573", nombre: "puntual" };
-  if (segundos <= 300) return { color: "#eab308", nombre: "leve" };
-  if (segundos <= 900) return { color: "#f97316", nombre: "tarde" };
-  return { color: "#e11d48", nombre: "grave" };
+  const c = prefiereOscuro.matches ? ESCALA.oscuro : ESCALA.claro;
+  if (segundos === null || segundos === undefined) {
+    return { color: "#9ca3af", nombre: "sin dato" };
+  }
+  if (segundos < -60) return { color: c.adelantado, nombre: "adelantado" };
+  if (segundos <= 180) return { color: c.puntual, nombre: "puntual" };
+  if (segundos <= 900) return { color: c.tarde, nombre: "tarde" };
+  return { color: c.grave, nombre: "grave" };
 }
 
 function enMinutos(segundos) {

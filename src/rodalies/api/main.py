@@ -213,6 +213,25 @@ def franjas(
     )
 
 
+@app.get("/resumen", tags=["puntualidad"], summary="Cifras de cabecera")
+def resumen(
+    ventana: dict[str, date] = Depends(rango),
+    nucleo: str | None = Query(None, description="Nucleo de Cercanias; 51 es Catalunya"),
+    source: str = Query("renfe", pattern="^(renfe|synthetic)$"),
+) -> dict[str, Any]:
+    filas = db.fetch(queries.RESUMEN, {**ventana, "nucleo": nucleo, "source": source})
+    return filas[0] if filas else {}
+
+
+@app.get("/semana", tags=["puntualidad"], summary="Puntualidad por dia de la semana")
+def semana(
+    ventana: dict[str, date] = Depends(rango),
+    nucleo: str | None = Query(None, description="Nucleo de Cercanias; 51 es Catalunya"),
+    source: str = Query("renfe", pattern="^(renfe|synthetic)$"),
+) -> list[dict[str, Any]]:
+    return db.fetch(queries.SEMANA, {**ventana, "nucleo": nucleo, "source": source})
+
+
 @app.get("/alertas", tags=["incidencias"], summary="Avisos activos")
 def alertas(limite: int = Query(50, ge=1, le=200)) -> list[dict[str, Any]]:
     return db.fetch(queries.ALERTAS, {"limite": limite})
