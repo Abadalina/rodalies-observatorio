@@ -37,7 +37,19 @@ class Database:
     def open(self, settings: Settings) -> None:
         from psycopg_pool import ConnectionPool
 
-        self.pool = ConnectionPool(settings.database_url, min_size=1, max_size=8, open=True)
+        # `check` valida la conexion ANTES de entregarla. Sin esto, una conexion
+        # que la base haya cerrado por su cuenta —un reinicio, un tiempo de
+        # espera, un corte de red— se entrega rota y la primera consulta que la
+        # use falla. Ocurre de tarde en tarde y basta para que /salud conteste
+        # 503 con todo perfectamente sano, que es la clase de falso positivo que
+        # ensena a ignorar la monitorizacion.
+        self.pool = ConnectionPool(
+            settings.database_url,
+            min_size=1,
+            max_size=8,
+            open=True,
+            check=ConnectionPool.check_connection,
+        )
 
     def close(self) -> None:
         if self.pool is not None:
@@ -124,6 +136,10 @@ def salud() -> JSONResponse:
     try:
         filas = db.fetch(queries.SALUD)
     except Exception as exc:
+        # Se registra. Antes se devolvia el 503 en silencio y, cuando pasaba, no
+        # habia forma de saber por que: ni una linea en el log del servicio cuyo
+        # unico trabajo es avisar de que algo va mal.
+        log.exception("/salud no ha podido consultar la base de datos")
         return JSONResponse({"estado": "sin_base_de_datos", "detalle": str(exc)}, 503)
 
     por_feed = {str(f["feed"]): f for f in filas}
