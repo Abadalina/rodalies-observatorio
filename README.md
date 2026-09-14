@@ -168,6 +168,18 @@ flowchart LR
 
 Detalle en [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md).
 
+## Que dicen los datos
+
+Con la serie ya se pueden responder preguntas que el dato del instante no permite.
+La primera: **¿el retraso se propaga o se recupera?**
+
+Por cada segundo de retraso en una parada, **0,91 segundos siguen ahi en la
+siguiente**. Y de los 5.830 trenes que llegaron a diez minutos de retraso, **solo
+el 6,2 % consiguio bajar de tres minutos** antes de acabar su recorrido.
+
+El retraso no se recupera: se arrastra. Metodo, trampas descartadas y limites en
+[docs/ANALISIS_PROPAGACION.md](docs/ANALISIS_PROPAGACION.md).
+
 ## El conjunto de datos
 
 863.651 filas —un tren en una parada, con su retraso real— de los quince nucleos
