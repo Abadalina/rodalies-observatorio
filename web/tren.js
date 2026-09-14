@@ -30,8 +30,18 @@ function celda(texto, clase) {
   return td;
 }
 
-// La media de N dias se pondera por paradas: un dia con tres paradas
-// observadas no puede pesar lo mismo que uno con cuarenta.
+// "Ultimos N dias" son dias del calendario, no las N filas mas recientes. Un
+// tren que solo circula en laborables tiene siete filas repartidas en nueve
+// dias, y llamar a eso "media de 7 dias" seria etiquetar mal el numero.
+function ultimosDias(dias, cuantos) {
+  const corte = new Date();
+  corte.setDate(corte.getDate() - cuantos);
+  const limite = corte.toISOString().slice(0, 10);
+  return dias.filter((d) => d.service_date >= limite);
+}
+
+// La media se pondera por paradas: un dia con tres paradas observadas no puede
+// pesar lo mismo que uno con cuarenta.
 function mediaPonderada(dias) {
   let suma = 0;
   let peso = 0;
@@ -72,14 +82,16 @@ async function cargar() {
   // dia para otro; el trip_id de hoy va debajo, como dato de trazabilidad.
   document.getElementById("titulo").textContent =
     `${tren.linea || "Tren"} · tren ${tren.numero || tren.trip_id}`;
+  const limpio = (v) => (v ? String(v).replace(/\s+/g, " ").trim() : "");
   document.getElementById("subtitulo").textContent =
-    [tren.destino, tren.recorrido].filter(Boolean).join(" · ") ||
+    [limpio(tren.destino), limpio(tren.recorrido)].filter(Boolean).join(" · ") ||
     "recorrido sin publicar";
   const traza = document.getElementById("trazabilidad");
   if (traza) traza.textContent = `Identificador de hoy: ${tren.trip_id}`;
 
   // -- cifras -----------------------------------------------------------------
-  const media7 = mediaPonderada(dias.slice(0, 7));
+  const ventana7 = ultimosDias(dias, 7);
+  const media7 = mediaPonderada(ventana7);
   const media14 = mediaPonderada(dias);
   document.getElementById("media-7").textContent = media7 === null ? "—" : minutos(media7);
   document.getElementById("media-14").textContent = media14 === null ? "—" : minutos(media14);
@@ -115,7 +127,8 @@ async function cargar() {
       cuerpoDias.appendChild(fila);
     }
     document.getElementById("apunte-dias").textContent =
-      `${dias.length} dias con datos. Renfe cambia el identificador del tren cada dia, ` +
+      `${dias.length} dias con datos, ${ventana7.length} en la ultima semana. ` +
+      `Renfe cambia el identificador del tren cada dia, ` +
       `asi que estos dias se agrupan por su numero comercial, que es lo que se mantiene. ` +
       `Las medias se ponderan por paradas observadas.`;
   }
