@@ -212,3 +212,13 @@ footer p { margin: .4rem 0; }
 .migas { margin: 0 0 .8rem; font-size: .88rem; color: var(--tenue); }
 .migas a { color: var(--tenue); }
 .enlaces--cabecera { margin-top: 1rem; font-weight: 600; }
+
+/* Aviso bajo una cifra cuando el numero necesita una aclaracion para no
+   parecer un error (por ejemplo, dos ventanas que cubren los mismos dias). */
+.cifra .nota:not(:empty) {
+  display: block;
+  margin-top: .3rem;
+  font-size: .72rem;
+  font-style: italic;
+  color: var(--tenue);
+}

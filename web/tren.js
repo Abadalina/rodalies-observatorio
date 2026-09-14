@@ -96,6 +96,15 @@ async function cargar() {
   document.getElementById("media-7").textContent = media7 === null ? "—" : minutos(media7);
   document.getElementById("media-14").textContent = media14 === null ? "—" : minutos(media14);
 
+  // Si este tren solo ha circulado en la ultima semana, las dos ventanas
+  // cubren los mismos dias y las dos cifras salen identicas. Es correcto, pero
+  // dos numeros iguales sin explicacion parecen un error: se dice.
+  const mismasVentanas = dias.length > 0 && ventana7.length === dias.length;
+  const nota = document.getElementById("nota-14");
+  if (nota) {
+    nota.textContent = mismasVentanas ? "sin datos anteriores: mismo periodo" : "";
+  }
+
   const conDato = dias.filter((d) => d.pct_puntualidad !== null);
   if (conDato.length) {
     const pesoTotal = conDato.reduce((t, d) => t + Number(d.con_dato || 0), 0);
