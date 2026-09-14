@@ -49,7 +49,9 @@ COMMENT ON FUNCTION analytics.numero_de_trip_id(text) IS
 CREATE INDEX IF NOT EXISTS ix_stop_final_numero
     ON analytics.mv_stop_final (analytics.numero_de_trip_id(trip_id), linea, service_date);
 
--- El mismo criterio sobre las observaciones crudas, para poder ir del mapa al
--- historico sin pasar por la capa analitica.
-CREATE INDEX IF NOT EXISTS ix_obs_numero
-    ON rt.observation (analytics.numero_de_trip_id(trip_id), service_date);
+-- NO se indexa rt.observation por el numero, aunque seria util algun dia:
+-- crear un indice toma un bloqueo que impide INSERTAR mientras se construye, y
+-- sobre 5,4 millones de filas eso es parar la captura un rato. Ninguna consulta
+-- de hoy lo necesita —el historico sale de la capa analitica— asi que se deja
+-- para cuando haga falta, y entonces con CREATE INDEX CONCURRENTLY fuera de una
+-- migracion, que es la unica forma de anadirlo sin frenar la ingesta.
