@@ -485,3 +485,50 @@ def test_el_rol_de_lectura_no_puede_refrescar(migrada):
         pytest.raises(psycopg.errors.InsufficientPrivilege),
     ):
         conn.execute("SELECT * FROM analytics.rebuild_analytics()")
+
+
+def test_el_historico_viejo_no_dispara_las_huerfanas(limpia):
+    """El GTFS de Renfe es una ventana movil, no un archivo.
+
+    Una observacion de hace dias apunta a un tren que hoy ya no esta en el
+    horario, y eso no es una anomalia: es que el horario de hoy es el de hoy.
+    Cruzar el historico contra el horario vigente ponia la comprobacion en ERROR
+    cada vez que se recargaba el horario, con el dato perfectamente guardado.
+    """
+    with session(limpia) as conn:
+        repo = Repository(conn)
+        # Tres dias atras, con un trip_id que el horario cargado no conoce.
+        repo.insert_observations(
+            [_observacion_hace(60 * 24 * 3, 120, trip="5135M99999R9Z")], source="renfe"
+        )
+        checks = {c[0]: (c[1], c[2]) for c in repo.quality_checks()}
+
+    estado, detalle = checks["observaciones_huerfanas"]
+    assert estado == "OK", f"el historico viejo no deberia disparar la alarma: {detalle}"
+
+
+def test_lo_que_se_captura_ahora_sin_horario_si_avisa(limpia):
+    """Lo que si importa: que el horario cargado no reconozca lo de la via."""
+    with session(limpia) as conn:
+        repo = Repository(conn)
+        repo.insert_observations([_observacion_hace(5, 120, trip="5135M99999R9Z")], source="renfe")
+        checks = {c[0]: (c[1], c[2]) for c in repo.quality_checks()}
+
+    estado, detalle = checks["observaciones_huerfanas"]
+    assert estado in ("AVISO", "ERROR")
+    assert "ultima hora" in detalle
+
+
+def test_la_reconstruccion_deja_estadisticas(limpia):
+    """Rehacer una tabla y no analizarla es dejar el trabajo a medias."""
+    with session(limpia) as conn:
+        repo = Repository(conn)
+        repo.insert_observations([_observacion_hace(30, 60)], source="renfe")
+        pasos = [p for p, _, _ in repo.rebuild_analytics()]
+        analizada = conn.execute(
+            "SELECT last_analyze IS NOT NULL FROM pg_stat_user_tables "
+            "WHERE schemaname = 'analytics' AND relname = 'mv_stop_final'"
+        ).fetchone()[0]
+
+    assert "analyze" in pasos
+    assert analizada

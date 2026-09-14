@@ -285,6 +285,21 @@ docker compose up -d --build    # las migraciones se aplican solas al arrancar
 docker compose exec ingestor rodalies check
 ```
 
+Las migraciones se aplican al arrancar el ingestor y **pueden tardar**: la 011,
+que crea un indice sobre la tabla de observaciones, tardo 127 s con 5,2 millones
+de filas. Hasta que terminan, los objetos nuevos no existen todavia.
+
+Si automatizas esto, **no des por buena la vuelta del servicio mirando
+`ingesta_reciente`**: esa comprobacion se satisface con consultas anteriores al
+reinicio, asi que da verde mientras las migraciones siguen corriendo. La
+condicion correcta es que haya una consulta **posterior** al arranque:
+
+```bash
+ARRANQUE=$(date -Is)
+docker compose up -d --build
+until docker compose exec -T db psql -U rodalies -d rodalies -tAc       "SELECT count(*) FROM rt.feed_poll WHERE polled_at > '$ARRANQUE'"       2>/dev/null | grep -qv '^0$'; do sleep 10; done
+```
+
 ### Revision semanal, dos minutos
 
 ```bash
