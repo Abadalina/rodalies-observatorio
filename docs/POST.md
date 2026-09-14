@@ -1,7 +1,7 @@
 # Construí el histórico de puntualidad de Rodalies que nadie publica
 
 Puedes consultar ahora mismo si tu tren de Rodalies lleva retraso. Renfe lo
-publica en abierto, y muy bien: un feed GTFS-Realtime, sin registro ni clave,
+publica en abierto: un feed GTFS-Realtime, sin registro ni clave,
 actualizado cada veinte segundos.
 
 Lo que no puedes saber es si ocho minutos un martes a las ocho de la mañana es
@@ -60,19 +60,19 @@ Con veinte días, el orden se ha dado la vuelta:
 
 | Comunidad | Observaciones | Puntualidad | Retraso medio |
 |---|---:|---:|---:|
-| Comunidad de Madrid | 267.198 | **39,7 %** | 6:58 |
-| **Catalunya** | 211.716 | **42,4 %** | 7:47 |
-| Asturias | 96.402 | 45,5 % | 7:06 |
-| Galicia | 7.561 | 53,5 % | 7:41 |
-| Cantabria | 39.157 | 56,7 % | 6:25 |
-| Región de Murcia | 8.943 | 63,4 % | 11:45 |
-| Comunitat Valenciana | 53.116 | 65,2 % | 4:04 |
-| Andalucía | 72.614 | 66,4 % | 4:15 |
-| Castilla y León | 8.739 | 74,6 % | 2:37 |
-| País Vasco | 110.703 | **76,5 %** | 2:45 |
+| Comunidad de Madrid | 259.758 | **39,4 %** | 6:58 |
+| **Catalunya** | 210.518 | **42,4 %** | 7:47 |
+| Asturias | 93.894 | 45,4 % | 7:06 |
+| Galicia | 7.569 | 53,5 % | 7:41 |
+| Cantabria | 39.178 | 56,6 % | 6:25 |
+| Región de Murcia | 8.807 | 63,3 % | 11:45 |
+| Comunitat Valenciana | 53.016 | 65,2 % | 4:04 |
+| Andalucía | 72.301 | 66,4 % | 4:15 |
+| Castilla y León | 8.720 | 74,6 % | 2:36 |
+| País Vasco | 110.684 | **76,5 %** | 2:45 |
 
-**Madrid es ahora la peor, y Rodalies está por encima.** No un poco: casi tres
-puntos. Con dos días me había salido lo contrario por doce puntos.
+**Madrid es ahora la peor, y Rodalies está por encima.** Tres puntos. Con dos
+días me había salido lo contrario por doce.
 
 Los dos números eran correctos el día que los calculé. Lo que estaba mal era
 creer que dos días dicen algo, y por eso llevaba el aviso. Lo cuento porque es la
@@ -80,12 +80,26 @@ lección más útil que me llevo del proyecto, y porque si lo hubiera publicado 
 el aviso ahora tendría que retractarme de un titular.
 
 Aun así hay un matiz que sobrevive al cambio: **Rodalies falla menos veces que
-Madrid pero cuando falla, más.** Mejor puntualidad y peor retraso medio. Son dos
-formas de romperse distintas, y la media sola no las distingue.
+Madrid, pero cuando falla, falla más fuerte.**
+
+| | Catalunya | Madrid |
+|---|---:|---:|
+| Paradas puntuales | 42,4 % | 39,4 % |
+| Retraso medio *entre las que llegan tarde* | **12:37** | 10:22 |
+| Paradas con más de 15 minutos | **13,1 %** | 9,3 % |
+
+Son dos formas distintas de romperse, y el porcentaje de puntualidad solo no las
+distingue: hay que mirar el retraso condicionado a llegar tarde.
 
 Están las diez comunidades con más de 5.000 observaciones, sin recortar la tabla:
 dejar fuera filas para que la historia quede más limpia es exactamente el error
 que este texto critica.
+
+En esta tabla y en todas las de aquí abajo se excluyen los retrasos imposibles
+—un 0,17 % de las filas, casi todas de menos 24 horas exactas por un fallo de día
+de servicio en el origen—. Es el mismo criterio en todo el texto: mezclar
+filtros distintos entre tablas hace que la misma cifra aparezca dos veces con dos
+valores, que es una forma silenciosa de perder credibilidad.
 
 Y una advertencia que sigue en pie: estas redes no son comparables sin más.
 Longitud de los trayectos, número de paradas y densidad de servicio son
@@ -136,9 +150,9 @@ largas por encima del 42 %. Con dos días me había parecido lo contrario.
 
 Pero **no es una escalera limpia**, y conviene decirlo: la R11 y la R3 tienen
 prácticamente las mismas paradas por trayecto —catorce— y van al 31,7 % y al
-44,6 %. Trece puntos de diferencia con la misma longitud. Así que la longitud
-acompaña pero no explica; lo que hay debajo es probablemente qué líneas son
-troncales y cuáles periféricas, y eso ya no se responde con esta tabla.
+44,6 %. Trece puntos de diferencia con la misma longitud.
+
+La longitud acompaña, pero no explica. Qué hay debajo, estos datos no lo dicen.
 
 ## Tres cosas que casi publico mal
 
@@ -200,9 +214,7 @@ Prefiero enumerarlo antes de que lo haga otro:
 
 Con la propagación medida, la pregunta predictiva tiene por fin una línea base
 contra la que competir: **persistencia 0,91**. Cualquier modelo que no supere
-claramente la regla trivial «el retraso se queda como está» no aporta nada. Es
-sorprendente la cantidad de modelos que no pasan ese examen porque nadie se lo
-pone.
+claramente la regla trivial «el retraso se queda como está» no aporta nada.
 
 Antes de eso, dos análisis que salen con los datos que ya hay: distinguir qué
 estaciones **generan** retraso de las que lo **heredan**, y normalizar la
