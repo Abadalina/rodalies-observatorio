@@ -28,6 +28,11 @@ SELECT service_date,
        estacion,
        provincia,
        comunidad,
+       -- oficial = del listado de Renfe; inferida = la provincia de la estacion
+       -- etiquetada mas cercana. El 42 %% de las estaciones estan inferidas y
+       -- se publica marcado: un dato aproximado etiquetado es util, sin
+       -- etiquetar es una trampa para quien lo use.
+       geo_origen AS provincia_origen,
        stop_sequence,
        scheduled_arrival,
        arrival_time,
