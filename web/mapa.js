@@ -9,14 +9,47 @@ let ambito = CATALUNYA;
 let temporizador = null;
 const marcas = new Map(); // trip_id -> marcador, para mover en vez de recrear
 
-const mapa = L.map("mapa", { zoomControl: true, preferCanvas: true })
+// SVG en vez de lienzo: con unos cientos de trenes rinde igual y permite darles
+// halo, sombra y una transicion suave al moverse, que en un lienzo no se puede.
+const mapa = L.map("mapa", { zoomControl: true, preferCanvas: false, zoomSnap: .5 })
   .setView(CATALUNYA.centro, CATALUNYA.zoom);
 
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  maxZoom: 17,
-  className: "hoja-mosaicos",
-  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-}).addTo(mapa);
+// Base casi monocroma a proposito. Los mosaicos de serie de OpenStreetMap estan
+// llenos de color y de detalle, y compiten con el dato: sobre un mapa asi, un
+// punto rojo es un punto rojo mas. Sobre una base gris, es el unico.
+const BASES = {
+  claro: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+  oscuro: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+};
+
+const prefiereOscuro = window.matchMedia("(prefers-color-scheme: dark)");
+let base = null;
+
+function pintarBase() {
+  if (base) mapa.removeLayer(base);
+  base = L.tileLayer(prefiereOscuro.matches ? BASES.oscuro : BASES.claro, {
+    maxZoom: 18,
+    detectRetina: true,
+    attribution:
+      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · ' +
+      '&copy; <a href="https://carto.com/attributions">CARTO</a> · ' +
+      'datos de Renfe (CC BY 4.0)',
+  });
+  base.addTo(mapa);
+  base.bringToBack();
+}
+
+pintarBase();
+
+// Si el sistema cambia de tema a media tarde, el mapa entero lo sigue: la base,
+// las vias y el anillo de cada tren. Cambiar solo la base dejaria vias grises
+// claras sobre fondo negro, que es peor que no cambiar nada.
+prefiereOscuro.addEventListener("change", () => {
+  pintarBase();
+  pintarVias();
+  const anillo = prefiereOscuro.matches ? "#14130f" : "#ffffff";
+  for (const marca of marcas.values()) marca.setStyle({ color: anillo });
+});
 
 const capaVias = L.layerGroup().addTo(mapa);
 const capaTrenes = L.layerGroup().addTo(mapa);
@@ -24,12 +57,12 @@ const capaTrenes = L.layerGroup().addTo(mapa);
 // -- color segun el retraso ---------------------------------------------------
 
 function tono(segundos) {
-  if (segundos === null || segundos === undefined) return { color: "#8a8a8a", nombre: "sin dato" };
-  if (segundos < -60) return { color: "#4a7fd4", nombre: "adelantado" };
-  if (segundos <= 180) return { color: "#2e9e5b", nombre: "puntual" };
-  if (segundos <= 300) return { color: "#d9a441", nombre: "leve" };
-  if (segundos <= 900) return { color: "#e07a3c", nombre: "tarde" };
-  return { color: "#c4342c", nombre: "grave" };
+  if (segundos === null || segundos === undefined) return { color: "#9ca3af", nombre: "sin dato" };
+  if (segundos < -60) return { color: "#3b82f6", nombre: "adelantado" };
+  if (segundos <= 180) return { color: "#21b573", nombre: "puntual" };
+  if (segundos <= 300) return { color: "#eab308", nombre: "leve" };
+  if (segundos <= 900) return { color: "#f97316", nombre: "tarde" };
+  return { color: "#e11d48", nombre: "grave" };
 }
 
 function enMinutos(segundos) {
@@ -93,11 +126,14 @@ async function pintarTrenes() {
         marca.setStyle({ fillColor: color });
       } else {
         marca = L.circleMarker(donde, {
-          radius: 6,
-          weight: 1.5,
-          color: "#00000055",
+          radius: 5.5,
+          weight: 2,
+          // Anillo del color del fondo, no negro: separa el punto de la base
+          // del mapa sin ensuciarlo, y funciona igual en claro y en oscuro.
+          color: prefiereOscuro.matches ? "#14130f" : "#ffffff",
           fillColor: color,
-          fillOpacity: .95,
+          fillOpacity: 1,
+          className: "tren",
         }).addTo(capaTrenes);
         marcas.set(t.trip_id, marca);
       }
@@ -131,9 +167,11 @@ async function pintarVias() {
     const trazados = await (await fetch(ruta)).json();
     for (const t of trazados) {
       L.polyline(t.puntos, {
-        color: "#7d8a99",
-        weight: 1.6,
-        opacity: .55,
+        color: prefiereOscuro.matches ? "#4b5563" : "#94a3b8",
+        weight: 2,
+        opacity: .7,
+        lineJoin: "round",
+        lineCap: "round",
         interactive: false,
       }).addTo(capaVias);
     }

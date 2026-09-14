@@ -46,7 +46,7 @@
 		Referrer-Policy "strict-origin-when-cross-origin"
 		# La pagina solo carga lo suyo y el mapa. Sin esto, cualquier script
 		# inyectado podria llamar a donde quisiera.
-		Content-Security-Policy "default-src 'self'; img-src 'self' data: https://*.tile.openstreetmap.org; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'"
+		Content-Security-Policy "default-src 'self'; img-src 'self' data: https://*.basemaps.cartocdn.com; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'"
 	}
 
 	log {
