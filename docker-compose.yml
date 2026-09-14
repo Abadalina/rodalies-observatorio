@@ -104,8 +104,43 @@ services:
     ports:
       - "127.0.0.1:${GRAFANA_PORT:-3000}:3000"
 
+  # Proxy inverso con TLS. Es el UNICO servicio que escucha fuera de la maquina.
+  #
+  # Solo arranca si hay un dominio definido en el `.env`; sin el no se levanta y
+  # el resto del sistema sigue igual que siempre, cerrado. Se activa con:
+  #
+  #   docker compose --profile publico up -d web
+  #
+  # El certificado se pide y se renueva solo, por el desafio HTTP del puerto 80.
+  web:
+    image: caddy:2.8-alpine
+    restart: unless-stopped
+    profiles: ["publico"]
+    depends_on:
+      - api
+    environment:
+      # Con valor por defecto, NO con `:?`: compose interpola el fichero entero
+      # antes de filtrar por perfiles, asi que exigir la variable romperia
+      # hasta un `docker compose ps` en cualquier instalacion sin panel publico.
+      RODALIES_DOMINIO: ${RODALIES_DOMINIO:-localhost}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./web:/srv:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
 volumes:
   # Estos volumenes son el proyecto. Ver docs/RUNBOOK.md antes de tocarlos.
   pgdata_live:
   grafana_live:
   ingestor_live:
+  # Los certificados. Perderlos no es grave (se vuelven a pedir), pero Let's
+  # Encrypt limita cuantas veces al dia, asi que conviene que persistan.
+  caddy_data:
+  caddy_config:

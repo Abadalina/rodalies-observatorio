@@ -1,0 +1,46 @@
+# Proxy inverso y TLS del panel publico.
+#
+# El dominio sale de `RODALIES_DOMINIO` en el `.env`, que no se versiona: el
+# repositorio no debe llevar dentro la direccion de nadie. Caddy pide y renueva
+# el certificado solo, por el desafio HTTP, asi que no hace falta ningun token.
+#
+# Lo que se expone y lo que no, a proposito:
+#
+#   /          la web estatica (mapa y estadisticas)
+#   /api/*     la API de solo lectura, que ya no escribe nada por diseno
+#   Grafana    NO. Entra con usuario y contrasena y se ve por el tunel SSH.
+#   Postgres   NO. Nunca ha escuchado fuera de localhost.
+
+{$RODALIES_DOMINIO} {
+	encode zstd gzip
+	root * /srv
+
+	# La API, detras del mismo dominio para no pelearse con CORS.
+	handle_path /api/* {
+		# Media hora de cache en el navegador y en cualquier intermedio: los
+		# agregados cambian cada quince minutos, no cada peticion. Es lo que
+		# hace que un visitante insistente no llegue a la base de datos.
+		header Cache-Control "public, max-age=60"
+		reverse_proxy api:8000
+	}
+
+	handle {
+		file_server
+	}
+
+	header {
+		-Server
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		# La pagina solo carga lo suyo y el mapa. Sin esto, cualquier script
+		# inyectado podria llamar a donde quisiera.
+		Content-Security-Policy "default-src 'self'; img-src 'self' data: https://*.tile.openstreetmap.org; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'"
+	}
+
+	log {
+		output file /data/acceso.log {
+			roll_size 10MiB
+			roll_keep 5
+		}
+	}
+}

@@ -66,8 +66,8 @@ SELECT linea,
 """
 
 KPI_DIARIO = """
-SELECT service_date, paradas_observadas, trenes, paradas_suprimidas,
-       retraso_medio_s, pct_puntualidad, pct_muy_tarde
+SELECT service_date, paradas_observadas, paradas_con_retraso, trenes,
+       paradas_suprimidas, retraso_medio_s, pct_puntualidad, pct_muy_tarde
   FROM analytics.v_kpi_dia
  WHERE service_date BETWEEN %(desde)s AND %(hasta)s
    AND source = %(source)s
