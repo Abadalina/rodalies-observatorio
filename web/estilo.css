@@ -222,3 +222,10 @@ footer p { margin: .4rem 0; }
   font-style: italic;
   color: var(--tenue);
 }
+
+/* Aclaracion de como se cuenta algo, donde la cifra sola se malinterpreta. */
+.apunte--aviso {
+  border-left: 3px solid var(--borde);
+  padding-left: .9rem;
+  margin-bottom: 1.4rem;
+}
