@@ -167,6 +167,16 @@ flowchart LR
 
 Detalle en [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md).
 
+## El conjunto de datos
+
+863.651 filas —un tren en una parada, con su retraso real— de los quince nucleos
+de Cercanias. Se descarga de las
+[releases](https://github.com/Abadalina/rodalies-observatorio/releases) y la
+ficha completa, con todo lo que hay que saber antes de usarlo, esta en
+[docs/DATASET.md](docs/DATASET.md).
+
+Datos de Renfe Operadora bajo [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/deed.es).
+
 ## Como se ve
 
 **Mapa en vivo.** Cada punto es un tren donde esta de verdad: la posicion la
@@ -368,7 +378,7 @@ Limitaciones que conviene decir antes de que las pregunten:
 - [x] Posicion GPS de cada tren, capturada y particionada por mes
 - [x] Cada version del horario archivada (Renfe solo publica una ventana movil)
 - [ ] Capturas de pantalla de los paneles (ver `docs/img/LEEME.md`)
-- [ ] Conjunto de datos publicado con ficha y licencia
+- [x] **Conjunto de datos publicado** con ficha, caveats medidos y licencia
 - [ ] Modelo de prediccion de retraso (cuando haya meses de historico)
 
 ## Licencia
