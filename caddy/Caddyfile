@@ -18,8 +18,12 @@
 	# El trazado de las vias cambia como mucho una vez al dia, cuando Renfe
 	# publica horario nuevo. Es lo mas pesado que sirve este sitio (unos 700 kB
 	# para Catalunya), asi que se cachea un dia entero en vez de un minuto.
-	handle_path /api/trazados* {
+	# `handle`, no `handle_path`: handle_path recorta el prefijo que ha hecho
+	# coincidir la regla, y aqui eso seria `/api/trazados` entero, con lo que a
+	# la API le llegaria `/` y devolveria el indice. Se recorta solo `/api`.
+	handle /api/trazados* {
 		header Cache-Control "public, max-age=86400"
+		uri strip_prefix /api
 		reverse_proxy api:8000
 	}
 
