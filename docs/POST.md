@@ -9,8 +9,11 @@ normal o es un mal día. Porque ese histórico **no lo publica nadie**. El feed 
 da el instante y solo el instante: consultas, y lo que había hace cinco minutos
 ha desaparecido para siempre.
 
-Así que me puse a guardarlo. Llevo veinte días y **5,4 millones de
+Así que me puse a guardarlo. Llevo veinte días y **5,5 millones de
 observaciones**.
+
+*Todas las cifras de este texto son del 26 de agosto al 14 de septiembre de 2026.
+Son una foto, no una constante, y más abajo explico cuánto se mueven y por qué.*
 
 Se puede ver en vivo en [rodalies.duckdns.org](https://rodalies.duckdns.org) y
 los datos están publicados con su ficha.
@@ -72,7 +75,8 @@ Con veinte días, el orden se ha dado la vuelta:
 | País Vasco | 110.684 | **76,5 %** | 2:45 |
 
 **Madrid es ahora la peor, y Rodalies está por encima.** Tres puntos. Con dos
-días me había salido lo contrario por doce.
+días me había salido lo contrario por doce. Guarda ese «tres puntos»: más abajo
+se ve que es más frágil de lo que parece.
 
 Los dos números eran correctos el día que los calculé. Lo que estaba mal era
 creer que dos días dicen algo, y por eso llevaba el aviso. Lo cuento porque es la
@@ -154,6 +158,75 @@ prácticamente las mismas paradas por trayecto —catorce— y van al 31,7 % y a
 
 La longitud acompaña, pero no explica. Qué hay debajo, estos datos no lo dicen.
 
+## Estos números van a cambiar, y no todos igual
+
+Una cifra de puntualidad no es una constante de la naturaleza: es la media de un
+periodo. Cuanto más largo el periodo, más estable, pero nunca deja de moverse.
+Lo interesante no es que se mueva, sino **cuánto y por qué**, porque eso decide
+de qué conclusiones te puedes fiar.
+
+Partí la serie en dos mitades de diez días:
+
+| | Primeros 10 días | Últimos 10 días |
+|---|---:|---:|
+| Madrid | 38,4 % | 40,1 % |
+| **Catalunya** | **38,7 %** | **45,9 %** |
+| Andalucía | 64,8 % | 68,0 % |
+| País Vasco | 77,5 % | 75,6 % |
+
+**En los primeros diez días, Catalunya y Madrid estaban empatadas.** Todo el
+titular de este post —«Madrid es peor»— depende de un salto de siete puntos en la
+segunda mitad. Con veinte días digo una cosa; con diez habría dicho otra, igual
+que con dos dije la contraria.
+
+### De dónde sale ese salto
+
+Lo primero que pensé es que lo explicaba la R7, que aparece el 7 de septiembre y
+es la línea más puntual de la red. No: con ella el 45,9 %, sin ella el 45,5 %.
+
+Lo que lo explica es **el calendario**:
+
+| Mitad | Tipo de día | Días | Puntualidad |
+|---|---|---:|---:|
+| Primeros 10 | festivo o fin de semana | **2** | 50,8 % |
+| Primeros 10 | laborable | 8 | 36,1 % |
+| Últimos 10 | festivo o fin de semana | **5** | 52,0 % |
+| Últimos 10 | laborable | 5 | 41,0 % |
+
+La puntualidad en festivo es prácticamente la misma en las dos mitades (50,8 %
+frente a 52,0 %). Lo que cambió es la mezcla: la segunda tiene **cinco días de
+fin de semana o festivo en lugar de dos**, y esos días van quince puntos por
+encima de un laborable.
+
+Parte de mi «mejora de siete puntos» no era una mejora: era que en esa ventana
+cayeron más domingos. Hay también una mejora real en laborables —de 36,1 % a
+41,0 %— pero es la mitad de lo que aparentaba.
+
+**Comparar dos periodos con distinta proporción de laborables es comparar cosas
+distintas.** Es el error de composición de toda la vida, y aquí te lo encuentras
+sin buscarlo.
+
+### Qué se mueve y qué no
+
+| Conclusión | Primeros 10 días | Últimos 10 días | ¿Fiable? |
+|---|---:|---:|---|
+| Puntualidad de Catalunya | 38,7 % | 45,9 % | **No.** Siete puntos de diferencia |
+| Orden entre Catalunya y Madrid | empate | Catalunya +5,8 | **No.** Ya se dio la vuelta una vez |
+| Persistencia del retraso | 0,876 | 0,942 | **Sí.** La conclusión no cambia |
+
+Los porcentajes de puntualidad son volátiles: dependen de qué días caen dentro,
+de si hubo incidencias y de la estación del año. **La persistencia del retraso
+es estructural**: en las dos mitades, y con cien mil tramos cada una, alrededor
+del 90 % del retraso sobrevive a la parada siguiente.
+
+Por eso el hallazgo que me creo de este post no es el ranking entre comunidades
+—que ya me ha engañado dos veces— sino que el retraso se arrastra. Lo primero es
+una foto; lo segundo parece una propiedad de cómo está construida la red.
+
+Las cifras actualizadas están siempre en
+[rodalies.duckdns.org](https://rodalies.duckdns.org). Las de este texto son del
+14 de septiembre de 2026.
+
 ## Tres cosas que casi publico mal
 
 Lo más útil que puedo contar no son los hallazgos, son los tres momentos en que
@@ -217,9 +290,9 @@ contra la que competir: **persistencia 0,91**. Cualquier modelo que no supere
 claramente la regla trivial «el retraso se queda como está» no aporta nada.
 
 Antes de eso, dos análisis que salen con los datos que ya hay: distinguir qué
-estaciones **generan** retraso de las que lo **heredan**, y normalizar la
-comparación entre redes por longitud de trayecto para poder afirmar en serio lo
-que la tabla de arriba solo insinúa.
+estaciones **generan** retraso de las que lo **heredan**, y rehacer la
+comparación entre redes controlando por composición de días y por longitud de
+trayecto. Esa tabla, tal como está, no aguanta el peso que parece tener.
 
 Y mientras tanto, lo más importante: no parar la captura.
 
