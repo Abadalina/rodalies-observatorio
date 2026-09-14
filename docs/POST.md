@@ -122,15 +122,23 @@ por paradas de media en cada trayecto:
 |---|---:|---:|
 | R8 | 7,9 | 28,8 % |
 | R15 | 9,8 | 33,0 % |
+| R16 | 11,5 | 30,4 % |
 | R2S | 11,5 | 29,9 % |
+| R2N | 13,8 | 43,6 % |
+| R11 | 14,0 | 31,7 % |
+| R2 | 14,1 | 37,0 % |
 | R3 | 14,8 | 44,6 % |
 | R1 | 19,2 | 42,3 % |
 | R4 | 27,4 | **51,6 %** |
 
-**Las líneas más cortas son las menos puntuales**, no al revés. Con dos días me
-había parecido lo contrario. Es descriptivo, ojo: las líneas cortas de esta red
-son también las periféricas, así que esto no dice que acortar una línea la
-empeore.
+Las cuatro líneas más cortas están todas por debajo del 34 %, y las dos más
+largas por encima del 42 %. Con dos días me había parecido lo contrario.
+
+Pero **no es una escalera limpia**, y conviene decirlo: la R11 y la R3 tienen
+prácticamente las mismas paradas por trayecto —catorce— y van al 31,7 % y al
+44,6 %. Trece puntos de diferencia con la misma longitud. Así que la longitud
+acompaña pero no explica; lo que hay debajo es probablemente qué líneas son
+troncales y cuáles periféricas, y eso ya no se responde con esta tabla.
 
 ## Tres cosas que casi publico mal
 
