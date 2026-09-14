@@ -8,7 +8,7 @@ calidad, no solo el codigo Python.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 
 import pytest
 
@@ -598,3 +598,46 @@ def test_un_tren_que_cruza_provincias_se_cuenta_una_vez(limpia):
 
     assert filas_por_provincia == 2, "el agregado debe seguir separando por provincia"
     assert trenes == 1, "pero el tren es uno solo"
+
+
+def test_todas_las_consultas_de_la_api_se_ejecutan(migrada):
+    """Ejecuta cada consulta de la API. Leerlas no basta.
+
+    Un `%` suelto dentro de un comentario SQL —escrito al documentar por que la
+    puntualidad se pondera— dejo /franjas devolviendo HTTP 500: psycopg lo lee
+    como un marcador de parametro aunque este comentado. Es el fallo 5 del
+    proyecto con otro disfraz, y la unica forma de verlo es ejecutar.
+
+    No se comprueban los resultados, solo que el SQL es ejecutable: con la base
+    vacia casi todas devuelven cero filas, y eso ya vale.
+    """
+    import psycopg
+
+    from rodalies.api import queries
+
+    parametros = {
+        "desde": date(2026, 9, 1),
+        "hasta": date(2026, 9, 14),
+        "source": "renfe",
+        "nucleo": None,
+        "linea": None,
+        "trip_id": "5155L77980R4",
+        "service_date": None,
+        "dias": 14,
+        "limite": 10,
+        "minimo": 1,
+    }
+
+    consultas = {
+        nombre: valor
+        for nombre, valor in vars(queries).items()
+        if nombre.isupper() and isinstance(valor, str) and "SELECT" in valor
+    }
+    assert len(consultas) >= 10, "se esperaban todas las consultas de la API"
+
+    with session(migrada) as conn:
+        for nombre, sql in sorted(consultas.items()):
+            try:
+                conn.execute(sql, parametros).fetchall()
+            except psycopg.Error as exc:
+                raise AssertionError(f"la consulta {nombre} no se puede ejecutar: {exc}") from exc

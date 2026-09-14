@@ -68,7 +68,9 @@ SELECT linea,
        -- Ponderado por paradas, no `avg(pct_puntualidad)`: promediar los
        -- porcentajes de cada dia le da el mismo peso a una hora con tres
        -- paradas observadas que a una con doscientas. En la R2S de las 23:00
-       -- la diferencia era de 27,3 % a 45,4 %.
+       -- la diferencia era de 27,3 a 45,4 puntos. (Sin el simbolo de tanto por
+       -- ciento: psycopg lee cualquier %% suelto como un marcador de parametro,
+       -- aunque este dentro de un comentario SQL, y revienta la consulta.)
        round(sum(pct_puntualidad * paradas_con_retraso)
              / NULLIF(sum(paradas_con_retraso), 0), 1)           AS pct_puntualidad
   FROM analytics.mv_line_hour
