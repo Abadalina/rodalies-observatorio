@@ -68,10 +68,15 @@ async function cargar() {
   const tren = datos.tren || {};
   const dias = datos.dias || [];
 
+  // El titulo lleva el numero comercial, que es lo que identifica al tren de un
+  // dia para otro; el trip_id de hoy va debajo, como dato de trazabilidad.
   document.getElementById("titulo").textContent =
-    `${tren.linea || "Tren"} · ${tren.destino || tren.trip_id}`;
+    `${tren.linea || "Tren"} · tren ${tren.numero || tren.trip_id}`;
   document.getElementById("subtitulo").textContent =
-    [tren.recorrido, tren.trip_id].filter(Boolean).join(" · ");
+    [tren.destino, tren.recorrido].filter(Boolean).join(" · ") ||
+    "recorrido sin publicar";
+  const traza = document.getElementById("trazabilidad");
+  if (traza) traza.textContent = `Identificador de hoy: ${tren.trip_id}`;
 
   // -- cifras -----------------------------------------------------------------
   const media7 = mediaPonderada(dias.slice(0, 7));
@@ -110,7 +115,9 @@ async function cargar() {
       cuerpoDias.appendChild(fila);
     }
     document.getElementById("apunte-dias").textContent =
-      `${dias.length} dias con datos. La media de 7 y 14 dias se pondera por paradas observadas.`;
+      `${dias.length} dias con datos. Renfe cambia el identificador del tren cada dia, ` +
+      `asi que estos dias se agrupan por su numero comercial, que es lo que se mantiene. ` +
+      `Las medias se ponderan por paradas observadas.`;
   }
 
   // -- ultimo recorrido -------------------------------------------------------

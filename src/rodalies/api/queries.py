@@ -159,10 +159,17 @@ SELECT stop_id, estacion, stop_sequence, scheduled_arrival, arrival_time,
 HISTORIAL_TREN = """
 -- Como se ha portado ESTE tren los ultimos dias, uno a uno.
 --
+-- Se agrupa por (numero, linea), NO por trip_id: Renfe reparte un trip_id nuevo
+-- cada dia, asi que preguntar por el historico de un trip_id devuelve siempre un
+-- solo dia y cualquier media de 7 o 14 dias sale identica. El numero comercial
+-- es lo que se mantiene, y es ademas lo que entiende un viajero por "el mismo
+-- tren".
+--
 -- El umbral de puntualidad no se escribe aqui: sale de analytics.setting_value,
 -- igual que en los agregados, para que cambiar que se considera puntual sea un
 -- UPDATE y no una reescritura de media capa analitica.
 SELECT service_date,
+       min(trip_id)                                              AS trip_id,
        count(*)                                                  AS paradas,
        count(*) FILTER (WHERE delay_s IS NOT NULL)                AS con_dato,
        round(avg(delay_s) FILTER (WHERE delay_s IS NOT NULL))     AS retraso_medio_s,
@@ -172,21 +179,26 @@ SELECT service_date,
                  WHERE delay_s <= analytics.setting_value('on_time_threshold_s'))
              / NULLIF(count(*) FILTER (WHERE delay_s IS NOT NULL), 0), 1) AS pct_puntualidad
   FROM analytics.mv_stop_final
- WHERE trip_id = %(trip_id)s
-   AND source = %(source)s
+ WHERE source = %(source)s
+   AND analytics.numero_de_trip_id(trip_id) = analytics.numero_de_trip_id(%(trip_id)s)
+   AND linea = (
+       SELECT linea FROM analytics.mv_stop_final
+        WHERE trip_id = %(trip_id)s LIMIT 1
+   )
    AND service_date >= current_date - %(dias)s::int
  GROUP BY service_date
  ORDER BY service_date DESC
 """
 
 FICHA_TREN = """
--- Los cuatro datos de cabecera: que linea es, a donde va y de donde sale.
+-- Los datos de cabecera: que linea es, que numero lleva y a donde va.
 SELECT t.trip_id,
        COALESCE(r.route_short_name,
                 analytics.linea_de_trip_id(t.trip_id),
                 'sin linea')                  AS linea,
+       analytics.numero_de_trip_id(t.trip_id) AS numero,
        r.route_long_name                      AS recorrido,
-       t.trip_headsign                        AS destino,
+       NULLIF(t.trip_headsign, '')            AS destino,
        t.nucleo_id
   FROM gtfs.trip t
   LEFT JOIN gtfs.route r ON r.route_id = t.route_id
