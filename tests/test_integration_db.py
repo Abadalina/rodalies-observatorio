@@ -507,16 +507,45 @@ def test_el_historico_viejo_no_dispara_las_huerfanas(limpia):
     assert estado == "OK", f"el historico viejo no deberia disparar la alarma: {detalle}"
 
 
-def test_lo_que_se_captura_ahora_sin_horario_si_avisa(limpia):
-    """Lo que si importa: que el horario cargado no reconozca lo de la via."""
+def test_cuatro_trenes_de_madrugada_no_son_una_alarma(limpia):
+    """Una proporcion sin muestra suficiente la dispara el ruido.
+
+    A las 02:19, recien desplegada la 013, la comprobacion dio ERROR por "14 de
+    14 observaciones": las catorce eran un solo tren especial. Nada roto, y una
+    alarma que salta sola se acaba ignorando.
+    """
     with session(limpia) as conn:
         repo = Repository(conn)
-        repo.insert_observations([_observacion_hace(5, 120, trip="5135M99999R9Z")], source="renfe")
+        repo.insert_observations(
+            [_observacion_hace(5, 120, trip="5135M99999R9Z", stop=f"7180{i}") for i in range(4)],
+            source="renfe",
+        )
         checks = {c[0]: (c[1], c[2]) for c in repo.quality_checks()}
 
     estado, detalle = checks["observaciones_huerfanas"]
-    assert estado in ("AVISO", "ERROR")
-    assert "ultima hora" in detalle
+    assert estado == "OK", f"cuatro observaciones no son una proporcion: {detalle}"
+    assert "muy pocas" in detalle
+
+
+def test_lo_que_se_captura_ahora_sin_horario_si_avisa(limpia):
+    """Lo que si importa: que el horario cargado no reconozca lo de la via.
+
+    Con muestra suficiente, que es lo que separa una senal de un ruido.
+    """
+    with session(limpia) as conn:
+        repo = Repository(conn)
+        repo.insert_observations(
+            [
+                _observacion_hace(5, 120, trip="5135M99999R9Z", stop=str(70000 + i))
+                for i in range(1200)
+            ],
+            source="renfe",
+        )
+        checks = {c[0]: (c[1], c[2]) for c in repo.quality_checks()}
+
+    estado, detalle = checks["observaciones_huerfanas"]
+    assert estado == "ERROR"
+    assert "no estan en el horario cargado" in detalle
 
 
 def test_la_reconstruccion_deja_estadisticas(limpia):
