@@ -91,6 +91,20 @@ body.cuerpo-mapa {
   background: var(--fondo);
 }
 
+/* Los mosaicos de OSM, apagados. Sin esto compiten con los trenes; con esto la
+   base es un plano gris y el unico color de la pantalla es el retraso. */
+.hoja-mosaicos {
+  filter: grayscale(.92) brightness(1.06) contrast(.88);
+}
+
+@media (prefers-color-scheme: dark) {
+  /* Invertir un mapa claro da un mapa oscuro creible; el giro de tono devuelve
+     el azul al agua, que si no sale naranja. */
+  .hoja-mosaicos {
+    filter: grayscale(.95) invert(1) hue-rotate(180deg) brightness(.92) contrast(.85);
+  }
+}
+
 /* Los controles de Leaflet vienen con el aspecto de serie de 2011. */
 .leaflet-control-zoom {
   border: 0 !important;

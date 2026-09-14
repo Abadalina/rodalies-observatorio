@@ -17,39 +17,20 @@ const mapa = L.map("mapa", { zoomControl: true, preferCanvas: false, zoomSnap: .
 // Base casi monocroma a proposito. Los mosaicos de serie de OpenStreetMap estan
 // llenos de color y de detalle, y compiten con el dato: sobre un mapa asi, un
 // punto rojo es un punto rojo mas. Sobre una base gris, es el unico.
-const BASES = {
-  claro: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
-  oscuro: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-};
-
+//
+// El apagado se hace con un filtro CSS sobre los mosaicos de OSM, y NO con un
+// proveedor de base gris ya hecha. Se probo CARTO y pide clave: devuelve un PNG
+// valido, con HTTP 200, cuya imagen es el aviso de que falta la clave. Un mapa
+// entero de marcas de agua que ninguna comprobacion automatica ve.
 const prefiereOscuro = window.matchMedia("(prefers-color-scheme: dark)");
-let base = null;
 
-function pintarBase() {
-  if (base) mapa.removeLayer(base);
-  base = L.tileLayer(prefiereOscuro.matches ? BASES.oscuro : BASES.claro, {
-    maxZoom: 18,
-    detectRetina: true,
-    attribution:
-      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · ' +
-      '&copy; <a href="https://carto.com/attributions">CARTO</a> · ' +
-      'datos de Renfe (CC BY 4.0)',
-  });
-  base.addTo(mapa);
-  base.bringToBack();
-}
-
-pintarBase();
-
-// Si el sistema cambia de tema a media tarde, el mapa entero lo sigue: la base,
-// las vias y el anillo de cada tren. Cambiar solo la base dejaria vias grises
-// claras sobre fondo negro, que es peor que no cambiar nada.
-prefiereOscuro.addEventListener("change", () => {
-  pintarBase();
-  pintarVias();
-  const anillo = prefiereOscuro.matches ? "#14130f" : "#ffffff";
-  for (const marca of marcas.values()) marca.setStyle({ color: anillo });
-});
+const base = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom: 18,
+  className: "hoja-mosaicos",
+  attribution:
+    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · ' +
+    'datos de Renfe (CC BY 4.0)',
+}).addTo(mapa);
 
 const capaVias = L.layerGroup().addTo(mapa);
 const capaTrenes = L.layerGroup().addTo(mapa);
