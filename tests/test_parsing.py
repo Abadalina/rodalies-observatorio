@@ -235,3 +235,42 @@ def test_linea_de_respaldo(trip_id, linea):
     from rodalies.parsing import linea_de_respaldo
 
     assert linea_de_respaldo(trip_id) == linea
+
+
+def test_posiciones_reales_de_renfe(vehicle_positions_json):
+    """Captura real del feed. Renfe SI publica la posicion GPS de sus trenes."""
+    snapshot = parse_feed("vehicle_positions", vehicle_positions_json, "json")
+
+    assert snapshot.entity_count == 12
+    assert len(snapshot.vehicles) == 12
+
+    con_coordenadas = [v for v in snapshot.vehicles if v.latitude is not None]
+    assert len(con_coordenadas) == 10
+    # Peninsula iberica: si un cambio de formato colara las coordenadas al reves
+    # o en otra unidad, el tren apareceria en el mar y esto lo cazaria.
+    for v in con_coordenadas:
+        assert 35.5 < v.latitude < 44.0, f"{v.vehicle_id} fuera de la peninsula"
+        assert -9.5 < v.longitude < 4.5, f"{v.vehicle_id} fuera de la peninsula"
+
+
+def test_un_tren_sin_posicion_se_guarda_igual(vehicle_positions_json):
+    """Renfe manda trenes sin coordenadas. No se descartan ni se inventan.
+
+    La fila sigue diciendo algo: que ese tren estaba circulando y en que estado.
+    Rellenar la posicion con ceros lo pondria en el golfo de Guinea; tirarlo
+    perderia la unica prueba de que existio.
+    """
+    snapshot = parse_feed("vehicle_positions", vehicle_positions_json, "json")
+    sin_posicion = [v for v in snapshot.vehicles if v.latitude is None]
+
+    assert len(sin_posicion) == 2
+    for v in sin_posicion:
+        assert v.longitude is None
+        assert v.vehicle_id
+
+
+def test_renfe_no_publica_rumbo_ni_velocidad(vehicle_positions_json):
+    """Se fija lo que HOY no viene, para enterarse el dia que empiece a venir."""
+    snapshot = parse_feed("vehicle_positions", vehicle_positions_json, "json")
+    assert all(v.bearing is None for v in snapshot.vehicles)
+    assert all(v.speed is None for v in snapshot.vehicles)

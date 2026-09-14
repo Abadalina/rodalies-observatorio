@@ -35,6 +35,17 @@ def alerts_json() -> dict:
 
 
 @pytest.fixture(scope="session")
+def vehicle_positions_json() -> dict:
+    """Captura real del feed VehiclePositions de Renfe (12 trenes).
+
+    Recortada de una del 14/09/2026 que traia 380. Se conservan a proposito los
+    tres estados que publica Renfe y dos trenes SIN coordenadas, que es el caso
+    que importa: existen y hay que guardarlos sin inventarles una posicion.
+    """
+    return json.loads((FIXTURES / "vehicle_positions_sample.json").read_text(encoding="utf-8"))
+
+
+@pytest.fixture(scope="session")
 def gtfs_mini(tmp_path_factory) -> Path:
     """Empaqueta el GTFS de prueba en un zip, como el que publica Renfe."""
     destino = tmp_path_factory.mktemp("gtfs") / "mini.zip"
