@@ -173,7 +173,8 @@ Detalle en [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md).
 de Cercanias. Se descarga de las
 [releases](https://github.com/Abadalina/rodalies-observatorio/releases) y la
 ficha completa, con todo lo que hay que saber antes de usarlo, esta en
-[docs/DATASET.md](docs/DATASET.md).
+[docs/DATASET.md](docs/DATASET.md); como se publica una version nueva, en
+[docs/PUBLICAR_DATASET.md](docs/PUBLICAR_DATASET.md).
 
 Datos de Renfe Operadora bajo [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/deed.es).
 
