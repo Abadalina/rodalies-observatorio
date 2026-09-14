@@ -1,0 +1,32 @@
+{
+  "title": "Observatorio de Rodalies: historico de puntualidad de Cercanias de Renfe",
+  "description": "<p>Renfe publica en abierto el retraso de sus trenes de Cercanias, pero solo el del instante actual: nadie guarda el historico, asi que a las dos horas no existe. Este proyecto lo construye capturando el feed GTFS-Realtime cada 60 segundos y guardandolo en PostgreSQL particionado, con capa analitica en SQL mantenida de forma incremental, comprobaciones de calidad de datos, paneles de Grafana provisionados como codigo, API de solo lectura y una web publica con mapa en vivo.</p><p>En produccion desde el 26 de agosto de 2026, capturando los quince nucleos de Cercanias de Espana sin intervencion.</p><p>El conjunto de datos derivado se publica en las releases del repositorio, con su ficha en <code>docs/DATASET.md</code>: una fila por tren y parada con su retraso real, en UTC, y los sesgos conocidos medidos y documentados en vez de corregidos en silencio.</p><p>Datos originales de Renfe Operadora bajo CC BY 4.0. Este proyecto no esta afiliado a Renfe.</p>",
+  "upload_type": "software",
+  "language": "spa",
+  "license": "MIT",
+  "access_right": "open",
+  "creators": [
+    {
+      "name": "Abadal Goula, Alejandro"
+    }
+  ],
+  "keywords": [
+    "GTFS-Realtime",
+    "transporte publico",
+    "puntualidad ferroviaria",
+    "Rodalies",
+    "Cercanias",
+    "Renfe",
+    "ingenieria de datos",
+    "series temporales",
+    "PostgreSQL",
+    "datos abiertos"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/Abadalina/rodalies-observatorio",
+      "relation": "isSupplementTo",
+      "scheme": "url"
+    }
+  ]
+}
