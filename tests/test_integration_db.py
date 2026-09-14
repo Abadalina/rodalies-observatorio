@@ -561,3 +561,40 @@ def test_la_reconstruccion_deja_estadisticas(limpia):
 
     assert "analyze" in pasos
     assert analizada
+
+
+def test_un_tren_que_cruza_provincias_se_cuenta_una_vez(limpia):
+    """Sumar conteos de distintos entre grupos los multiplica.
+
+    `mv_line_daily` esta agrupada por provincia, asi que un tren que va de
+    Barcelona a Tarragona aparece en dos filas. Sumar su columna `trenes` lo
+    contaba dos veces: la portada declaraba 15.688 trenes donde habia 10.929.
+    """
+    with session(limpia) as conn:
+        repo = Repository(conn)
+        conn.execute(
+            "INSERT INTO gtfs.stop (stop_id, stop_name, provincia, comunidad) VALUES "
+            "('71801', 'Barcelona Sants', 'BARCELONA', 'CATALUNYA'), "
+            "('77002', 'Tarragona', 'TARRAGONA', 'CATALUNYA') "
+            "ON CONFLICT (stop_id) DO UPDATE SET provincia = EXCLUDED.provincia, "
+            "comunidad = EXCLUDED.comunidad"
+        )
+        # UN tren, dos paradas, dos provincias.
+        repo.insert_observations(
+            [
+                _observacion_hace(40, 60, stop="71801"),
+                _observacion_hace(30, 120, stop="77002"),
+            ],
+            source="renfe",
+        )
+        repo.rebuild_analytics()
+
+        filas_por_provincia = conn.execute(
+            "SELECT count(*) FROM analytics.mv_line_daily WHERE source = 'renfe'"
+        ).fetchone()[0]
+        trenes = conn.execute(
+            "SELECT trenes FROM analytics.v_kpi_dia WHERE source = 'renfe'"
+        ).fetchone()[0]
+
+    assert filas_por_provincia == 2, "el agregado debe seguir separando por provincia"
+    assert trenes == 1, "pero el tren es uno solo"

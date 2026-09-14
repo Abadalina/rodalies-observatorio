@@ -11,21 +11,31 @@ usuario.
 from __future__ import annotations
 
 RANKING_LINEAS = """
-SELECT linea,
-       nucleo_id,
-       sum(paradas_observadas)                                   AS paradas,
-       sum(paradas_suprimidas)                                   AS suprimidas,
-       sum(trenes)                                               AS trenes,
-       round(sum(retraso_medio_s * paradas_con_retraso)
-             / NULLIF(sum(paradas_con_retraso), 0), 1)           AS retraso_medio_s,
-       round(100.0 * sum(paradas_puntuales)
-             / NULLIF(sum(paradas_con_retraso), 0), 1)           AS pct_puntualidad,
-       max(retraso_max_s)                                        AS retraso_max_s
-  FROM analytics.mv_line_daily
- WHERE service_date BETWEEN %(desde)s AND %(hasta)s
-   AND source = %(source)s
-   AND (%(nucleo)s::text IS NULL OR nucleo_id = %(nucleo)s::text)
- GROUP BY linea, nucleo_id
+SELECT d.linea,
+       d.nucleo_id,
+       sum(d.paradas_observadas)                                 AS paradas,
+       sum(d.paradas_suprimidas)                                 AS suprimidas,
+       -- De `analytics.mv_trenes_dia`, no de `sum(d.trenes)`: mv_line_daily
+       -- esta agrupada por provincia y un tren que cruza dos las visita en dos
+       -- filas, asi que sumarlo lo contaba dos veces.
+       max(t.trenes)                                             AS trenes,
+       round(sum(d.retraso_medio_s * d.paradas_con_retraso)
+             / NULLIF(sum(d.paradas_con_retraso), 0), 1)         AS retraso_medio_s,
+       round(100.0 * sum(d.paradas_puntuales)
+             / NULLIF(sum(d.paradas_con_retraso), 0), 1)         AS pct_puntualidad,
+       max(d.retraso_max_s)                                      AS retraso_max_s
+  FROM analytics.mv_line_daily d
+  LEFT JOIN (
+      SELECT linea, nucleo_id, sum(trenes) AS trenes
+        FROM analytics.mv_trenes_dia
+       WHERE service_date BETWEEN %(desde)s AND %(hasta)s
+         AND source = %(source)s
+       GROUP BY linea, nucleo_id
+  ) t ON t.linea = d.linea AND t.nucleo_id IS NOT DISTINCT FROM d.nucleo_id
+ WHERE d.service_date BETWEEN %(desde)s AND %(hasta)s
+   AND d.source = %(source)s
+   AND (%(nucleo)s::text IS NULL OR d.nucleo_id = %(nucleo)s::text)
+ GROUP BY d.linea, d.nucleo_id
  ORDER BY pct_puntualidad NULLS LAST
 """
 
@@ -55,7 +65,12 @@ SELECT linea,
        sum(paradas_observadas)                                   AS paradas,
        round(sum(retraso_medio_s * paradas_con_retraso)
              / NULLIF(sum(paradas_con_retraso), 0), 1)           AS retraso_medio_s,
-       round(avg(pct_puntualidad), 1)                            AS pct_puntualidad
+       -- Ponderado por paradas, no `avg(pct_puntualidad)`: promediar los
+       -- porcentajes de cada dia le da el mismo peso a una hora con tres
+       -- paradas observadas que a una con doscientas. En la R2S de las 23:00
+       -- la diferencia era de 27,3 % a 45,4 %.
+       round(sum(pct_puntualidad * paradas_con_retraso)
+             / NULLIF(sum(paradas_con_retraso), 0), 1)           AS pct_puntualidad
   FROM analytics.mv_line_hour
  WHERE service_date BETWEEN %(desde)s AND %(hasta)s
    AND source = %(source)s
