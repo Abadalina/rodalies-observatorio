@@ -16,6 +16,10 @@ from playwright.sync_api import sync_playwright
 
 GRAFANA = "http://grafana:3000"
 API = "http://api:8000"
+# El dominio publico sale del entorno, no escrito aqui: el repositorio no lleva
+# dentro la direccion de nadie, y asi el script sirve en cualquier instalacion.
+# Sin el, se saltan las dos capturas de la web y se hacen las de Grafana igual.
+DOMINIO = os.environ.get("RODALIES_DOMINIO", "")
 CLAVE = os.environ["GP"]
 SALIDA = "/salida"
 
@@ -106,13 +110,16 @@ def main() -> int:
 
         # La web publica. No necesita sesion: es publica, que es justo la gracia.
         for fichero, ruta, espera in (
-            ("web-mapa.png", "/mapa.html", ".leaflet-marker-pane, .leaflet-overlay-pane path"),
-            ("web-estadisticas.png", "/estadisticas.html", ".lienzo svg"),
+            ()
+            if not DOMINIO
+            else (
+                ("web-mapa.png", "/mapa.html", ".leaflet-marker-pane, .leaflet-overlay-pane path"),
+                ("web-estadisticas.png", "/estadisticas.html", ".lienzo svg"),
+            )
         ):
             print(f"  {fichero} ...", flush=True)
             pagina.set_viewport_size({"width": 1500, "height": 950})
-            pagina.goto(f"https://rodalies.duckdns.org{ruta}", wait_until="networkidle",
-                        timeout=90_000)
+            pagina.goto(f"https://{DOMINIO}{ruta}", wait_until="networkidle", timeout=90_000)
             pagina.wait_for_selector(espera, timeout=60_000)
             pagina.wait_for_timeout(6_000)
             if fichero == "web-mapa.png":
@@ -125,6 +132,9 @@ def main() -> int:
                     pagina.wait_for_timeout(2_500)
                 pagina.screenshot(path=f"{SALIDA}/{fichero}", full_page=False)
             print(f"  {fichero} listo", flush=True)
+
+        if not DOMINIO:
+            print("  sin RODALIES_DOMINIO: no se capturan las paginas web", flush=True)
 
         navegador.close()
     return 0
