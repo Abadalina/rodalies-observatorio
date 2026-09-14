@@ -167,6 +167,32 @@ flowchart LR
 
 Detalle en [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md).
 
+## Como se ve
+
+**Mapa en vivo.** Cada punto es un tren donde esta de verdad: la posicion la
+publica Renfe, no se interpola. El color es su retraso.
+
+![Mapa en vivo con los trenes de Rodalies y su retraso](docs/img/web-mapa.png)
+
+**Estadisticas.** Puntualidad por dia, por hora programada, por dia de la semana,
+y el ranking de lineas y estaciones.
+
+![Pagina de estadisticas de puntualidad](docs/img/web-estadisticas.png)
+
+**Panel de puntualidad** en Grafana, provisionado como codigo.
+
+![Panel de Grafana con la puntualidad por linea](docs/img/panel-puntualidad.png)
+
+**Panel de salud de la ingesta.** Es el que demuestra que esto lleva semanas
+corriendo solo: consultas fallidas, filas escritas por hora, comprobaciones de
+calidad y las descargas del horario con su huella.
+
+![Panel de Grafana con la salud de la ingesta](docs/img/panel-ingesta.png)
+
+**API abierta**, documentada sola.
+
+![Documentacion automatica de la API](docs/img/api-docs.png)
+
 ---
 
 ## Decisiones que conviene poder defender

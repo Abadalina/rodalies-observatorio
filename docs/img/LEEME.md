@@ -1,57 +1,37 @@
 # Capturas de pantalla
 
 Van enlazadas desde el README y son lo primero que mira quien abre el
-repositorio. Se hacen a mano en cinco minutos.
+repositorio. **No se hacen a mano**: se generan con un navegador sin interfaz
+que corre dentro de la propia red de Docker, asi que no hace falta tunel ni
+exponer ningun puerto, y salen identicas cada vez.
 
-## Antes de empezar
-
-Abre el tunel y dejalo abierto:
-
-```powershell
-ssh -N -L 3000:localhost:3000 -L 8000:localhost:8000 <usuario>@<ip-del-servidor>
+```bash
+# En el servidor, con el sistema en marcha
+GP=$(grep '^GRAFANA_PASSWORD=' .env | cut -d= -f2)
+docker run --rm --network rodalies-observatorio_default   -e GP="$GP" -e PLAYWRIGHT_BROWSERS_PATH=/ms-playwright   -v "$PWD/scripts/capturar.py:/capturar.py:ro" -v ~/capturas:/salida   mcr.microsoft.com/playwright/python:v1.47.0-jammy   sh -c "pip install -q playwright==1.47.0; python /capturar.py"
 ```
 
-Entra en <http://localhost:3000> con `admin` y la contrasena de
-`reference/private/CREDENCIALES.md`.
+Genera cinco ficheros en `~/capturas`, que se copian a `docs/img/`.
 
-## Las tres que hacen falta
+## Dos cosas que costaron descubrir
 
-### 1. `panel-puntualidad.png`
+**No se puede usar `full_page`.** Grafana monta el tablero dentro de un
+contenedor con su propio desplazamiento, y la captura de pagina completa fuerza
+un reflujo que desmonta los paneles: sale una imagen del tamaño correcto y
+completamente en blanco, con solo el selector de fechas. Hay que agrandar la
+ventana hasta la altura del contenido y capturar la ventana.
 
-*Dashboards -> Rodalies -> Rodalies - Puntualidad*
+**Y hay que MIRAR el resultado.** El primer intento genero un fichero de 37 kB
+que parecia una captura y era una pagina vacia. Ninguna comprobacion automatica
+lo habria visto: el fichero existia, era un PNG valido y tenia las dimensiones
+correctas.
 
-- Rango temporal, arriba a la derecha: **Last 7 days** (con menos de una semana
-  de datos, **Last 2 days**).
-- Variables: **Origen** `renfe`, **Comunidad** `Catalunya`, **Provincia** y
-  **Linea** en `All`.
-- Espera a que carguen los nueve paneles antes de capturar.
-- Captura la ventana entera del navegador, no solo un panel.
+## Que sale en cada una
 
-### 2. `panel-ingesta.png`
-
-*Dashboards -> Rodalies -> Rodalies - Salud de la ingesta*
-
-- Rango: **Last 24 hours**.
-- Es la que demuestra que el sistema lleva semanas corriendo solo. Para un
-  reclutador tecnico vale mas que la de puntualidad.
-- Que se vean las comprobaciones de calidad en verde.
-
-### 3. `api-docs.png`
-
-<http://localhost:8000/docs>
-
-- Despliega un endpoint (`/lineas` va bien) para que se vea la respuesta.
-
-## Al terminar
-
-Guardalas en esta carpeta y enlazalas en el README, debajo del titulo:
-
-```markdown
-![Panel de puntualidad de Rodalies](docs/img/panel-puntualidad.png)
-```
-
-## Cuando hacerlas
-
-**Espera a tener al menos una semana de datos.** Con dos dias las series
-temporales salen flacas y transmiten lo contrario de lo que interesa. A partir
-del 3 de septiembre de 2026 ya tienen forma.
+| Fichero | Que enseña |
+|---|---|
+| `web-mapa.png` | El mapa en vivo con los trenes y su retraso |
+| `web-estadisticas.png` | Puntualidad por dia, hora, dia de la semana, lineas y estaciones |
+| `panel-puntualidad.png` | El panel de Grafana, ultimos 7 dias, Catalunya |
+| `panel-ingesta.png` | Salud de la ingesta, ultimas 24 h. **Es la que mas dice a un perfil tecnico**: demuestra que el sistema lleva semanas corriendo solo |
+| `api-docs.png` | La documentacion automatica de la API |
