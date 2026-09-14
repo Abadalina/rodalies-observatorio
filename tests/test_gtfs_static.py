@@ -11,6 +11,8 @@ from datetime import date
 import pytest
 
 from rodalies.gtfs_static import (
+    GTFS_FILES,
+    SHAPES_FILE,
     GtfsArchive,
     NucleoFilter,
     calendar_rows,
@@ -19,6 +21,7 @@ from rodalies.gtfs_static import (
     parse_gtfs_time,
     route_rows,
     service_date_index,
+    shape_rows,
     stop_rows,
     stop_time_rows,
     trip_rows,
@@ -123,3 +126,37 @@ def test_falta_un_fichero_obligatorio(tmp_path):
         faltan = archivo.missing_files()
     assert "stop_times.txt" in faltan
     assert "trips.txt" in faltan
+
+
+def test_la_geometria_de_las_vias_se_lee(gtfs_mini):
+    """El trazado entra entero: no se filtra por nucleo, como las estaciones."""
+    with GtfsArchive(gtfs_mini) as archivo:
+        puntos = list(shape_rows(archivo))
+
+    trazados = {p[0] for p in puntos}
+    assert trazados == {"51_R2", "51_R2_INV"}
+    assert puntos[0] == ("51_R2", 1, 41.3792, 2.1400, None)
+
+
+def test_un_punto_incompleto_se_descarta_en_vez_de_inventarse(gtfs_mini):
+    """Un vertice sin coordenadas no es un vertice en (0, 0).
+
+    Rellenarlo con ceros pondria la via en el golfo de Guinea, y un mapa con una
+    linea que cruza el Atlantico se ve; uno con un punto de mas, no.
+    """
+    with GtfsArchive(gtfs_mini) as archivo:
+        puntos = list(shape_rows(archivo))
+
+    assert all(p[2] != 0 and p[3] != 0 for p in puntos)
+    assert not any(p[0] in {"sin_orden", "sin_coordenadas", "letras"} for p in puntos)
+
+
+def test_el_horario_no_depende_de_la_geometria(gtfs_mini):
+    """shapes.txt es opcional: sin el se carga el horario igual.
+
+    Es geometria para pintar un mapa, no informacion de si un tren llega tarde.
+    Si Renfe dejara de publicarla, la captura no se para por eso.
+    """
+    assert SHAPES_FILE not in GTFS_FILES
+    with GtfsArchive(gtfs_mini) as archivo:
+        assert archivo.missing_files() == []

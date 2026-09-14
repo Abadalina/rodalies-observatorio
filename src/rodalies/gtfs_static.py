@@ -38,6 +38,12 @@ GTFS_FILES = (
     "stop_times.txt",
 )
 
+# `shapes.txt` NO entra en la lista de obligatorios a proposito. Es la
+# geometria de las vias: sirve para pintar un mapa bonito, no para saber si un
+# tren llega tarde. Si Renfe dejara de publicarla, lo ultimo que debe pasar es
+# que se pare la captura por un fichero decorativo.
+SHAPES_FILE = "shapes.txt"
+
 
 def clean(value: str | None) -> str | None:
     """Quita el relleno de espacios que trae el GTFS de Renfe."""
@@ -196,6 +202,34 @@ def stop_rows(archive: GtfsArchive) -> Iterator[tuple[Any, ...]]:
             float(lon) if lon else None,
             int(wheelchair) if wheelchair and wheelchair.isdigit() else None,
         )
+
+
+def shape_rows(archive: GtfsArchive) -> Iterator[tuple[Any, ...]]:
+    """Trazado de cada recorrido, punto a punto.
+
+    Sin filtrar por nucleo: toda la red son 136 trazados y el filtro costaria
+    mas que los datos. Un punto sin coordenadas o sin orden no es un punto, asi
+    que se descarta en vez de colarlo con ceros: una via con un vertice en el
+    golfo de Guinea se ve enseguida en un mapa, pero para entonces ya ha
+    ensuciado el dato.
+    """
+    for r in archive.rows("shapes.txt"):
+        shape_id = r.get("shape_id")
+        lat = r.get("shape_pt_lat")
+        lon = r.get("shape_pt_lon")
+        punto = r.get("shape_pt_sequence")
+        if not shape_id or not lat or not lon or not punto:
+            continue
+        try:
+            cabecera = (shape_id, int(punto), float(lat), float(lon))
+        except ValueError:
+            continue
+        dist = r.get("shape_dist_traveled")
+        try:
+            metros = float(dist) if dist else None
+        except ValueError:
+            metros = None
+        yield (*cabecera, metros)
 
 
 def calendar_rows(archive: GtfsArchive) -> Iterator[tuple[Any, ...]]:

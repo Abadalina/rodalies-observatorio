@@ -323,6 +323,18 @@ class Ingestor:
                     ("trip_id", "stop_sequence", "stop_id", "arrival_s", "departure_s"),
                     gs.stop_time_rows(archive, keep),
                 )
+                # El trazado de las vias: 136 recorridos para toda la red. Se
+                # carga entero, sin filtrar por nucleo, como las estaciones, y
+                # solo si viene: es opcional, y el GTFS sintetico no lo trae.
+                if gs.SHAPES_FILE in archive.names():
+                    counts["shape"] = repo.copy_rows(
+                        "gtfs.shape",
+                        ("shape_id", "punto", "lat", "lon", "dist_metros"),
+                        gs.shape_rows(archive),
+                    )
+                else:
+                    counts["shape"] = 0
+                    log.info("el GTFS no trae %s: el mapa no tendra trazado", gs.SHAPES_FILE)
                 repo.record_feed_version(
                     source=self.settings.source,
                     url=str(target)

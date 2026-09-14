@@ -1,0 +1,9 @@
+shape_id,shape_pt_lat,shape_pt_lon,shape_pt_sequence,shape_dist_traveled
+51_R2,41.3792,2.1400,1,
+51_R2,41.3850,2.1520,2,
+51_R2,41.3917,2.1650,3,
+51_R2_INV,41.3917,2.1650,1,
+51_R2_INV,41.3792,2.1400,2,
+sin_orden,41.4000,2.1000,,
+sin_coordenadas,,,4,
+letras,x,y,5,

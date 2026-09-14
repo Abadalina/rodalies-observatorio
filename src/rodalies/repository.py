@@ -277,7 +277,8 @@ class Repository:
         vacia. Y no toca `rt.*`: los hechos historicos no se recargan jamas.
         """
         self.conn.execute(
-            "TRUNCATE gtfs.stop_time, gtfs.trip, gtfs.route, gtfs.stop, gtfs.calendar, gtfs.agency"
+            "TRUNCATE gtfs.stop_time, gtfs.trip, gtfs.route, gtfs.stop, gtfs.calendar, "
+            "gtfs.agency, gtfs.shape"
         )
 
     def copy_rows(
