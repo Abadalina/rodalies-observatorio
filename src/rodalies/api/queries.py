@@ -185,6 +185,12 @@ HISTORIAL_TREN = """
 -- El umbral de puntualidad no se escribe aqui: sale de analytics.setting_value,
 -- igual que en los agregados, para que cambiar que se considera puntual sea un
 -- UPDATE y no una reescritura de media capa analitica.
+--
+-- La linea se busca primero en la capa analitica, pero esa capa se pone al dia
+-- cada quince minutos: un tren que acaba de salir aun no esta en ella, y sin
+-- respaldo la condicion quedaba en `linea = NULL` y la ficha salia vacia justo
+-- para los trenes que se abren desde el mapa. El respaldo usa la misma regla
+-- con la que la capa calcula la linea.
 SELECT service_date,
        min(trip_id)                                              AS trip_id,
        count(*)                                                  AS paradas,
@@ -198,9 +204,16 @@ SELECT service_date,
   FROM analytics.mv_stop_final
  WHERE source = %(source)s
    AND analytics.numero_de_trip_id(trip_id) = analytics.numero_de_trip_id(%(trip_id)s)
-   AND linea = (
-       SELECT linea FROM analytics.mv_stop_final
-        WHERE trip_id = %(trip_id)s LIMIT 1
+   AND linea = COALESCE(
+       (SELECT linea FROM analytics.mv_stop_final
+         WHERE trip_id = %(trip_id)s LIMIT 1),
+       (SELECT COALESCE(r.route_short_name,
+                        analytics.linea_de_trip_id(t.trip_id),
+                        'sin linea')
+          FROM gtfs.trip t
+          LEFT JOIN gtfs.route r ON r.route_id = t.route_id
+         WHERE t.trip_id = %(trip_id)s),
+       analytics.linea_de_trip_id(%(trip_id)s)
    )
    AND service_date >= current_date - %(dias)s::int
  GROUP BY service_date
