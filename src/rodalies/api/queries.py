@@ -165,11 +165,39 @@ SELECT t.shape_id,
 """
 
 TRAYECTORIA = """
+-- Hoy y ayer se leen de las observaciones, no de la capa analitica: la capa se
+-- pone al dia cada quince minutos, y un tren recien salido no tenia recorrido
+-- justo cuando se abre desde el mapa. Es la misma regla con la que la capa
+-- elige la ultima observacion de cada parada. Los dias anteriores ya estan
+-- consolidados y salen de la capa. El filtro por service_date deja usar el
+-- indice (service_date, trip_id) de cada particion.
 SELECT stop_id, estacion, stop_sequence, scheduled_arrival, arrival_time,
        delay_s, schedule_relationship, last_seen
-  FROM analytics.mv_stop_final
- WHERE trip_id = %(trip_id)s
-   AND (%(service_date)s::date IS NULL OR service_date = %(service_date)s::date)
+  FROM (
+    (SELECT DISTINCT ON (o.source, o.service_date, o.stop_id)
+            o.service_date,
+            o.stop_id,
+            COALESCE(s.stop_name, o.stop_id)                 AS estacion,
+            o.stop_sequence,
+            o.scheduled_arrival,
+            o.arrival_time,
+            COALESCE(o.arrival_delay_s, o.departure_delay_s) AS delay_s,
+            o.schedule_relationship,
+            o.feed_timestamp                                 AS last_seen
+       FROM rt.observation o
+       LEFT JOIN gtfs.stop s ON s.stop_id = o.stop_id
+      WHERE o.trip_id = %(trip_id)s
+        AND o.service_date >= current_date - 1
+        AND (%(service_date)s::date IS NULL OR o.service_date = %(service_date)s::date)
+      ORDER BY o.source, o.service_date, o.stop_id, o.feed_timestamp DESC)
+    UNION ALL
+    SELECT service_date, stop_id, estacion, stop_sequence, scheduled_arrival,
+           arrival_time, delay_s, schedule_relationship, last_seen
+      FROM analytics.mv_stop_final
+     WHERE trip_id = %(trip_id)s
+       AND service_date < current_date - 1
+       AND (%(service_date)s::date IS NULL OR service_date = %(service_date)s::date)
+  ) paradas
  ORDER BY service_date DESC, stop_sequence NULLS LAST, scheduled_arrival
 """
 
