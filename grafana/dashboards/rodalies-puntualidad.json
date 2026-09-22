@@ -299,7 +299,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "\nSELECT sum(trenes) AS \"Trenes observados\"\n  FROM analytics.mv_line_daily\n WHERE service_date BETWEEN $__timeFrom()::date AND $__timeTo()::date\n   AND source = '$source'\n   AND comunidad = '$comunidad'\n   AND provincia LIKE ANY (ARRAY[${provincia:sqlstring}])\n   AND linea LIKE ANY (ARRAY[${linea:sqlstring}])\n",
+          "rawSql": "\n-- Trenes distintos, no la suma de mv_line_daily: esa tabla va por provincia y\n-- un tren que cruza dos provincias se contaba dos veces (un 42 % de mas en\n-- Catalunya). El trip_id se repite entre dias, por eso cuenta el par.\nSELECT count(DISTINCT (service_date, trip_id)) AS \"Trenes observados\"\n  FROM analytics.mv_stop_final\n WHERE service_date BETWEEN $__timeFrom()::date AND $__timeTo()::date\n   AND source = '$source'\n   AND comunidad = '$comunidad'\n   AND provincia LIKE ANY (ARRAY[${provincia:sqlstring}])\n   AND linea LIKE ANY (ARRAY[${linea:sqlstring}])\n",
           "sql": {
             "columns": [
               {
@@ -555,7 +555,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "\nSELECT hora AS \"Hora\",\n       linea AS \"Linea\",\n       round(sum(retraso_medio_s * paradas_con_retraso)\n             / NULLIF(sum(paradas_con_retraso), 0), 0) AS \"Retraso medio (s)\"\n  FROM analytics.mv_line_hour\n WHERE service_date BETWEEN $__timeFrom()::date AND $__timeTo()::date\n   AND source = '$source'\n   AND comunidad = '$comunidad'\n   AND provincia LIKE ANY (ARRAY[${provincia:sqlstring}])\n   AND linea LIKE ANY (ARRAY[${linea:sqlstring}])\n GROUP BY hora, linea\n ORDER BY hora, linea\n",
+          "rawSql": "\n-- Desde mv_stop_final y no desde mv_line_hour, porque hay que descartar antes\n-- de promediar los retrasos imposibles: Renfe publica algunos con el dia de\n-- servicio mal (casi -24 h), concentrados a medianoche, y a las 0 h llegaban a\n-- dar medias de -12 h. Mismo rango que la comprobacion retrasos_fuera_de_rango.\nSELECT EXTRACT(hour FROM scheduled_local)::int AS \"Hora\",\n       linea AS \"Linea\",\n       round(avg(delay_s), 0) AS \"Retraso medio (s)\"\n  FROM analytics.mv_stop_final\n WHERE service_date BETWEEN $__timeFrom()::date AND $__timeTo()::date\n   AND source = '$source'\n   AND comunidad = '$comunidad'\n   AND provincia LIKE ANY (ARRAY[${provincia:sqlstring}])\n   AND linea LIKE ANY (ARRAY[${linea:sqlstring}])\n   AND scheduled_local IS NOT NULL\n   AND delay_s BETWEEN -3600 AND 43200\n GROUP BY 1, 2\n ORDER BY 1, 2\n",
           "sql": {
             "columns": [
               {
