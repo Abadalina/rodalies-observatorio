@@ -141,6 +141,46 @@ def test_agregados_por_linea(limpia):
     assert float(pct) == pytest.approx(66.7, abs=0.1)
 
 
+def test_un_retraso_imposible_no_entra_en_los_agregados(limpia):
+    """Renfe publica a veces el dia de servicio mal: casi -24 h de retraso.
+
+    Antes de la migracion 021 eso contaba como tren puntual (cumple
+    `delay_s <= 180`) y hundia la media. Ahora la parada cuenta como observada
+    pero sin dato de retraso, y el crudo sigue intacto en mv_stop_final.
+    """
+    with session(limpia) as conn:
+        repo = Repository(conn)
+        repo.sync_settings({"on_time_threshold_s": 180})
+        repo.insert_observations(
+            [
+                observacion(0, 600, stop="71801"),
+                observacion(1, -86_100, stop="71802"),
+            ],
+            source="renfe",
+        )
+        repo.rebuild_analytics()
+        # Sumado y no fetchone(): si otro test dejo provincias en gtfs.stop, el
+        # agregado sale partido en una fila por provincia.
+        observadas, con_retraso, puntuales, medio = conn.execute(
+            """
+            SELECT sum(paradas_observadas), sum(paradas_con_retraso),
+                   sum(paradas_puntuales),
+                   sum(retraso_medio_s * paradas_con_retraso)
+                       / NULLIF(sum(paradas_con_retraso), 0)
+              FROM analytics.mv_line_daily WHERE source = 'renfe'
+            """
+        ).fetchone()
+        crudo = conn.execute(
+            "SELECT min(delay_s) FROM analytics.mv_stop_final WHERE source = 'renfe'"
+        ).fetchone()[0]
+
+    assert observadas == 2, "la parada sigue contando como observada"
+    assert con_retraso == 1
+    assert puntuales == 0, "-24 h no es un tren puntual"
+    assert float(medio) == 600
+    assert crudo == -86_100, "el dato crudo no se toca"
+
+
 def test_los_datos_sinteticos_no_contaminan_los_reales(limpia):
     """Es la garantia de que la demo nunca falsea las cifras publicadas."""
     with session(limpia) as conn:

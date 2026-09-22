@@ -218,6 +218,9 @@ HISTORIAL_TREN = """
 -- igual que en los agregados, para que cambiar que se considera puntual sea un
 -- UPDATE y no una reescritura de media capa analitica.
 --
+-- Lee de v_stop_final_fiable, como los agregados: un retraso de casi -24 h
+-- (dia de servicio mal publicado) no es un tren puntual ni baja la media.
+--
 -- La linea se busca primero en la capa analitica, pero esa capa se pone al dia
 -- cada quince minutos: un tren que acaba de salir aun no esta en ella, y sin
 -- respaldo la condicion quedaba en `linea = NULL` y la ficha salia vacia justo
@@ -233,7 +236,7 @@ SELECT service_date,
        round(100.0 * count(*) FILTER (
                  WHERE delay_s <= analytics.setting_value('on_time_threshold_s'))
              / NULLIF(count(*) FILTER (WHERE delay_s IS NOT NULL), 0), 1) AS pct_puntualidad
-  FROM analytics.mv_stop_final
+  FROM analytics.v_stop_final_fiable
  WHERE source = %(source)s
    AND analytics.numero_de_trip_id(trip_id) = analytics.numero_de_trip_id(%(trip_id)s)
    AND linea = COALESCE(
