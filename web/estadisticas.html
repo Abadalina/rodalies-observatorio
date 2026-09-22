@@ -3,35 +3,57 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Estadisticas · Observatorio de Rodalies</title>
-<meta name="description" content="Puntualidad de Rodalies: por dia, por linea, por hora y por estacion.">
+<title>Estadísticas · Observatorio de Cercanías</title>
+<meta name="description" content="Estadísticas de puntualidad de Cercanías: por día, línea, hora y estación.">
 <link rel="stylesheet" href="/estilo.css">
 <link rel="stylesheet" href="/graficas.css">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>🚂</text></svg>">
 </head>
-<body>
+<body class="pagina-estadisticas">
 
 <header class="cabecera">
   <div class="contenido">
-    <p class="migas"><a href="/">Observatorio</a> · <a href="/mapa.html">mapa en vivo</a></p>
-    <h1>Estadisticas</h1>
+    <p class="migas"><a href="/">Observatorio</a> · <a href="/mapa.html">Mapa en vivo</a></p>
+    <h1>Estadísticas</h1>
     <p class="lema" id="periodo">Cargando…</p>
 
-    <div class="filtros" role="group" aria-label="Periodo y ambito">
-      <label>Periodo
+    <div class="filtros" role="group" aria-label="Periodo y ámbito">
+      <label>Período
         <select id="dias">
-          <option value="7">ultimos 7 dias</option>
-          <option value="14" selected>ultimos 14 dias</option>
-          <option value="30">ultimos 30 dias</option>
+          <option value="7">últimos 7 días</option>
+          <option value="14" selected>últimos 14 días</option>
+          <option value="30">últimos 30 días</option>
+          <option value="90">últimos 90 días</option>
+          <option value="365">último año</option>
         </select>
       </label>
-      <label>Ambito
+      <label>Ámbito
         <select id="ambito">
           <option value="51" selected>Catalunya</option>
-          <option value="">toda Espana</option>
+          <option value="">Toda España</option>
+          <option value="10">Madrid</option>
+          <option value="20">Asturias</option>
+          <option value="30">Sevilla</option>
+          <option value="31">Cádiz</option>
+          <option value="32">Málaga</option>
+          <option value="40">Valencia</option>
+          <option value="41">Murcia/Alicante</option>
+          <option value="45">Cartagena–Los Nietos</option>
+          <option value="46">Ferrol–Ortigueira</option>
+          <option value="47">León</option>
+          <option value="50">Barcelona (servicios especiales)</option>
+          <option value="60">Bilbao</option>
+          <option value="61">San Sebastián</option>
+          <option value="62">Santander</option>
+          <option value="70">Zaragoza</option>
+          <option value="90">Cercedilla–Cotos</option>
         </select>
       </label>
     </div>
+    <p class="estado" id="estado-datos" role="status" aria-live="polite">
+      <span class="punto" id="punto-datos"></span>
+      <span id="texto-estado">Cargando estadísticas…</span>
+    </p>
   </div>
 </header>
 
@@ -40,67 +62,87 @@
   <section class="cifras" aria-label="Resumen del periodo">
     <div class="cifra"><strong id="c-puntualidad">—</strong><span>llegan en 3 min o menos</span></div>
     <div class="cifra"><strong id="c-retraso">—</strong><span>retraso medio</span></div>
+    <div class="cifra"><strong id="c-graves">—</strong><span>con más de 15 min</span></div>
+    <div class="cifra"><strong id="c-suprimidas">—</strong><span>paradas suprimidas</span></div>
     <div class="cifra"><strong id="c-trenes">—</strong><span>trenes seguidos</span></div>
     <div class="cifra"><strong id="c-paradas">—</strong><span>paradas observadas</span></div>
+    <div class="cifra"><strong id="c-lineas">—</strong><span>líneas con datos</span></div>
+    <div class="cifra"><strong id="c-dias">—</strong><span>días con datos</span></div>
   </section>
 
   <section>
-    <h2>Puntualidad dia a dia</h2>
+    <h2>Puntualidad día a día</h2>
     <p class="apunte">Porcentaje de paradas con 3 minutos de retraso o menos.
-       Cada punto es un dia entero de captura.</p>
+       Cada punto es un día entero de captura.</p>
     <figure class="grafica"><div id="g-dias" class="lienzo"></div></figure>
   </section>
 
   <section>
-    <h2>Puntualidad por hora del dia</h2>
+    <h2>Puntualidad por hora del día</h2>
     <p class="apunte">La hora es la <em>programada</em>, no la real: un tren muy retrasado
-       sigue contando en la franja en la que deberia haber pasado.</p>
+       sigue contando en la franja en la que debería haber pasado. Se muestran todas
+       las horas con datos; consulta la muestra exacta al pasar el cursor.</p>
     <figure class="grafica"><div id="g-horas" class="lienzo"></div></figure>
   </section>
 
   <section>
-    <h2>Puntualidad por dia de la semana</h2>
+    <h2>Puntualidad por día de la semana</h2>
     <p class="apunte">Un lunes no se parece a un domingo, y mezclarlos esconde justo
-       lo que interesa de una red de cercanias.</p>
+       lo que interesa de una red de Cercanías.</p>
     <figure class="grafica"><div id="g-semana" class="lienzo"></div></figure>
   </section>
 
   <section>
-    <h2>Lineas, de peor a mejor</h2>
-    <p class="apunte">Solo lineas con 500 paradas observadas o mas: por debajo de eso
-       una proporcion no significa nada.</p>
+    <div class="titulo-tabla">
+      <div>
+        <h2>Líneas, de peor a mejor</h2>
+        <p class="apunte">Se muestran todas las líneas con datos. Una muestra pequeña
+          se conserva para no ocultar información, pero aparece señalada.</p>
+      </div>
+      <span class="contador" id="total-lineas">—</span>
+    </div>
     <div class="tabla-envoltorio">
       <table>
         <thead>
           <tr>
-            <th>Linea</th>
+            <th>Línea</th>
             <th>Puntualidad</th>
             <th class="num">%</th>
             <th class="num">Retraso medio</th>
+            <th class="num">&gt; 15 min</th>
+            <th class="num">Suprimidas</th>
             <th class="num">Trenes</th>
             <th class="num">Paradas</th>
           </tr>
         </thead>
-        <tbody id="cuerpo-lineas"><tr><td colspan="6" class="cargando">cargando…</td></tr></tbody>
+        <tbody id="cuerpo-lineas"><tr><td colspan="8" class="cargando">Cargando…</td></tr></tbody>
       </table>
     </div>
   </section>
 
   <section>
-    <h2>Estaciones con mas retraso</h2>
-    <p class="apunte">Retraso medio de los trenes a su paso por cada estacion.
-       Las quince peores del periodo.</p>
+    <div class="titulo-tabla titulo-tabla--busqueda">
+      <div>
+        <h2>Estaciones con más retraso</h2>
+        <p class="apunte">Todas las estaciones observadas, ordenadas por retraso medio.</p>
+      </div>
+      <label class="busqueda">Buscar estación
+        <input id="buscar-estacion" type="search" placeholder="Nombre o código" autocomplete="off">
+      </label>
+    </div>
+    <p class="contador contador--bloque" id="total-estaciones">—</p>
     <div class="tabla-envoltorio">
       <table>
         <thead>
           <tr>
-            <th>Estacion</th>
+            <th>Estación</th>
+            <th class="num">Puntualidad</th>
             <th class="num">Retraso medio</th>
             <th class="num">Peor</th>
             <th class="num">Paradas</th>
           </tr>
         </thead>
-        <tbody id="cuerpo-estaciones"><tr><td colspan="4" class="cargando">cargando…</td></tr></tbody>
+        <tbody id="cuerpo-estaciones"><tr><td colspan="5" class="cargando">Cargando…</td></tr></tbody>
       </table>
     </div>
   </section>
@@ -108,9 +150,9 @@
 </main>
 
 <footer class="contenido">
-  <p>Datos de <strong>Renfe Operadora</strong>, publicados en abierto bajo
+  <p>En producción, datos abiertos de <strong>Renfe Operadora</strong> bajo
      <a href="https://creativecommons.org/licenses/by/4.0/deed.es" rel="license">CC BY 4.0</a>.
-     Este sitio no esta afiliado a Renfe.</p>
+     La demo local usa datos sintéticos separados. Este sitio no está afiliado a Renfe.</p>
   <p class="tenue">Una parada cuenta como puntual con 3 minutos de retraso o menos.
      Las medias se ponderan por paradas observadas, nunca promediando porcentajes.</p>
 </footer>

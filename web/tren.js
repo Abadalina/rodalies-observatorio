@@ -1,4 +1,4 @@
-// Ficha de un tren: como se ha portado estos dias y su ultimo recorrido.
+// Ficha de un tren: cómo se ha portado estos días y su último recorrido.
 "use strict";
 
 const id = new URLSearchParams(location.search).get("id");
@@ -102,7 +102,7 @@ async function cargar() {
   const mismasVentanas = dias.length > 0 && ventana7.length === dias.length;
   const nota = document.getElementById("nota-14");
   if (nota) {
-    nota.textContent = mismasVentanas ? "sin datos anteriores: mismo periodo" : "";
+    nota.textContent = mismasVentanas ? "sin datos anteriores: mismo período" : "";
   }
 
   const conDato = dias.filter((d) => d.pct_puntualidad !== null);
@@ -121,7 +121,7 @@ async function cargar() {
   const cuerpoDias = document.getElementById("cuerpo-dias");
   cuerpoDias.textContent = "";
   if (!dias.length) {
-    cuerpoDias.appendChild(celda("este tren no ha circulado estos dias", "vacio")).colSpan = 6;
+    cuerpoDias.appendChild(celda("este tren no ha circulado estos días", "vacio")).colSpan = 6;
   } else {
     for (const d of dias) {
       const fila = document.createElement("tr");
@@ -136,9 +136,9 @@ async function cargar() {
       cuerpoDias.appendChild(fila);
     }
     document.getElementById("apunte-dias").textContent =
-      `${dias.length} dias con datos, ${ventana7.length} en la ultima semana. ` +
-      `Renfe cambia el identificador del tren cada dia, ` +
-      `asi que estos dias se agrupan por su numero comercial, que es lo que se mantiene. ` +
+      `${dias.length} días con datos, ${ventana7.length} en la última semana. ` +
+      `Renfe cambia el identificador del tren cada día, ` +
+      `así que estos días se agrupan por su número comercial, que es lo que se mantiene. ` +
       `Las medias se ponderan por paradas observadas.`;
   }
 

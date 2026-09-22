@@ -17,7 +17,10 @@ async function pedir(ruta) {
 function fecha(desplazamiento) {
   const d = new Date();
   d.setDate(d.getDate() + desplazamiento);
-  return d.toISOString().slice(0, 10);
+  const ano = d.getFullYear();
+  const mes = String(d.getMonth() + 1).padStart(2, "0");
+  const dia = String(d.getDate()).padStart(2, "0");
+  return `${ano}-${mes}-${dia}`;
 }
 
 function minutosYSegundos(segundos) {
@@ -40,7 +43,7 @@ async function pintarEstado() {
     const bien = salud.estado === "ok";
     punto.className = `punto ${bien ? "punto--bien" : "punto--mal"}`;
     texto.textContent = bien
-      ? `capturando · ultima consulta hace ${antiguedad} s`
+      ? `capturando · última consulta hace ${antiguedad} s`
       : `la captura va con retraso (${salud.estado})`;
   } catch (error) {
     // Que falle el estado no debe dejar la pagina mintiendo con "comprobando".
@@ -93,7 +96,7 @@ async function pintarLineas() {
     const utiles = lineas.filter((l) => Number(l.paradas) >= 500 && l.pct_puntualidad !== null);
 
     if (!utiles.length) {
-      cuerpo.innerHTML = '<tr><td colspan="4" class="vacio">todavia no hay suficientes datos</td></tr>';
+      cuerpo.innerHTML = '<tr><td colspan="4" class="vacio">todavía no hay suficientes datos</td></tr>';
       return;
     }
 
@@ -123,7 +126,7 @@ async function pintarLineas() {
       cuerpo.appendChild(fila);
     }
   } catch (error) {
-    cuerpo.innerHTML = '<tr><td colspan="4" class="vacio">no se han podido cargar las lineas</td></tr>';
+    cuerpo.innerHTML = '<tr><td colspan="4" class="vacio">no se han podido cargar las líneas</td></tr>';
     console.error(error);
   }
 }

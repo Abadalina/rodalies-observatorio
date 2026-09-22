@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Observatorio de Rodalies</title>
-<meta name="description" content="Historico de puntualidad de Cercanias de Renfe, capturado cada minuto desde agosto de 2026.">
+<meta name="description" content="Histórico de puntualidad de Cercanías de Renfe, capturado cada minuto desde agosto de 2026.">
 <link rel="stylesheet" href="/estilo.css">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>🚂</text></svg>">
 </head>
@@ -14,59 +14,59 @@
   <div class="contenido">
     <h1>Observatorio de Rodalies</h1>
     <p class="lema">Renfe publica el retraso de sus trenes, pero solo el de este instante.
-       Aqui se guarda, minuto a minuto, para poder mirar atras.</p>
+       Aquí se guarda, minuto a minuto, para poder mirar atrás.</p>
     <p class="estado" id="estado" aria-live="polite">
       <span class="punto punto--espera"></span><span id="estado-texto">comprobando el estado…</span>
     </p>
     <p class="enlaces enlaces--cabecera"><a href="/mapa.html">Ver el mapa en vivo →</a>
-       <a href="/estadisticas.html">Ver las estadisticas →</a></p>
+       <a href="/estadisticas.html">Ver las estadísticas →</a></p>
   </div>
 </header>
 
 <main class="contenido">
 
-  <section class="cifras" id="cifras" aria-label="Resumen del historico">
+  <section class="cifras" id="cifras" aria-label="Resumen del histórico">
     <div class="cifra"><strong id="cifra-observaciones">—</strong><span>paradas observadas</span></div>
-    <div class="cifra"><strong id="cifra-dias">—</strong><span>dias de serie</span></div>
+    <div class="cifra"><strong id="cifra-dias">—</strong><span>días de serie</span></div>
     <div class="cifra"><strong id="cifra-trenes">—</strong><span>trenes seguidos</span></div>
     <div class="cifra"><strong id="cifra-puntualidad">—</strong><span>llegan en 3 min</span></div>
   </section>
 
   <section>
-    <h2>Puntualidad por linea</h2>
-    <p class="apunte">Ultimos 14 dias en Catalunya. Una parada cuenta como puntual si el tren
+    <h2>Puntualidad por línea</h2>
+    <p class="apunte">Últimos 14 días en Catalunya. Una parada cuenta como puntual si el tren
        llega con 3 minutos de retraso o menos.</p>
     <div class="tabla-envoltorio">
       <table id="tabla-lineas">
         <thead>
           <tr>
-            <th>Linea</th>
+            <th>Línea</th>
             <th class="num">Puntualidad</th>
             <th class="num">Retraso medio</th>
             <th class="num">Paradas</th>
           </tr>
         </thead>
         <tbody id="cuerpo-lineas">
-          <tr><td colspan="4" class="cargando">cargando…</td></tr>
+          <tr><td colspan="4" class="cargando">Cargando…</td></tr>
         </tbody>
       </table>
     </div>
   </section>
 
   <section>
-    <h2>Como se construye</h2>
+    <h2>Cómo se construye</h2>
     <p>Cada 60 segundos se consulta el feed <abbr title="General Transit Feed Specification, en tiempo real">GTFS-Realtime</abbr>
        de Renfe y se guarda lo que dice de cada tren en cada parada. Nada se descarta:
-       una circulacion que el horario no reconoce se guarda <em>marcada</em>, no se tira,
-       porque perder una fila es irreversible y un cruce vacio no.</p>
-    <p>Lo que ves arriba sale de esa serie, no de una estimacion. Si un dia falta, se nota;
+       una circulación que el horario no reconoce se guarda <em>marcada</em>, no se tira,
+       porque perder una fila es irreversible y un cruce vacío no.</p>
+    <p>Lo que ves arriba sale de esa serie, no de una estimación. Si un día falta, se nota;
        no se rellena.</p>
     <p class="enlaces">
       <a href="/mapa.html">Mapa en vivo</a>
-      <a href="/estadisticas.html">Estadisticas</a>
+      <a href="/estadisticas.html">Estadísticas</a>
       <a href="/api/docs">API abierta</a>
       <a href="https://github.com/Abadalina/rodalies-observatorio/releases">Descargar los datos</a>
-      <a href="https://github.com/Abadalina/rodalies-observatorio">Codigo en GitHub</a>
+      <a href="https://github.com/Abadalina/rodalies-observatorio">Código en GitHub</a>
     </p>
   </section>
 
@@ -75,8 +75,8 @@
 <footer class="contenido">
   <p>Datos de <strong>Renfe Operadora</strong>, publicados en abierto bajo
      <a href="https://creativecommons.org/licenses/by/4.0/deed.es" rel="license">CC BY 4.0</a>.
-     Este sitio no esta afiliado a Renfe.</p>
-  <p class="tenue">Proyecto personal de analisis de datos. La captura corre sin intervencion
+     Este sitio no está afiliado a Renfe.</p>
+  <p class="tenue">Proyecto personal de análisis de datos. La captura corre sin intervención
      desde el 26 de agosto de 2026.</p>
 </footer>
 

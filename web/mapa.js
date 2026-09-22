@@ -97,7 +97,7 @@ function ficha(t) {
     <div class="ficha-retraso" style="color:${color}">${enMinutos(t.retraso_s)}</div>
     ${parada ? `<div class="ficha-dato">${parada}</div>` : ""}
     <div class="ficha-dato">visto ${new Date(t.visto).toLocaleTimeString("es-ES")}</div>
-    <a class="ficha-enlace" href="/tren.html?id=${encodeURIComponent(t.trip_id)}">ver su historico →</a>
+    <a class="ficha-enlace" href="/tren.html?id=${encodeURIComponent(t.trip_id)}">ver su histórico →</a>
   `;
 }
 
@@ -150,7 +150,7 @@ async function pintarTrenes() {
 
     const tarde = trenes.filter((t) => t.retraso_s > 300).length;
     punto.className = "punto punto--bien";
-    resumen.textContent = `${trenes.length} trenes en circulacion · ${tarde} con mas de 5 min`;
+    resumen.textContent = `${trenes.length} trenes en circulación · ${tarde} con más de 5 min`;
   } catch (error) {
     punto.className = "punto punto--mal";
     resumen.textContent = "no se han podido cargar los trenes";
