@@ -408,6 +408,21 @@ def test_refresco_incremental_incorpora_lo_nuevo(limpia):
     assert agregados == 1
 
 
+def test_refresco_incremental_salta_intervalos_sin_datos(limpia):
+    """Una parada larga no obliga a esperar una pasada por cada seis horas."""
+    with session(limpia) as conn:
+        repo = Repository(conn)
+        conn.execute("TRUNCATE analytics.mv_stop_final, analytics.mv_line_daily")
+        _marca_de_agua(conn, datetime.now(UTC) - timedelta(days=2))
+        repo.insert_observations([_observacion_hace(30, 180)], source="synthetic")
+
+        pasos = {p: f for p, f, _ in repo.refresh_analytics()}
+        fuentes = conn.execute("SELECT DISTINCT source FROM analytics.mv_stop_final").fetchall()
+
+    assert pasos["mv_stop_final"] == 1
+    assert fuentes == [("synthetic",)]
+
+
 def test_el_refresco_incremental_no_toca_lo_recien_insertado(limpia):
     """La ventana se cierra dos minutos antes de ahora, y por un buen motivo.
 
