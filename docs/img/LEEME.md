@@ -8,7 +8,8 @@ exponer ningun puerto, y salen identicas cada vez.
 ```bash
 # En el servidor, con el sistema en marcha
 GP=$(grep '^GRAFANA_PASSWORD=' .env | cut -d= -f2)
-docker run --rm --network rodalies-observatorio_default   -e GP="$GP" -e PLAYWRIGHT_BROWSERS_PATH=/ms-playwright   -v "$PWD/scripts/capturar.py:/capturar.py:ro" -v ~/capturas:/salida   mcr.microsoft.com/playwright/python:v1.47.0-jammy   sh -c "pip install -q playwright==1.47.0; python /capturar.py"
+DOM=$(grep '^RODALIES_DOMINIO=' .env | cut -d= -f2)   # sin el, no salen las de la web
+docker run --rm --network rodalies-observatorio_default   -e GP="$GP" -e RODALIES_DOMINIO="$DOM" -e PLAYWRIGHT_BROWSERS_PATH=/ms-playwright   -v "$PWD/scripts/capturar.py:/capturar.py:ro" -v ~/capturas:/salida   mcr.microsoft.com/playwright/python:v1.47.0-jammy   sh -c "pip install -q playwright==1.47.0; python /capturar.py"
 ```
 
 Genera cinco ficheros en `~/capturas`, que se copian a `docs/img/`.

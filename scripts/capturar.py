@@ -126,9 +126,19 @@ def main() -> int:
                 # El mapa ocupa la ventana entera: no tiene sentido agrandarla.
                 pagina.screenshot(path=f"{SALIDA}/{fichero}", full_page=False)
             else:
+                # Se corta justo antes de la tabla de estaciones: ahora lista
+                # todas y alargaria la imagen sin anadir nada a primera vista.
+                # Con un alto fijo, el corte caia en mitad de su titulo.
                 for _ in range(2):
-                    alto = pagina.evaluate("document.body.scrollHeight")
-                    pagina.set_viewport_size({"width": 1500, "height": min(int(alto), 3000)})
+                    alto = pagina.evaluate(
+                        """() => {
+                            const b = document.querySelector('.titulo-tabla--busqueda');
+                            const s = b && b.closest('section');
+                            return s ? s.getBoundingClientRect().top + window.scrollY
+                                     : document.body.scrollHeight;
+                        }"""
+                    )
+                    pagina.set_viewport_size({"width": 1500, "height": int(alto)})
                     pagina.wait_for_timeout(2_500)
                 pagina.screenshot(path=f"{SALIDA}/{fichero}", full_page=False)
             print(f"  {fichero} listo", flush=True)

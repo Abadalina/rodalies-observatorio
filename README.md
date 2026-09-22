@@ -393,7 +393,7 @@ Limitaciones que conviene decir antes de que las pregunten:
 - [x] **Web publica** con mapa en vivo, estadisticas y TLS automatico
 - [x] Posicion GPS de cada tren, capturada y particionada por mes
 - [x] Cada version del horario archivada (Renfe solo publica una ventana movil)
-- [ ] Capturas de pantalla de los paneles (ver `docs/img/LEEME.md`)
+- [x] Capturas de pantalla de los paneles y la web (ver `docs/img/LEEME.md`)
 - [x] **Conjunto de datos publicado** con ficha, caveats medidos y licencia
 - [ ] Modelo de prediccion de retraso (cuando haya meses de historico)
 
