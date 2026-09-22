@@ -1,0 +1,23 @@
+# Web local de demostracion. Sin dominio ni TLS: solo escucha en el puerto que
+# docker-compose.demo.yml publica sobre 127.0.0.1.
+:80 {
+	encode zstd gzip
+	root * /srv
+
+	handle_path /api/* {
+		reverse_proxy api:8000
+	}
+
+	handle {
+		file_server
+	}
+
+	header {
+		-Server
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Content-Security-Policy "default-src 'self'; img-src 'self' data: https://tile.openstreetmap.org; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'"
+	}
+}
+

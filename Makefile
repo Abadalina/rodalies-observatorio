@@ -12,6 +12,7 @@ help: ## Muestra esta ayuda
 
 demo: ## Demostracion con datos sinteticos, sin red y sin credenciales
 	$(COMPOSE_DEMO) up -d --build
+	@echo "Web:      http://localhost:8081"
 	@echo "Grafana:  http://localhost:3001   (admin/admin)"
 	@echo "API:      http://localhost:8001/docs"
 

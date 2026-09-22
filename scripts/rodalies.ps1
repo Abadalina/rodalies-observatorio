@@ -39,8 +39,10 @@ switch ($Accion) {
         # tocar el historico real ni aunque se quiera.
         Invoke-ComposeDemo up -d --build
         Write-Host ""
-        Write-Host "Demo con datos sinteticos en http://localhost:3001" -ForegroundColor Green
-        Write-Host "Usuario admin / admin. El historico real no se toca." -ForegroundColor Yellow
+        Write-Host "Web:      http://localhost:8081" -ForegroundColor Green
+        Write-Host "Grafana:  http://localhost:3001 (admin / admin)" -ForegroundColor Green
+        Write-Host "API:      http://localhost:8001/docs" -ForegroundColor Green
+        Write-Host "La demo usa datos sinteticos y no toca el historico real." -ForegroundColor Yellow
     }
     'down'    { Invoke-Compose down }
     'logs'    { Invoke-Compose logs -f ingestor }

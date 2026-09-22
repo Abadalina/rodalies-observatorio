@@ -93,6 +93,22 @@ services:
     ports:
       - "127.0.0.1:${DEMO_GRAFANA_PORT:-3001}:3000"
 
+  web:
+    image: caddy:2.8-alpine
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_started
+    command: ["caddy", "run", "--config", "/etc/caddy/Caddyfile.demo", "--adapter", "caddyfile"]
+    volumes:
+      - ./caddy:/etc/caddy:ro
+      - ./web:/srv:ro
+    ports:
+      - "127.0.0.1:${DEMO_WEB_PORT:-8081}:80"
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
 volumes:
   # Desechables: contienen datos inventados. Borrarlos no pierde nada.
   pgdata_demo:
