@@ -21,6 +21,19 @@ pytestmark = pytest.mark.integration
 AHORA = datetime(2026, 9, 15, 6, 30, tzinfo=UTC)
 
 
+# Lo que los tests escriben fuera de `rt.*`. Vaciar solo `rt.*` no bastaba: una
+# provincia que un test dejaba en gtfs.stop partia los agregados del siguiente, y
+# un sha que quedaba en gtfs.feed_version hacia creer al archivado que ese horario
+# ya estaba guardado. Los tests pasaban en una base nueva y fallaban al repetirlos.
+# gtfs.nucleo no esta: lo siembra la migracion 001 y ningun test lo toca.
+TABLAS_QUE_ESCRIBEN_LOS_TESTS = (
+    "rt.observation, rt.alert, rt.vehicle_position, rt.feed_poll, "
+    "gtfs.agency, gtfs.route, gtfs.stop, gtfs.calendar, gtfs.trip, gtfs.stop_time, "
+    "gtfs.shape, gtfs.feed_version, "
+    "analytics.mv_stop_final, analytics.mv_line_daily, analytics.mv_station_daily, "
+    "analytics.mv_line_hour, analytics.mv_trenes_dia"
+)
+
 @pytest.fixture(scope="module")
 def migrada(database_url) -> str:
     apply_migrations(database_url, verbose=False)
@@ -29,10 +42,23 @@ def migrada(database_url) -> str:
 
 @pytest.fixture
 def limpia(migrada) -> str:
-    """Deja `rt.*` vacio entre tests, sin tocar el esquema."""
+    """Deja la base como recien migrada entre tests, sin tocar el esquema.
+
+    Los umbrales y la marca de agua los siembra la migracion con ON CONFLICT DO
+    NOTHING, asi que en una base reutilizada no vuelven solos: un test que puso
+    el umbral a 300 s lo dejaba asi para la pasada siguiente. Se resiembran aqui
+    con los mismos valores que las migraciones 001 y 011.
+    """
     with session(migrada) as conn:
-        conn.execute("TRUNCATE rt.observation, rt.alert, rt.vehicle_position")
-        conn.execute("TRUNCATE rt.feed_poll RESTART IDENTITY")
+        conn.execute(f"TRUNCATE {TABLAS_QUE_ESCRIBEN_LOS_TESTS} RESTART IDENTITY")
+        Repository(conn).sync_settings(
+            {"on_time_threshold_s": 180, "late_threshold_s": 300, "severe_threshold_s": 900}
+        )
+        conn.execute(
+            "INSERT INTO analytics.refresh_state (clave, hasta) "
+            "VALUES ('stop_final', now() - interval '2 minutes') "
+            "ON CONFLICT (clave) DO UPDATE SET hasta = EXCLUDED.hasta, actualizado_at = now()"
+        )
     return migrada
 
 
@@ -159,8 +185,7 @@ def test_un_retraso_imposible_no_entra_en_los_agregados(limpia):
             source="renfe",
         )
         repo.rebuild_analytics()
-        # Sumado y no fetchone(): si otro test dejo provincias en gtfs.stop, el
-        # agregado sale partido en una fila por provincia.
+        # Sumado: mv_line_daily va por provincia y el test no depende de cuantas.
         observadas, con_retraso, puntuales, medio = conn.execute(
             """
             SELECT sum(paradas_observadas), sum(paradas_con_retraso),
