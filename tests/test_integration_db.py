@@ -34,6 +34,7 @@ TABLAS_QUE_ESCRIBEN_LOS_TESTS = (
     "analytics.mv_line_hour, analytics.mv_trenes_dia"
 )
 
+
 @pytest.fixture(scope="module")
 def migrada(database_url) -> str:
     apply_migrations(database_url, verbose=False)
