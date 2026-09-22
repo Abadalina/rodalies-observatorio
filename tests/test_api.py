@@ -94,8 +94,23 @@ def test_origen_invalido_da_422(cliente):
     assert cliente.get("/lineas", params={"source": "inventado"}).status_code == 422
 
 
+def test_origen_replay_es_valido(cliente, falsa):
+    respuesta = cliente.get("/lineas", params={"source": "replay"})
+    assert respuesta.status_code == 200
+    assert falsa.llamadas[-1][1]["source"] == "replay"
+
+
+def test_origen_por_defecto_sale_de_la_configuracion(monkeypatch):
+    class AjustesDemo:
+        source = "synthetic"
+
+    monkeypatch.setattr(api, "get_settings", lambda: AjustesDemo())
+    assert api.origen(None) == "synthetic"
+
+
 def test_estaciones_valida_el_limite(cliente):
     assert cliente.get("/estaciones", params={"limite": 5000}).status_code == 422
+    assert cliente.get("/estaciones", params={"limite": 2000}).status_code == 200
 
 
 def test_tren_sin_datos_da_404(monkeypatch):
@@ -127,6 +142,14 @@ def test_salud_ok(monkeypatch):
     assert respuesta.status_code == 200
     assert respuesta.json()["estado"] == "ok"
     assert respuesta.json()["feeds_degradados"] == []
+
+
+def test_salud_acepta_antiguedad_cero(monkeypatch):
+    """Cero segundos es una captura nueva, no un valor ausente."""
+    monkeypatch.setattr(api, "db", FakeDb(filas=[_fila("trip_updates", 0), _fila("alerts", 0)]))
+    with TestClient(api.app) as http:
+        respuesta = http.get("/salud")
+    assert respuesta.status_code == 200
 
 
 def test_salud_avisa_si_la_ingesta_esta_parada(monkeypatch):

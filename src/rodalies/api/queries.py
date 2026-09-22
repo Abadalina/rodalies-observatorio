@@ -23,6 +23,8 @@ SELECT d.linea,
              / NULLIF(sum(d.paradas_con_retraso), 0), 1)         AS retraso_medio_s,
        round(100.0 * sum(d.paradas_puntuales)
              / NULLIF(sum(d.paradas_con_retraso), 0), 1)         AS pct_puntualidad,
+       round(100.0 * sum(d.paradas_muy_tarde)
+             / NULLIF(sum(d.paradas_con_retraso), 0), 1)         AS pct_muy_tarde,
        max(d.retraso_max_s)                                      AS retraso_max_s
   FROM analytics.mv_line_daily d
   LEFT JOIN (
@@ -48,6 +50,8 @@ SELECT stop_id,
        sum(paradas_observadas)                                   AS paradas,
        round(sum(retraso_medio_s * paradas_con_retraso)
              / NULLIF(sum(paradas_con_retraso), 0), 1)           AS retraso_medio_s,
+       round(100.0 * sum(paradas_puntuales)
+             / NULLIF(sum(paradas_con_retraso), 0), 1)           AS pct_puntualidad,
        max(retraso_max_s)                                        AS retraso_max_s
   FROM analytics.mv_station_daily
  WHERE service_date BETWEEN %(desde)s AND %(hasta)s

@@ -16,16 +16,30 @@ from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
+from .. import __version__
 from ..config import Settings, load_settings
 from . import queries
 
 log = logging.getLogger(__name__)
 
 VENTANA_MAXIMA_DIAS = 400
+SOURCE_PATTERN = "^(renfe|synthetic|replay)$"
 
 
 def get_settings() -> Settings:
     return load_settings()
+
+
+def origen(
+    source: str | None = Query(None, pattern=SOURCE_PATTERN, description="Origen de los datos"),
+) -> str:
+    """Usa el origen del servicio cuando el cliente no especifica otro.
+
+    En producción es ``renfe`` y en la demo es ``synthetic``. Mantener un valor
+    fijo aquí dejaba vacía la API de demostración aunque el ingestor estuviera
+    escribiendo correctamente.
+    """
+    return source or get_settings().source
 
 
 class Database:
@@ -86,7 +100,7 @@ app = FastAPI(
         "Historico propio de retrasos de Rodalies/Cercanias, construido a partir "
         "de los feeds GTFS-Realtime publicos de Renfe. Solo lectura."
     ),
-    version="0.1.0",
+    version=__version__,
     lifespan=lifespan,
 )
 
@@ -151,7 +165,7 @@ def salud() -> JSONResponse:
         fila = por_feed.get(feed)
         if fila is None:
             estado_feed = "sin_datos"
-        elif (fila.get("antiguedad_s") or 10**9) > limite:
+        elif fila.get("antiguedad_s") is None or fila["antiguedad_s"] > limite:
             estado_feed = "obsoleto"
         elif not fila.get("ultima_ok", True):
             estado_feed = "ultimo_intento_fallido"
@@ -188,7 +202,7 @@ def calidad() -> list[dict[str, Any]]:
 def kpi(
     ventana: dict[str, date] = Depends(rango),
     nucleo: str | None = Query(None, description="codigo de nucleo, p. ej. 51"),
-    source: str = Query("renfe", pattern="^(renfe|synthetic)$"),
+    source: str = Depends(origen),
 ) -> list[dict[str, Any]]:
     return db.fetch(queries.KPI_DIARIO, {**ventana, "nucleo": nucleo, "source": source})
 
@@ -197,7 +211,7 @@ def kpi(
 def lineas(
     ventana: dict[str, date] = Depends(rango),
     nucleo: str | None = Query(None),
-    source: str = Query("renfe", pattern="^(renfe|synthetic)$"),
+    source: str = Depends(origen),
 ) -> list[dict[str, Any]]:
     return db.fetch(queries.RANKING_LINEAS, {**ventana, "nucleo": nucleo, "source": source})
 
@@ -206,9 +220,9 @@ def lineas(
 def estaciones(
     ventana: dict[str, date] = Depends(rango),
     nucleo: str | None = Query(None),
-    source: str = Query("renfe", pattern="^(renfe|synthetic)$"),
+    source: str = Depends(origen),
     minimo: int = Query(20, ge=1, description="paradas observadas minimas"),
-    limite: int = Query(50, ge=1, le=500),
+    limite: int = Query(50, ge=1, le=2000),
 ) -> list[dict[str, Any]]:
     return db.fetch(
         queries.RANKING_ESTACIONES,
@@ -221,7 +235,7 @@ def franjas(
     ventana: dict[str, date] = Depends(rango),
     nucleo: str | None = Query(None),
     linea: str | None = Query(None, description="p. ej. R2N"),
-    source: str = Query("renfe", pattern="^(renfe|synthetic)$"),
+    source: str = Depends(origen),
 ) -> list[dict[str, Any]]:
     return db.fetch(
         queries.FRANJAS,
@@ -233,7 +247,7 @@ def franjas(
 def resumen(
     ventana: dict[str, date] = Depends(rango),
     nucleo: str | None = Query(None, description="Nucleo de Cercanias; 51 es Catalunya"),
-    source: str = Query("renfe", pattern="^(renfe|synthetic)$"),
+    source: str = Depends(origen),
 ) -> dict[str, Any]:
     filas = db.fetch(queries.RESUMEN, {**ventana, "nucleo": nucleo, "source": source})
     return filas[0] if filas else {}
@@ -243,7 +257,7 @@ def resumen(
 def semana(
     ventana: dict[str, date] = Depends(rango),
     nucleo: str | None = Query(None, description="Nucleo de Cercanias; 51 es Catalunya"),
-    source: str = Query("renfe", pattern="^(renfe|synthetic)$"),
+    source: str = Depends(origen),
 ) -> list[dict[str, Any]]:
     return db.fetch(queries.SEMANA, {**ventana, "nucleo": nucleo, "source": source})
 
@@ -256,7 +270,7 @@ def alertas(limite: int = Query(50, ge=1, le=200)) -> list[dict[str, Any]]:
 @app.get("/posiciones", tags=["en vivo"], summary="Donde esta cada tren ahora")
 def posiciones(
     nucleo: str | None = Query(None, description="Nucleo de Cercanias; 51 es Catalunya"),
-    source: str = Query("renfe", pattern="^(renfe|synthetic)$"),
+    source: str = Depends(origen),
 ) -> list[dict[str, Any]]:
     """Ultima posicion conocida de cada tren en circulacion, con su retraso.
 
@@ -283,7 +297,7 @@ def trazados(
 def historial_tren(
     trip_id: str,
     dias: int = Query(14, ge=1, le=90),
-    source: str = Query("renfe", pattern="^(renfe|synthetic)$"),
+    source: str = Depends(origen),
 ) -> dict[str, Any]:
     """Ficha del tren y su retraso dia a dia.
 
