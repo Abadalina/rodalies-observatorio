@@ -57,7 +57,8 @@ Levanta el stack entero con una red de Rodalies **simulada**: hora punta,
 propagacion del retraso a lo largo del recorrido e incidencias esporadicas. No
 necesita conexion, ni credenciales, ni esperar dias a que se acumule historico.
 
-- Paneles: <http://localhost:3001> (`admin` / `admin`)
+- Web completa: <http://localhost:8081> (mapa, estadísticas y fichas de tren)
+- Paneles técnicos: <http://localhost:3001> (`admin` / `admin`)
 - API: <http://localhost:8001/docs>
 
 El perfil de demostracion usa **volumen, credenciales y puertos propios**. No
@@ -198,8 +199,9 @@ publica Renfe, no se interpola. El color es su retraso.
 
 ![Mapa en vivo con los trenes de Rodalies y su retraso](docs/img/web-mapa.png)
 
-**Estadisticas.** Puntualidad por dia, por hora programada, por dia de la semana,
-y el ranking de lineas y estaciones.
+**Estadisticas.** Ocho indicadores de resumen, puntualidad por dia, por hora
+programada y por dia de la semana, todas las lineas y todas las estaciones con
+buscador. Las muestras pequenas se muestran y se senalan en vez de ocultarse.
 
 ![Pagina de estadisticas de puntualidad](docs/img/web-estadisticas.png)
 
@@ -304,12 +306,12 @@ mypy                                                    # estricto
 python scripts/check_source.py                          # la fuente sigue igual
 ```
 
-En cada push, GitHub Actions ejecuta cinco trabajos: estilo y tipado estricto,
+En cada push, GitHub Actions ejecuta cuatro trabajos: estilo y tipado estricto,
 tests unitarios e integracion contra un PostgreSQL real, una prueba de extremo a
 extremo con la fuente sintetica que llega hasta exportar el conjunto de datos, la
 construccion de la imagen y la validacion de los dos perfiles de Compose.
 
-Ademas, **una vez al dia** se valida el feed en vivo de Renfe. Si cambian el
+Un quinto trabajo, **una vez al dia**, valida el feed en vivo de Renfe. Si cambian el
 formato, el trabajo falla y abre una incidencia automaticamente: un aviso que no
 falla no es un aviso.
 

@@ -45,7 +45,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "\nSELECT min(antiguedad_s) AS \"Segundos desde la ultima consulta\"\n  FROM analytics.v_ingest_health\n",
+          "rawSql": "\nSELECT max(antiguedad_s) AS \"Segundos desde el feed mas antiguo\"\n  FROM analytics.v_ingest_health\n",
           "sql": {
             "columns": [
               {

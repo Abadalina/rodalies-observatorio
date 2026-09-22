@@ -76,7 +76,7 @@ su ritmo.
 3. **Todo intento queda anotado** en `rt.feed_poll`, tambien los fallidos. Sin
    ese registro es imposible distinguir "no hubo trenes" de "fallo la captura",
    y esa diferencia es exactamente lo que hace creible un historico.
-4. **Idempotente.** La clave natural `(feed_timestamp, trip_id, stop_id)` con
+4. **Idempotente.** La clave natural `(source, feed_timestamp, trip_id, stop_id)` con
    `ON CONFLICT DO NOTHING` permite reprocesar cualquier captura sin duplicar.
 5. **Si el feed no ha cambiado, no se reprocesa**: se compara la marca de tiempo
    de la cabecera con la ultima procesada y se anota el intento como

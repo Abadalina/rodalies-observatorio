@@ -234,7 +234,7 @@ seis vistas. El ingestor sincroniza ahi los valores del entorno al arrancar.
 
 | Indice | Para que |
 |---|---|
-| `rt.observation` PK `(feed_timestamp, trip_id, stop_id)` | Idempotencia y poda de particiones |
+| `rt.observation` PK `(source, feed_timestamp, trip_id, stop_id)` | Idempotencia y separación entre orígenes |
 | `ix_obs_service_trip (service_date, trip_id)` | Trayectoria de un tren concreto |
 | `ix_obs_stop (stop_id, service_date)` | Analisis por estacion |
 | `ix_obs_route (route_id, service_date)` | Analisis por linea |
