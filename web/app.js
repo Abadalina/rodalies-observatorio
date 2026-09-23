@@ -88,6 +88,7 @@ async function pintarCifras() {
 async function pintarLineas() {
   const cuerpo = document.getElementById("cuerpo-lineas");
   try {
+    await Lineas.cargar();
     const lineas = await pedir(
       `/api/lineas?desde=${fecha(-DIAS)}&hasta=${fecha(0)}&nucleo=${NUCLEO_CATALUNYA}`
     );
@@ -106,10 +107,7 @@ async function pintarLineas() {
       // textContent en vez de innerHTML: el nombre de la linea viene de la base
       // de datos y no tiene por que acabar interpretandose como HTML.
       const celdaLinea = document.createElement("td");
-      const etiqueta = document.createElement("span");
-      etiqueta.className = "linea";
-      etiqueta.textContent = l.linea;
-      celdaLinea.appendChild(etiqueta);
+      celdaLinea.appendChild(Lineas.etiqueta(l.linea, l.nucleo_id));
 
       const celdas = [
         `${decimal.format(Number(l.pct_puntualidad))} %`,
@@ -130,6 +128,126 @@ async function pintarLineas() {
     console.error(error);
   }
 }
+
+// -- buscador ----------------------------------------------------------------
+//
+// Un numero busca trenes en la API; un texto busca estaciones en la lista que
+// ya da /estaciones, filtrada aqui mismo sin acentos ni mayusculas: son unas
+// doscientas y no merece la pena un endpoint para eso.
+
+const MAX_RESULTADOS = 8;
+let estaciones = null;
+let busquedaEnCurso = 0;
+
+function normalizar(texto) {
+  return String(texto || "")
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase();
+}
+
+function diaCorto(iso) {
+  return new Date(`${iso}T12:00:00`).toLocaleDateString("es-ES", { day: "numeric", month: "short" });
+}
+
+function resultado(href, principal, detalle, linea, nucleo) {
+  const li = document.createElement("li");
+  const a = document.createElement("a");
+  a.href = href;
+  if (linea) a.appendChild(Lineas.etiqueta(linea, nucleo));
+  const texto = document.createElement("span");
+  texto.className = "resultado-texto";
+  texto.textContent = principal;
+  const extra = document.createElement("span");
+  extra.className = "resultado-detalle";
+  extra.textContent = detalle;
+  a.append(texto, extra);
+  li.appendChild(a);
+  return li;
+}
+
+async function buscar() {
+  const lista = document.getElementById("resultados");
+  const termino = document.getElementById("buscar").value.trim();
+  const esta = ++busquedaEnCurso;
+  if (!termino || (!/^\d+$/.test(termino) && termino.length < 2)) {
+    lista.textContent = "";
+    return;
+  }
+
+  let filas = [];
+  try {
+    if (/^\d{1,6}$/.test(termino)) {
+      const trenes = await pedir(
+        `/api/buscar/trenes?numero=${termino}&nucleo=${NUCLEO_CATALUNYA}&limite=${MAX_RESULTADOS}`
+      );
+      filas = trenes.map((t) =>
+        resultado(
+          `/tren.html?id=${encodeURIComponent(t.trip_id)}`,
+          `tren ${t.numero}`,
+          `visto el ${diaCorto(t.ultimo_dia)}`,
+          t.linea,
+          t.nucleo_id
+        )
+      );
+    } else {
+      if (!estaciones) {
+        estaciones = await pedir(
+          `/api/estaciones?desde=${fecha(-DIAS)}&hasta=${fecha(0)}` +
+            `&nucleo=${NUCLEO_CATALUNYA}&limite=2000&minimo=1`
+        );
+      }
+      const buscado = normalizar(termino);
+      filas = estaciones
+        .filter((e) => normalizar(e.estacion).includes(buscado))
+        .slice(0, MAX_RESULTADOS)
+        .map((e) =>
+          resultado(
+            `/estadisticas.html?estacion=${encodeURIComponent(e.estacion)}#estaciones`,
+            e.estacion,
+            e.pct_puntualidad === null
+              ? "sin dato de puntualidad"
+              : `${decimal.format(Number(e.pct_puntualidad))} % puntual`
+          )
+        );
+    }
+  } catch (error) {
+    console.error(error);
+  }
+
+  // Si mientras llegaba esta respuesta se ha tecleado otra cosa, se descarta:
+  // si no, una respuesta lenta podria pisar a una mas nueva.
+  if (esta !== busquedaEnCurso) return;
+  lista.textContent = "";
+  if (!filas.length) {
+    const li = document.createElement("li");
+    li.className = "resultado-vacio";
+    li.textContent = "no hay coincidencias";
+    lista.appendChild(li);
+    return;
+  }
+  lista.append(...filas);
+}
+
+// Los resultados de lo tecleado antes se quitan en cuanto se teclea otra cosa:
+// si se quedaran mientras llega la respuesta nueva, un Intro en ese instante
+// llevaria al primer resultado de la busqueda ANTERIOR.
+let esperaBusqueda = null;
+document.getElementById("buscar").addEventListener("input", () => {
+  document.getElementById("resultados").textContent = "";
+  clearTimeout(esperaBusqueda);
+  esperaBusqueda = setTimeout(buscar, 200);
+});
+
+// Intro lleva al primer resultado de lo que hay escrito AHORA: si la busqueda
+// aun no habia salido, se lanza y se espera.
+document.getElementById("buscador").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  clearTimeout(esperaBusqueda);
+  await buscar();
+  const primero = document.querySelector("#resultados a");
+  if (primero) location.href = primero.href;
+});
 
 pintarEstado();
 pintarCifras();

@@ -61,6 +61,12 @@ async function pedir(ruta) {
 const DIAS_SEMANA = ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"];
 let estacionesCargadas = [];
 
+// Las estaciones son casi doscientas: listarlas todas de golpe hacia una pagina
+// de 26.000 px en el movil. Se ensenan las primeras y el resto bajo demanda; al
+// buscar se ven todas las que coinciden.
+const ESTACIONES_VISIBLES = 25;
+let verTodas = false;
+
 function cambiarEstado(tipo, texto) {
   const punto = document.getElementById("punto-datos");
   punto.className = `punto${tipo ? ` punto--${tipo}` : ""}`;
@@ -77,12 +83,18 @@ function normalizar(texto) {
 function renderEstaciones() {
   const cuerpo = document.getElementById("cuerpo-estaciones");
   const termino = normalizar(document.getElementById("buscar-estacion").value.trim());
-  const visibles = termino
+  const coinciden = termino
     ? estacionesCargadas.filter((e) => normalizar(`${e.estacion} ${e.stop_id}`).includes(termino))
     : estacionesCargadas;
+  const recortar = !termino && !verTodas && coinciden.length > ESTACIONES_VISIBLES;
+  const visibles = recortar ? coinciden.slice(0, ESTACIONES_VISIBLES) : coinciden;
+
+  const boton = document.getElementById("ver-todas");
+  boton.hidden = !recortar;
+  boton.textContent = `Ver las ${numero.format(coinciden.length)} estaciones`;
 
   document.getElementById("total-estaciones").textContent = termino
-    ? `${numero.format(visibles.length)} de ${numero.format(estacionesCargadas.length)} estaciones`
+    ? `${numero.format(coinciden.length)} de ${numero.format(estacionesCargadas.length)} estaciones`
     : `${numero.format(estacionesCargadas.length)} estaciones con datos`;
 
   if (!visibles.length) {
@@ -229,6 +241,7 @@ async function cargar() {
   // -- lineas -----------------------------------------------------------------
   const cuerpoLineas = document.getElementById("cuerpo-lineas");
   try {
+    await Lineas.cargar();
     const lineas = await pedir(`/api/lineas?${base}`);
     document.getElementById("total-lineas").textContent =
       `${numero.format(lineas.length)} líneas`;
@@ -243,10 +256,7 @@ async function cargar() {
         if (paradas < 500) fila.classList.add("muestra-baja");
 
         const celdaLinea = document.createElement("td");
-        const etiqueta = document.createElement("span");
-        etiqueta.className = "linea";
-        etiqueta.textContent = l.linea;
-        celdaLinea.appendChild(etiqueta);
+        celdaLinea.appendChild(Lineas.etiqueta(l.linea, l.nucleo_id));
         if (paradas < 500) {
           const aviso = document.createElement("span");
           aviso.className = "aviso-muestra";
@@ -293,6 +303,7 @@ async function cargar() {
   try {
     estacionesCargadas = await pedir(`/api/estaciones?${base}&limite=2000&minimo=1`);
     renderEstaciones();
+    irAEstacionPedida();
   } catch (error) {
     fallos += 1;
     estacionesCargadas = [];
@@ -310,6 +321,22 @@ async function cargar() {
 document.getElementById("dias").addEventListener("change", cargar);
 document.getElementById("ambito").addEventListener("change", cargar);
 document.getElementById("buscar-estacion").addEventListener("input", renderEstaciones);
+document.getElementById("ver-todas").addEventListener("click", () => {
+  verTodas = true;
+  renderEstaciones();
+});
+
+// Desde el buscador de la portada se llega con ?estacion=Nombre: se rellena la
+// busqueda y, la primera vez que hay datos, se baja hasta la tabla. El salto
+// del ancla #estaciones no basta, porque ocurre antes de que la tabla crezca.
+const estacionPedida = new URLSearchParams(location.search).get("estacion");
+if (estacionPedida) document.getElementById("buscar-estacion").value = estacionPedida;
+let yaSaltado = false;
+function irAEstacionPedida() {
+  if (!estacionPedida || yaSaltado) return;
+  yaSaltado = true;
+  document.getElementById("estaciones").scrollIntoView({ block: "start" });
+}
 oscuro.addEventListener("change", cargar);
 // Las graficas se dibujan al ancho del contenedor, asi que al cambiar de tamaño
 // hay que rehacerlas; se espera a que el usuario suelte para no redibujar cien

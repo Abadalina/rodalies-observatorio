@@ -293,6 +293,70 @@ footer p { margin: .4rem 0; }
   margin-bottom: 1.4rem;
 }
 
+/* -- buscador de la portada ------------------------------------------------ */
+
+.buscador { margin-top: 1.75rem; max-width: 34rem; }
+.buscador label { display: block; margin-bottom: .35rem; font-weight: 600; font-size: .95rem; }
+
+.buscador input {
+  width: 100%;
+  padding: .65rem .85rem;
+  border: 1px solid var(--borde);
+  border-radius: .55rem;
+  color: var(--texto);
+  background: var(--fondo);
+  font: inherit;
+}
+
+.buscador input:focus-visible { outline: 2px solid var(--acento); outline-offset: 1px; }
+.buscador-ayuda { margin: .35rem 0 0; font-size: .8rem; }
+
+.resultados { margin: .5rem 0 0; padding: 0; list-style: none; }
+.resultados:empty { display: none; }
+
+.resultados a {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  padding: .5rem .7rem;
+  border-bottom: 1px solid var(--borde);
+  color: var(--texto);
+  text-decoration: none;
+}
+
+.resultados li:last-child a { border-bottom: 0; }
+.resultados a:hover, .resultados a:focus-visible { background: var(--fondo); }
+.resultados a:focus-visible { outline: 2px solid var(--acento); outline-offset: -2px; }
+.resultados { border: 1px solid var(--borde); border-radius: .55rem; background: var(--fondo-alt); }
+.resultado-texto { font-weight: 600; }
+.resultado-detalle { margin-left: auto; color: var(--tenue); font-size: .82rem; }
+.resultado-vacio { padding: .55rem .7rem; color: var(--tenue); font-size: .88rem; }
+
+/* -- detalles -------------------------------------------------------------- */
+
+.boton-mas {
+  display: block;
+  margin: 1rem auto 0;
+  padding: .55rem 1.1rem;
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+  color: var(--acento);
+  background: var(--fondo-alt);
+  font: inherit;
+  font-size: .9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.boton-mas:hover { background: var(--fondo); }
+.boton-mas:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; }
+
+/* La etiqueta de linea dentro del titulo de la ficha de un tren. */
+h1 .linea { font-size: .5em; vertical-align: .35em; padding: .2rem .55rem; }
+
+/* Grafica encima de su tabla, en la ficha de tren. */
+.grafica + .tabla-envoltorio { margin-top: 1rem; }
+
 @media (max-width: 48rem) {
   .cifras { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .titulo-tabla { align-items: stretch; flex-direction: column; gap: 0; }
@@ -301,7 +365,20 @@ footer p { margin: .4rem 0; }
   .busqueda { width: 100%; }
 }
 
-@media (max-width: 28rem) {
-  .cifras { grid-template-columns: 1fr; }
-  .cifra { padding: 1rem; }
+/* En el movil: las cifras siguen en 2x2 (una sola columna ocupaba media
+   pantalla con cuatro numeros) y las tablas estrechan el relleno y dejan partir
+   las cabeceras, que eran las que empujaban la ultima columna fuera de la caja. */
+@media (max-width: 34rem) {
+  .cabecera { padding: 2rem 0 1.75rem; }
+  section { margin: 2.25rem 0; }
+  .cifras { margin: 1.75rem 0; }
+  .cifra { padding: .9rem .6rem; }
+  .cifra strong { font-size: 1.45rem; }
+  table { font-size: .86rem; }
+  th, td { padding: .55rem .5rem; }
+  th { white-space: normal; line-height: 1.25; }
+  /* Los nombres de estacion largos ("L'Ampolla-El Perello-Deltebre") se parten
+     en dos lineas en vez de empujar las cifras fuera de la caja. */
+  td:first-child { white-space: normal; min-width: 7rem; }
+  .resultado-detalle { font-size: .75rem; }
 }

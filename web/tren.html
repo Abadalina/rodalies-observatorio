@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ficha de tren · Observatorio de Rodalies</title>
 <link rel="stylesheet" href="/estilo.css">
+<link rel="stylesheet" href="/graficas.css">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>🚂</text></svg>">
 </head>
 <body>
@@ -36,6 +37,9 @@
        <strong>0 %</strong> sin ser un desastre —le basta con llegar 4 minutos tarde a todas—
        y puede marcar <strong>100 %</strong> sin ir en hora exacta a ninguna.</p>
     <p class="apunte" id="apunte-dias">Cada día que este tren ha circulado desde que se captura.</p>
+    <figure class="grafica" id="figura-dias" hidden>
+      <div class="lienzo" id="g-dias" aria-label="Retraso medio de cada día"></div>
+    </figure>
     <div class="tabla-envoltorio">
       <table>
         <thead>
@@ -55,7 +59,11 @@
 
   <section>
     <h2>Su último recorrido</h2>
-    <p class="apunte">Parada a parada, con el retraso registrado en cada una.</p>
+    <p class="apunte">Parada a parada, con el retraso registrado en cada una. La gráfica
+       enseña si el retraso venía del origen o se fue acumulando por el camino.</p>
+    <figure class="grafica" id="figura-paradas" hidden>
+      <div class="lienzo" id="g-paradas" aria-label="Retraso en cada parada del último recorrido"></div>
+    </figure>
     <div class="tabla-envoltorio">
       <table>
         <thead>
@@ -78,6 +86,8 @@
      <a href="https://creativecommons.org/licenses/by/4.0/deed.es" rel="license">CC BY 4.0</a>.</p>
 </footer>
 
+<script src="/graficas.js"></script>
+<script src="/lineas.js"></script>
 <script src="/tren.js"></script>
 </body>
 </html>

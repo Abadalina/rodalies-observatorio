@@ -20,6 +20,15 @@
     </p>
     <p class="enlaces enlaces--cabecera"><a href="/mapa.html">Ver el mapa en vivo →</a>
        <a href="/estadisticas.html">Ver las estadísticas →</a></p>
+
+    <form class="buscador" id="buscador" role="search" autocomplete="off">
+      <label for="buscar">Busca un tren por su número o una estación</label>
+      <input id="buscar" type="search" inputmode="search" placeholder="p. ej. 25671 o Mataró"
+             aria-describedby="buscar-ayuda" aria-controls="resultados">
+      <p class="tenue buscador-ayuda" id="buscar-ayuda">Catalunya, trenes y estaciones
+         vistos en los últimos 14 días.</p>
+      <ul class="resultados" id="resultados" aria-live="polite"></ul>
+    </form>
   </div>
 </header>
 
@@ -80,6 +89,7 @@
      desde el 26 de agosto de 2026.</p>
 </footer>
 
+<script src="/lineas.js"></script>
 <script src="/app.js"></script>
 </body>
 </html>

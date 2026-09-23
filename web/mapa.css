@@ -208,9 +208,26 @@ body.cuerpo-mapa {
   line-height: 1.5;
 }
 
+/* En el movil la barra y la leyenda se comian un tercio de la pantalla. La
+   barra queda en dos lineas cortas (marca y conmutador arriba, estado debajo) y
+   la leyenda pasa a ser una tira de cuatro puntos sobre la atribucion. */
 @media (max-width: 560px) {
-  .leyenda { right: .6rem; bottom: .6rem; max-width: 10.5rem; padding: .65rem .75rem; }
-  .leyenda .pie-leyenda { display: none; }
+  .barra { gap: .3rem .9rem; padding: .55rem .85rem; }
+  .marca { font-size: .95rem; }
+  .enlace-barra { font-size: .85rem; }
+  .barra-estado { order: 1; flex-basis: 100%; font-size: .8rem; }
+
+  .leyenda {
+    left: .6rem;
+    right: .6rem;
+    bottom: 1.5rem;
+    max-width: none;
+    padding: .4rem .7rem;
+    border-radius: .6rem;
+  }
+  .leyenda strong, .leyenda .pie-leyenda { display: none; }
+  .leyenda ul { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .15rem .8rem; }
+  .leyenda li { padding: 0; gap: .35rem; font-size: .74rem; }
 }
 
 /* -- burbuja del tren ------------------------------------------------------- */

@@ -91,8 +91,12 @@ function ficha(t) {
   const estado = ESTADOS[t.estado] || "";
   const parada = t.parada ? `${estado} ${escapar(t.parada)}` : "";
   const color = tono(t.retraso_s).color;
+  // La etiqueta lleva el color de la LINEA, no el del retraso: el retraso ya lo
+  // dice la cifra grande de debajo. Sin color conocido, gris neutro, que no se
+  // pueda leer como "puntual" o "grave".
+  const fondo = Lineas.color(t.linea, t.nucleo_id) || "#6b6862";
   return `
-    <span class="ficha-linea" style="background:${color}">${escapar(t.linea)}</span>
+    <span class="ficha-linea" style="background:${fondo};color:${Lineas.textoSobre(fondo)}">${escapar(t.linea)}</span>
     <div class="ficha-destino">${escapar(t.destino) || "destino sin publicar"}</div>
     <div class="ficha-retraso" style="color:${color}">${enMinutos(t.retraso_s)}</div>
     ${parada ? `<div class="ficha-dato">${parada}</div>` : ""}
@@ -192,7 +196,7 @@ document.getElementById("todo-espana").addEventListener("change", (e) => {
 });
 
 pintarVias();
-pintarTrenes();
+Lineas.cargar().then(pintarTrenes);
 temporizador = setInterval(pintarTrenes, CADA);
 
 // Con la pestaña de fondo no se pide nada: ni gasta bateria ni carga el servidor.

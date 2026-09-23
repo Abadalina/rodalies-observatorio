@@ -23,6 +23,43 @@ function dia(fecha) {
   });
 }
 
+// La misma escala de severidad que el mapa: el color de una barra significa lo
+// mismo que el de un tren en el mapa.
+const oscuro = window.matchMedia("(prefers-color-scheme: dark)");
+function colorRetraso(segundos) {
+  const c = oscuro.matches
+    ? { puntual: "#30a865", tarde: "#d9a12b", grave: "#e8635c" }
+    : { puntual: "#15803d", tarde: "#f59e0b", grave: "#b91c1c" };
+  if (segundos <= 180) return c.puntual;
+  if (segundos <= 900) return c.tarde;
+  return c.grave;
+}
+
+function escapar(valor) {
+  // Los nombres de estacion vienen de la base y van al globo de la grafica,
+  // que es innerHTML.
+  const d = document.createElement("div");
+  d.textContent = valor === null || valor === undefined ? "" : String(valor);
+  return d.innerHTML;
+}
+
+const enMinutos = (v) => `${decimal.format(v)} min`;
+
+// Las graficas se dibujan al ancho de su caja; al girar el movil o cambiar el
+// tamano de la ventana se rehacen con lo ya descargado.
+const dibujos = [];
+let redibujo = null;
+window.addEventListener("resize", () => {
+  clearTimeout(redibujo);
+  redibujo = setTimeout(() => dibujos.forEach((dibujar) => dibujar()), 250);
+});
+
+function mostrarGrafica(idFigura, dibujar) {
+  document.getElementById(idFigura).hidden = false;
+  dibujos.push(dibujar);
+  dibujar();
+}
+
 function celda(texto, clase) {
   const td = document.createElement("td");
   if (clase) td.className = clase;
@@ -77,12 +114,21 @@ async function cargar() {
 
   const tren = datos.tren || {};
   const dias = datos.dias || [];
+  await Lineas.cargar();
 
   // El titulo lleva el numero comercial, que es lo que identifica al tren de un
   // dia para otro; el trip_id de hoy va debajo, como dato de trazabilidad.
-  document.getElementById("titulo").textContent =
-    `${tren.linea || "Tren"} · tren ${tren.numero || tren.trip_id}`;
-  const limpio = (v) => (v ? String(v).replace(/\s+/g, " ").trim() : "");
+  const titulo = document.getElementById("titulo");
+  titulo.textContent = "";
+  if (tren.linea) titulo.append(Lineas.etiqueta(tren.linea, tren.nucleo_id), " ");
+  titulo.append(`tren ${tren.numero || tren.trip_id}`);
+  document.title = `${tren.linea ? `${tren.linea} · ` : ""}tren ${tren.numero || tren.trip_id}` +
+    " · Observatorio de Rodalies";
+  // Renfe rellena el recorrido con espacios antes del guion que separa origen y
+  // destino ("Molins de Rei      -Maçanet-Massanes"). Ese guion, y solo ese,
+  // lleva espacio delante: los de dentro de un nombre de estacion no.
+  const limpio = (v) =>
+    v ? String(v).replace(/\s+-\s*/g, " – ").replace(/\s+/g, " ").trim() : "";
   document.getElementById("subtitulo").textContent =
     [limpio(tren.destino), limpio(tren.recorrido)].filter(Boolean).join(" · ") ||
     "recorrido sin publicar";
@@ -135,6 +181,28 @@ async function cargar() {
       );
       cuerpoDias.appendChild(fila);
     }
+    const conMedia = dias
+      .filter((d) => d.retraso_medio_s !== null)
+      .sort((a, b) => (a.service_date < b.service_date ? -1 : 1));
+    if (conMedia.length >= 2) {
+      mostrarGrafica("figura-dias", () =>
+        graficaBarras(
+          document.getElementById("g-dias"),
+          conMedia.map((d) => ({
+            etiqueta: new Date(`${d.service_date}T12:00:00`).toLocaleDateString("es-ES", {
+              day: "numeric", month: "short",
+            }),
+            valor: Number(d.retraso_medio_s) / 60,
+            color: colorRetraso(Number(d.retraso_medio_s)),
+            detalle: `<strong>${dia(d.service_date)}</strong><br>` +
+              `retraso medio ${minutos(d.retraso_medio_s)}<br>` +
+              `peor ${minutos(d.retraso_max_s)} · ` +
+              `${d.pct_puntualidad === null ? "—" : `${decimal.format(d.pct_puntualidad)} %`} puntual`,
+          })),
+          { titulo: "Retraso medio de cada día", formato: enMinutos, alto: 210 }
+        )
+      );
+    }
     document.getElementById("apunte-dias").textContent =
       `${dias.length} días con datos, ${ventana7.length} en la última semana. ` +
       `Renfe cambia el identificador del tren cada día, ` +
@@ -150,6 +218,25 @@ async function cargar() {
     if (!paradas.length) {
       cuerpoParadas.appendChild(celda("sin recorrido registrado", "vacio")).colSpan = 4;
       return;
+    }
+    // Un trip_id es un solo dia (Renfe le cambia el prefijo cada dia), asi que
+    // estas paradas son un unico recorrido.
+    const recorrido = paradas.filter((p) => p.delay_s !== null && p.delay_s !== undefined);
+    if (recorrido.length >= 2) {
+      const corto = (nombre) => (nombre.length > 14 ? `${nombre.slice(0, 13)}…` : nombre);
+      mostrarGrafica("figura-paradas", () =>
+        graficaLinea(
+          document.getElementById("g-paradas"),
+          recorrido.map((p) => ({
+            etiqueta: corto(p.estacion || p.stop_id),
+            valor: Number(p.delay_s) / 60,
+            detalle: `<strong>${escapar(p.estacion || p.stop_id)}</strong><br>` +
+              `prevista ${hora(p.scheduled_arrival)} · real ${hora(p.arrival_time)}<br>` +
+              `retraso ${minutos(p.delay_s)}`,
+          })),
+          { titulo: "Retraso en cada parada", formato: enMinutos, anchoEtiqueta: 96, alto: 230 }
+        )
+      );
     }
     for (const p of paradas.slice(0, 60)) {
       const fila = document.createElement("tr");

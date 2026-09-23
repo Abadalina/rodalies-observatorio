@@ -202,8 +202,13 @@ publica Renfe, no se interpola. El color es su retraso.
 **Estadisticas.** Ocho indicadores de resumen, puntualidad por dia, por hora
 programada y por dia de la semana, todas las lineas y todas las estaciones con
 buscador. Las muestras pequenas se muestran y se senalan en vez de ocultarse.
+Cada linea lleva su color oficial, el que publica Renfe en su horario.
 
 ![Pagina de estadisticas de puntualidad](docs/img/web-estadisticas.png)
+
+**Ficha de tren.** Se llega desde el mapa o buscando su numero en la portada.
+Su retraso dia a dia y, parada a parada, su ultimo recorrido: la grafica
+ensena si el retraso venia del origen o se fue acumulando por el camino.
 
 **Panel de puntualidad** en Grafana, provisionado como codigo.
 
