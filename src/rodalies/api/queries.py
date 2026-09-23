@@ -308,6 +308,48 @@ SELECT dia_semana,
  ORDER BY dia_semana
 """
 
+COLORES = """
+-- El color oficial de cada linea, tal como lo publica Renfe en su horario.
+--
+-- Por nucleo Y linea: "C1" es una linea en Madrid y otra en Valencia, cada una
+-- con su color. Algunas lineas traen mas de un color entre sus rutas (la R1 trae
+-- dos azules); se elige el que mas rutas usan. El blanco se descarta: es lo que
+-- Renfe pone cuando no hay color, y una etiqueta blanca sobre fondo claro no se ve.
+SELECT DISTINCT ON (nucleo_id, route_short_name)
+       nucleo_id,
+       route_short_name          AS linea,
+       '#' || upper(route_color) AS color
+  FROM gtfs.route
+ WHERE route_short_name IS NOT NULL
+   AND route_color ~* '^[0-9a-f]{6}$'
+   AND upper(route_color) <> 'FFFFFF'
+   AND (%(nucleo)s::text IS NULL OR nucleo_id = %(nucleo)s::text)
+ GROUP BY nucleo_id, route_short_name, route_color
+ ORDER BY nucleo_id, route_short_name, count(*) DESC, route_color
+"""
+
+BUSCAR_TRENES = """
+-- Trenes cuyo numero comercial empieza por lo que se ha tecleado.
+--
+-- Se busca en la capa analitica de los ultimos catorce dias y no en el horario:
+-- un tren programado que nunca se ha visto no tiene ficha que ensenar. De cada
+-- (numero, linea) se devuelve su trip_id mas reciente, que es con el que la
+-- ficha encuentra tambien los datos de cabecera del horario vigente.
+SELECT DISTINCT ON (analytics.numero_de_trip_id(trip_id), linea)
+       analytics.numero_de_trip_id(trip_id) AS numero,
+       linea,
+       nucleo_id,
+       trip_id,
+       service_date                          AS ultimo_dia
+  FROM analytics.mv_stop_final
+ WHERE source = %(source)s
+   AND service_date >= current_date - 14
+   AND analytics.numero_de_trip_id(trip_id) LIKE %(patron)s
+   AND (%(nucleo)s::text IS NULL OR nucleo_id = %(nucleo)s::text)
+ ORDER BY analytics.numero_de_trip_id(trip_id), linea, service_date DESC
+ LIMIT %(limite)s
+"""
+
 ALERTAS = """
 SELECT alert_id, header_text, description_text, effect,
        active_start, active_end, last_seen_at, lineas

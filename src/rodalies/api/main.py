@@ -133,6 +133,8 @@ def indice() -> dict[str, Any]:
             "/estaciones",
             "/franjas",
             "/alertas",
+            "/colores",
+            "/buscar/trenes",
             "/trenes/{trip_id}",
         ],
     }
@@ -260,6 +262,32 @@ def semana(
     source: str = Depends(origen),
 ) -> list[dict[str, Any]]:
     return db.fetch(queries.SEMANA, {**ventana, "nucleo": nucleo, "source": source})
+
+
+@app.get("/colores", tags=["meta"], summary="Color oficial de cada linea")
+def colores(
+    nucleo: str | None = Query(None, description="Nucleo de Cercanias; 51 es Catalunya"),
+) -> list[dict[str, Any]]:
+    """El color con el que Renfe identifica cada linea, por nucleo."""
+    return db.fetch(queries.COLORES, {"nucleo": nucleo})
+
+
+@app.get("/buscar/trenes", tags=["puntualidad"], summary="Buscar un tren por su numero")
+def buscar_trenes(
+    numero: str = Query(..., pattern=r"^[0-9]{1,6}$", description="Numero comercial o su inicio"),
+    nucleo: str | None = Query(None, description="Nucleo de Cercanias; 51 es Catalunya"),
+    limite: int = Query(8, ge=1, le=30),
+    source: str = Depends(origen),
+) -> list[dict[str, Any]]:
+    """Trenes vistos en los ultimos catorce dias cuyo numero empieza por `numero`.
+
+    Solo digitos: el patron se pasa a un LIKE y un `%` o un `_` tecleados
+    cambiarian lo que se busca.
+    """
+    return db.fetch(
+        queries.BUSCAR_TRENES,
+        {"patron": f"{numero}%", "nucleo": nucleo, "limite": limite, "source": source},
+    )
 
 
 @app.get("/alertas", tags=["incidencias"], summary="Avisos activos")

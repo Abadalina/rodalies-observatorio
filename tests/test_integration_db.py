@@ -707,6 +707,7 @@ def test_todas_las_consultas_de_la_api_se_ejecutan(migrada):
         "dias": 14,
         "limite": 10,
         "minimo": 1,
+        "patron": "256%",
     }
 
     consultas = {

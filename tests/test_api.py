@@ -108,6 +108,23 @@ def test_origen_por_defecto_sale_de_la_configuracion(monkeypatch):
     assert api.origen(None) == "synthetic"
 
 
+def test_colores_filtra_por_nucleo(cliente, falsa):
+    assert cliente.get("/colores", params={"nucleo": "51"}).status_code == 200
+    assert falsa.llamadas[-1][1]["nucleo"] == "51"
+
+
+def test_buscar_trenes_convierte_el_numero_en_prefijo(cliente, falsa):
+    respuesta = cliente.get("/buscar/trenes", params={"numero": "2567", "nucleo": "51"})
+    assert respuesta.status_code == 200
+    assert falsa.llamadas[-1][1]["patron"] == "2567%"
+
+
+@pytest.mark.parametrize("numero", ["", "25%", "25_7", "abc", "1234567"])
+def test_buscar_trenes_solo_admite_digitos(cliente, numero):
+    """Un `%` o un `_` tecleados cambiarian lo que busca el LIKE."""
+    assert cliente.get("/buscar/trenes", params={"numero": numero}).status_code == 422
+
+
 def test_estaciones_valida_el_limite(cliente):
     assert cliente.get("/estaciones", params={"limite": 5000}).status_code == 422
     assert cliente.get("/estaciones", params={"limite": 2000}).status_code == 200
