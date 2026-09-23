@@ -43,6 +43,33 @@ function globo(contenedor) {
   };
 }
 
+// Escala del eje Y. Por defecto es de porcentaje, entre 0 y 100, como la usan
+// las estadisticas. Con `opciones.formato` la escala es libre (minutos, por
+// ejemplo): se redondea a un paso "bonito" y el cero siempre queda dentro,
+// porque un eje de retraso que no empieza en cero exagera las diferencias.
+function pasoBonito(bruto) {
+  const potencia = 10 ** Math.floor(Math.log10(bruto || 1));
+  const n = bruto / potencia;
+  return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * potencia;
+}
+
+function rangoY(valores, opciones, porcentajeConMargen) {
+  if (!opciones.formato) {
+    return { ...porcentajeConMargen, texto: (v) => `${Math.round(v)}%` };
+  }
+  const bajo = Math.min(0, ...valores);
+  const alto = Math.max(...valores, bajo + 1);
+  // Cuatro tramos de un paso bonito, y no el maximo redondeado partido en
+  // cuatro: eso daba marcas de "3,75 min" y "11,25 min".
+  let paso = pasoBonito((alto - bajo) / 4);
+  let min = Math.floor(bajo / paso) * paso;
+  while (min + 4 * paso < alto) {
+    paso = pasoBonito(paso * 1.5);
+    min = Math.floor(bajo / paso) * paso;
+  }
+  return { min, max: min + 4 * paso, texto: opciones.formato };
+}
+
 /**
  * Grafica de linea para una serie temporal.
  * datos: [{ etiqueta, valor, detalle }]
@@ -61,8 +88,10 @@ function graficaLinea(contenedor, datos, opciones = {}) {
   const h = alto - margen.arriba - margen.abajo;
 
   const valores = datos.map((d) => d.valor);
-  const max = Math.min(100, Math.ceil(Math.max(...valores) / 10) * 10 + 5);
-  const min = Math.max(0, Math.floor(Math.min(...valores) / 10) * 10 - 5);
+  const { min, max, texto } = rangoY(valores, opciones, {
+    max: Math.min(100, Math.ceil(Math.max(...valores) / 10) * 10 + 5),
+    min: Math.max(0, Math.floor(Math.min(...valores) / 10) * 10 - 5),
+  });
   const escalaX = (i) => (datos.length === 1 ? w / 2 : (i / (datos.length - 1)) * w);
   const escalaY = (v) => h - ((v - min) / (max - min || 1)) * h;
 
@@ -82,7 +111,7 @@ function graficaLinea(contenedor, datos, opciones = {}) {
     const y = escalaY(v);
     g.appendChild(crear("line", { class: "rejilla", x1: 0, x2: w, y1: y, y2: y }));
     const t = crear("text", { class: "marca-eje", x: -8, y: y + 4, "text-anchor": "end" });
-    t.textContent = `${Math.round(v)}%`;
+    t.textContent = texto(v);
     g.appendChild(t);
   }
 
@@ -90,19 +119,26 @@ function graficaLinea(contenedor, datos, opciones = {}) {
   const puntos = datos.map((d, i) => `${escalaX(i)},${escalaY(d.valor)}`);
   g.appendChild(crear("path", {
     class: "area",
-    d: `M0,${h} L${puntos.join(" L")} L${w},${h} Z`,
+    d: `M0,${Math.min(h, escalaY(Math.max(min, 0)))} L${puntos.join(" L")} ` +
+       `L${w},${Math.min(h, escalaY(Math.max(min, 0)))} Z`,
   }));
   g.appendChild(crear("path", { class: "linea-serie", d: `M${puntos.join(" L")}` }));
 
   // Etiquetas del eje X: solo las que caben, nunca todas encimadas.
-  const cada = Math.max(1, Math.ceil(datos.length / (w / 64)));
+  // La primera y la ultima se ponen siempre, alineadas hacia dentro para no
+  // salirse de la caja. Alineadas asi ocupan hueco y medio, de modo que la
+  // vecina de cada una se salta si le queda mas cerca: si no, se pisaban.
+  const cada = Math.max(1, Math.ceil(datos.length / (w / (opciones.anchoEtiqueta || 64))));
+  const ultima = datos.length - 1;
   datos.forEach((d, i) => {
-    if (i % cada && i !== datos.length - 1) return;
+    const extremo = i === 0 || i === ultima;
+    if (!extremo && (i % cada || i < 1.5 * cada || ultima - i < 1.5 * cada)) return;
+    const ancla = datos.length > 1 && i === 0 ? "start" : i === ultima && i > 0 ? "end" : "middle";
     const t = crear("text", {
       class: "marca-eje",
       x: escalaX(i),
       y: h + 22,
-      "text-anchor": "middle",
+      "text-anchor": ancla,
     });
     t.textContent = d.etiqueta;
     g.appendChild(t);
@@ -171,7 +207,11 @@ function graficaBarras(contenedor, datos, opciones = {}) {
   const margen = { arriba: 18, derecha: 12, abajo: 34, izquierda: 42 };
   const w = ancho - margen.izquierda - margen.derecha;
   const h = alto - margen.arriba - margen.abajo;
-  const max = Math.min(100, Math.ceil(Math.max(...datos.map((d) => d.valor)) / 10) * 10 + 5);
+  const valores = datos.map((d) => Math.max(0, d.valor));
+  const { max, texto } = rangoY(valores, opciones, {
+    min: 0,
+    max: Math.min(100, Math.ceil(Math.max(...valores) / 10) * 10 + 5),
+  });
 
   const svg = crear("svg", {
     viewBox: `0 0 ${ancho} ${alto}`,
@@ -188,7 +228,7 @@ function graficaBarras(contenedor, datos, opciones = {}) {
     const y = h - (v / max) * h;
     g.appendChild(crear("line", { class: "rejilla", x1: 0, x2: w, y1: y, y2: y }));
     const t = crear("text", { class: "marca-eje", x: -8, y: y + 4, "text-anchor": "end" });
-    t.textContent = `${Math.round(v)}%`;
+    t.textContent = texto(v);
     g.appendChild(t);
   }
 
@@ -200,7 +240,7 @@ function graficaBarras(contenedor, datos, opciones = {}) {
 
   datos.forEach((d, i) => {
     const x = i * paso + (paso - anchoBarra) / 2;
-    const altura = Math.max(1, (d.valor / max) * h);
+    const altura = Math.max(1, (Math.max(0, d.valor) / max) * h);
     const barra = crear("rect", {
       class: "barra",
       x,
@@ -209,7 +249,9 @@ function graficaBarras(contenedor, datos, opciones = {}) {
       height: altura,
       rx: Math.min(4, anchoBarra / 2),
     });
-    if (d.color) barra.setAttribute("fill", d.color);
+    // Como estilo y no como atributo `fill`: la regla .barra de la hoja gana a
+    // un atributo de presentacion, y las barras salian todas del color de serie.
+    if (d.color) barra.style.fill = d.color;
     barra.addEventListener("pointerenter", () => {
       burbuja.mostrar(x + anchoBarra / 2 + margen.izquierda, h - altura + margen.arriba - 12, d.detalle);
       barra.classList.add("barra--activa");
