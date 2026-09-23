@@ -315,6 +315,11 @@ COLORES = """
 -- con su color. Algunas lineas traen mas de un color entre sus rutas (la R1 trae
 -- dos azules); se elige el que mas rutas usan. El blanco se descarta: es lo que
 -- Renfe pone cuando no hay color, y una etiqueta blanca sobre fondo claro no se ve.
+--
+-- Excepciones, elegidas a mano: la R1 de Rodalies es azul claro en los planos,
+-- pero Renfe pone azul oscuro en 28 de sus 38 rutas y el mas usado salia mal.
+-- Es una preferencia, no un color fijo: gana solo si ese color viene en el
+-- horario, y si Renfe dejara de publicarlo se vuelve a la regla general.
 SELECT DISTINCT ON (nucleo_id, route_short_name)
        nucleo_id,
        route_short_name          AS linea,
@@ -325,7 +330,9 @@ SELECT DISTINCT ON (nucleo_id, route_short_name)
    AND upper(route_color) <> 'FFFFFF'
    AND (%(nucleo)s::text IS NULL OR nucleo_id = %(nucleo)s::text)
  GROUP BY nucleo_id, route_short_name, route_color
- ORDER BY nucleo_id, route_short_name, count(*) DESC, route_color
+ ORDER BY nucleo_id, route_short_name,
+          (nucleo_id, route_short_name, upper(route_color)) IN (('51', 'R1', '7DBCEC')) DESC,
+          count(*) DESC, route_color
 """
 
 BUSCAR_TRENES = """

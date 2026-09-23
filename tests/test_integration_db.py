@@ -681,6 +681,32 @@ def test_un_tren_que_cruza_provincias_se_cuenta_una_vez(limpia):
     assert trenes == 1, "pero el tren es uno solo"
 
 
+def test_el_color_de_la_r1_es_el_azul_claro_si_viene_en_el_horario(limpia):
+    """La R1 prefiere su azul claro aunque Renfe use mas el oscuro.
+
+    Y es una preferencia, no un color fijo: sin el azul claro en el horario,
+    vuelve la regla general (el color mas usado).
+    """
+    from rodalies.api import queries
+
+    def color_r1(conn):
+        filas = conn.execute(queries.COLORES, {"nucleo": "51"}).fetchall()
+        return {linea: color for _, linea, color in filas}["R1"]
+
+    with session(limpia) as conn:
+        conn.execute(
+            "INSERT INTO gtfs.route (route_id, route_short_name, route_color, nucleo_id) VALUES "
+            "('51T1R1', 'R1', '094188', '51'), ('51T2R1', 'R1', '094188', '51'), "
+            "('51T3R1', 'R1', '7dbcec', '51')"
+        )
+        con_claro = color_r1(conn)
+        conn.execute("DELETE FROM gtfs.route WHERE route_id = '51T3R1'")
+        sin_claro = color_r1(conn)
+
+    assert con_claro == "#7DBCEC"
+    assert sin_claro == "#094188"
+
+
 def test_todas_las_consultas_de_la_api_se_ejecutan(migrada):
     """Ejecuta cada consulta de la API. Leerlas no basta.
 
