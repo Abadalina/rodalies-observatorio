@@ -245,6 +245,54 @@ def test_umbral_de_puntualidad_es_configurable(limpia):
     assert (estricto, laxo) == (0, 1)
 
 
+def test_el_horario_vigente_lo_marca_el_nucleo_que_antes_se_queda_sin_trenes(limpia):
+    """Migracion 022: se mide por trenes y por nucleo, no por el calendario.
+
+    El 25/09 Rodalies tenia trenes hasta el 04/10, los otros nucleos hasta el
+    23/10 y el calendario declaraba servicios vacios hasta el 23/10. La version
+    anterior decia OK hasta el 23/10 para todos.
+    """
+
+    def horario(conn):
+        return conn.execute(
+            "SELECT estado, detalle FROM analytics.v_quality_checks "
+            "WHERE comprobacion = 'horario_vigente'"
+        ).fetchone()
+
+    def servicio(conn, service_id, dias_vista, nucleo=None):
+        conn.execute(
+            "INSERT INTO gtfs.calendar VALUES "
+            "(%s, true, true, true, true, true, true, true, current_date, current_date + %s)",
+            (service_id, dias_vista),
+        )
+        if nucleo:
+            conn.execute(
+                "INSERT INTO gtfs.trip (trip_id, service_id, nucleo_id) VALUES (%s, %s, %s)",
+                (f"{service_id}_tren", service_id, nucleo),
+            )
+
+    with session(limpia) as conn:
+        sin_horario = horario(conn)
+
+        servicio(conn, "RODALIES", 1, nucleo="51")
+        servicio(conn, "MADRID", 20, nucleo="10")
+        servicio(conn, "VACIO", 60)  # un servicio sin trenes no cuenta
+        rodalies_corto = horario(conn)
+
+        conn.execute("DELETE FROM gtfs.trip WHERE nucleo_id = '51'")
+        solo_madrid = horario(conn)
+
+    assert sin_horario[0] == "ERROR"
+    assert "no hay GTFS" in sin_horario[1]
+
+    assert rodalies_corto[0] == "AVISO", "Rodalies se queda sin trenes en un dia"
+    assert rodalies_corto[1].startswith("Barcelona (Rodalies) tiene trenes hasta")
+    assert "el resto de nucleos" in rodalies_corto[1]
+
+    assert solo_madrid[0] == "OK"
+    assert solo_madrid[1].startswith("Madrid tiene trenes hasta")
+
+
 def test_comprobaciones_de_calidad_responden(limpia):
     with session(limpia) as conn:
         checks = Repository(conn).quality_checks()

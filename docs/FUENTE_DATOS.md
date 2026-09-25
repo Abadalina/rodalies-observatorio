@@ -180,7 +180,7 @@ Cosas del fichero real que rompen un lector de CSV ingenuo. El fixture
 | Los feeds siguen publicandose sin autenticacion | `check_source.py` a diario en la CI |
 | `trip_id` empieza por el codigo de nucleo | `observaciones_huerfanas` en `v_quality_checks` |
 | `calendar.txt` da un servicio por dia natural | Si no, se cae a la fecha local del feed |
-| El horario cubre varios dias vista | `horario_vigente` en `v_quality_checks` |
+| El horario cubre varios dias vista (Rodalies, unos once desde el 24/09/2026) | `horario_vigente` en `v_quality_checks`, por nucleo y contando trenes |
 | El retraso viene en segundos | `retrasos_fuera_de_rango` en `v_quality_checks` |
 | La cabecera trae `timestamp` valido | Si falta, el feed **se rechaza** y el fallo queda en `rt.feed_poll` |
 

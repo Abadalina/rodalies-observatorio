@@ -74,6 +74,12 @@ python scripts/check_source.py
 
 Sintoma: `horario_vigente` en AVISO o ERROR.
 
+Desde la migracion 022 la comprobacion mira, nucleo a nucleo, hasta que dia hay
+**trenes** programados (no la fecha final del calendario, que incluye servicios
+vacios) y el detalle nombra el nucleo que antes se queda sin ellos. Desde el
+24/09/2026 Renfe publica Rodalies solo unos once dias vista, asi que es el que
+aparece: lo normal es que la ventana avance cada dia con la recarga del horario.
+
 ```bash
 make gtfs                                    # recarga normal (condicional)
 docker compose run --rm ingestor rodalies load-gtfs --force   # fuerza la descarga
